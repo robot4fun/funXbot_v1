@@ -1,0 +1,6 @@
+{
+    "name": "cDisplays",
+    "type": "arduino",
+    "image": "display.png",
+    "example": "Arduino"
+}

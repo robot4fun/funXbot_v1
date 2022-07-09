@@ -1,0 +1,1478 @@
+/**
+ * Created by tony on 2019/8/30.
+ */
+const DHT = require('./dht11.js');
+const TCS34725 = require('./tcs34725.js');
+
+const ArgumentType = Scratch.ArgumentType;
+const BlockType = Scratch.BlockType;
+const formatMessage = Scratch.formatMessage;
+const log = Scratch.log;
+
+async function timeout(ms) {
+  await new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
+
+function cutHex(h) {return (h.charAt(0)=="#") ? h.substring(1,7):h};
+function hexToR(h) {return parseInt((cutHex(h)).substring(0,2),16)};
+function hexToG(h) {return parseInt((cutHex(h)).substring(2,4),16)};
+function hexToB(h) {return parseInt((cutHex(h)).substring(4,6),16)};
+
+class cSensorsExtension {
+    constructor (runtime){
+        this.runtime = runtime;
+    }
+    getInfo (){
+        return {
+            id: 'cSensors',
+            name: formatMessage({
+                id: 'Sensors.categoryName',
+                default: 'Sensors'
+            }),
+            color1: '#4CBFE6',
+            color2: '#3C95B2',
+            color3: '#3C95B2',
+            //menuIconURI: board.menuIconURI,
+            blockIconURI: board.blockIconURI,
+
+            blocks: [
+              {
+                  opcode: 'sensorDigit',
+                  blockType: BlockType.BOOLEAN,
+                  text: 'digital sensor [SENSOR] at port [PIN] is triggered?',
+                  arguments: {
+                      SENSOR: {
+                          type: ArgumentType.STRING,
+                          defaultValue: 'button',
+                          menu: 'digi'//'#digiList'
+                      },
+                      PIN: {
+                          type: ArgumentType.STRING,
+                          defaultValue: '2',
+                          menu: 'dPort'
+                      }
+                  },
+                  func: 'sensorDigit',
+                  gen: {
+                      arduino: this.sensorDigiGen
+                  }
+              },
+                /*{
+                    opcode: 'rir',
+                    blockType: BlockType.BOOLEAN,
+
+                    text: formatMessage({
+                        id: 'cSensors.rir',
+                        default: 'reflective IR sensor at port [PIN] is triggered?'
+                    }),
+                    arguments: {
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '2',
+                            menu: 'dPort'
+                        }
+                    },
+                    func: 'rir',
+                    gen: {
+                        arduino: this.rirGen
+                    }
+                },*/
+                /*{
+                    opcode: 'tilt',
+                    blockType: BlockType.BOOLEAN,
+
+                    text: formatMessage({
+                        id: 'cSensors.tilt',
+                        default: 'tilt switch at port [PIN] is triggered?'
+                    }),
+                    arguments: {
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '2',
+                            menu: 'dPort'
+                        }
+                    },
+                    func: 'sensorDigit',
+                    gen: {
+                        arduino: this.sensorDigiGen
+                    }
+                },*/
+                {
+                    opcode: 'tracers',
+                    blockType: BlockType.BOOLEAN,
+                    text: 'tracers status at port [PIN] is [PAT]?',
+                    arguments: {
+                        PAT: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '■■■',
+                            menu: 'pat'
+                        },
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '6',
+                            menu: 'dPort3'
+                        }
+                    },
+                    func: 'tracers',
+                    gen: {
+                        arduino: this.tracersGen
+                    }
+                },
+                /*{
+                    opcode: 'analogKeypad',
+                    blockType: BlockType.BOOLEAN,
+
+                    text: formatMessage({
+                        id: 'cSensors.analogKeypad',
+                        default: 'keypad at port [PIN]  button [BUT] pressed?'
+                    }),
+                    arguments: {
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: board._port.p2[2],
+                            menu: 'aPort'
+                        },
+                        BUT: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 4,
+                            menu: 'aButton'
+                        }
+                    },
+                    func: 'analogKeypad',
+                    gen: {
+                        arduino: this.analogKeypadGen
+                    }
+                },*/
+                '---',
+                /*{
+                    opcode: 'sensorAnalog',
+                    blockType: BlockType.REPORTER,
+
+                    text: formatMessage({
+                        id: 'cSensors.sensorAnalog',
+                        default: 'analog sensor [SENSOR] reading at port [PIN]'
+                    }),
+                    arguments: {
+                        SENSOR: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'Soil',
+                            menu: '#analogList'
+                        },
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: board._port.p2[2],
+                            menu: 'aPort'
+                        }
+                    },
+                    func: 'sensorAnalog',
+                    gen: {
+                        arduino: this.sensorAnalogGen
+                    }
+                },*/
+                {
+                    opcode: 'ultrasonic',
+                    blockType: BlockType.REPORTER,
+                    text: 'ultrasonic sensor distance reading at port [PIN] (cm)',
+                    arguments: {
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '3',
+                            menu: 'dPort'
+                        }
+                    },
+                    func: 'ultrasonic',
+                    gen: {
+                        arduino: this.ultrasonicGen
+                    }
+                },
+                {
+                    opcode: 'dht',
+                    blockType: BlockType.REPORTER,
+                    text: 'DHT sensor [FUNC] reading at port [PIN]',
+                    arguments: {
+                        FUNC: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'temperature',
+                            menu: 'dht11function'
+                        },
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '3',
+                            menu: 'dPort'
+                        }
+                    },
+                    func: 'dht11',
+                    gen: {
+                        arduino: this.dht11Gen
+                    }
+                },
+                {
+                    opcode: 'getLux',
+                    blockType: BlockType.REPORTER,
+                    text: 'get [LIGHT] illuminance from port 3 (lux)',
+                    arguments: {
+                        LIGHT: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'reflected',
+                            menu: 'light'
+                        },
+                    },
+                    func: 'tcs34725lux',
+                    gen: {
+                        arduino: this.tcs34725luxGen
+                    }
+                },
+                '---',
+                {
+                    opcode: 'colorSensor',
+                    blockType: BlockType.REPORTER,
+                    text: 'get color from port 3 (hex)',
+                    func: 'tcs34725',
+                    gen: {
+                        arduino: this.tcs34725Gen
+                    }
+                },
+                {
+                    opcode: 'colorMatch',
+                    blockType: BlockType.BOOLEAN,
+                    text: '[SENCOL] is [COLOR]?',
+                    arguments: {
+                        SENCOL: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '#FFFFFF',
+                        },
+                        COLOR: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '0',
+                            menu: '#colorList'
+                        },
+                    },
+                    func: 'colormatchHEX',
+                    gen: {
+                        arduino: this.colormatchHEXGen //colormatchGen
+                    }
+                },
+                {
+                    opcode: 'colorCal',
+                    blockType: BlockType.COMMAND,
+                    text: 'set [WB] balance for color sensor at port 3',
+                    arguments: {
+                        WB: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'bright',
+                            menu: 'wb'
+                        },
+                    },
+                    func: 'tcs34725cal',
+                    gen: {
+                        arduino: this.tcs34725calGen
+                    }
+                },
+                '---',
+                {
+                    opcode: 'imuRead',
+                    blockType: BlockType.REPORTER,
+                    text: 'MPU6050 [MPUAXIS] reading at port 3',
+                    arguments: {
+                        MPUAXIS: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'ax',
+                            menu: 'imumenu'
+                        }
+                    },
+                    func: 'imuRead',
+                    gen: {
+                        arduino: this.imuReadGen
+                    }
+                },
+/*
+                {
+                    opcode: 'ds18b20Setup',
+                    blockType: BlockType.COMMAND,
+
+                    text: formatMessage({
+                        id: 'sensors.ds18b20Setup',
+                        default: 'Setup 18B20 Pin [PIN]'
+                    }),
+                    arguments: {
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '4',
+                            menu: 'digiPin'
+                        }
+                    },
+                    func: 'ds18b20Setup',
+                    gen: {
+                        arduino: this.ds18b20SetupGen
+                    }
+                },
+                {
+                    opcode: 'ds18b20Read',
+                    blockType: BlockType.COMMAND,
+
+                    text: formatMessage({
+                        id: 'sensors.ds18b20Read',
+                        default: '18B20 Read'
+                    }),
+                    func: 'ds18b20Read',
+                    gen: {
+                        arduino: this.ds18b20ReadGen
+                    }
+                },
+                {
+                    opcode: 'ds18b20',
+                    blockType: BlockType.REPORTER,
+
+                    text: formatMessage({
+                        id: 'sensors.ds18b20',
+                        default: '18B20 Temperature [INDEX]'
+                    }),
+                    arguments: {
+                        INDEX: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    },
+                    func: 'ds18b20',
+                    gen: {
+                        arduino: this.ds18b20Gen
+                    }
+                },
+                '---',
+
+                {
+                    opcode: 'infraen',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'sensors.infraen',
+                        default: 'Infra Enable Pin[RXPIN]'
+                    }),
+                    func: 'noop',
+                    arguments: {
+                        RXPIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '2',
+                            menu: 'dPort'
+                        }
+                    },
+                    gen: {
+                        arduino: this.infraenGen
+                    }
+                },
+                {
+                    opcode: 'infraloop',
+                    blockType: BlockType.CONDITIONAL,
+                    text: formatMessage({
+                        id: 'sensors.infraloop',
+                        default: 'Infra Read Loop'
+                    }),
+                    func: 'noop',
+                    gen: {
+                        arduino: this.infraloopGen
+                    }
+                },
+                {
+                    opcode: 'infraresult',
+                    blockType: BlockType.REPORTER,
+                    text: formatMessage({
+                        id: 'sensors.infradata',
+                        default: 'Infra Result'
+                    }),
+                    func: 'noop',
+                    gen: {
+                        arduino: this.infraresultGen
+                    }
+                },
+                {
+                    opcode: 'infrasend',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'sensors.infrasend',
+                        default: 'Infra Send [DATA]'
+                    }),
+                    arguments: {
+                        DATA: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'abcd'
+                        }
+                    },
+                    func: 'noop',
+                    gen: {
+                        arduino: this.infrasend
+                    }
+                }*/
+            ],
+
+            menus: {
+                /*'#analogList': [
+                    {src: 'static/extension-assets/arduino/SoundSensor.png',
+                        value: 'Sound', width: 128, height: 128, alt: 'Sound'},
+                    {src: 'static/extension-assets/arduino/LightSensor.png',
+                        value: 'Light', width: 128, height: 128, alt: 'Light'},
+                    {src: 'static/extension-assets/arduino/Potential.png',
+                        value: 'Potential', width: 128, height: 128, alt: 'Potential'},
+                    {src: 'static/extension-assets/arduino/SoilSensor.png',
+                        value: 'Soil', width: 128, height: 128, alt: 'Soil'},
+                    {src: 'static/extension-assets/arduino/RainDrop.png',
+                        value: 'RainDrop', width: 128, height: 128, alt: 'RainDrop'},
+                    {src: 'static/extension-assets/arduino/FlameSensor.png',
+                        value: 'Flame', width: 128, height: 128, alt: 'Flame'},
+                    {src: 'static/extension-assets/arduino/GasSensor.png',
+                        value: 'Smoke', width: 128, height: 128, alt: 'Smoke'},
+                    {src: 'static/extension-assets/arduino/SlidePotential.png',
+                        value: 'SlidePotential', width: 128, height: 128, alt: 'SlidePotential'},
+                ],*/
+                /*'#digiList': [
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/rir.png',
+                        value: '0', width: 128, height: 128, alt: 'Reflective IR'},
+                    {src: 'static/extension-assets/arduino/linefollow_1x.png',
+                        value: '1', width: 128, height: 128, alt: 'TRACER'},
+                    {src: 'static/extension-assets/arduino/Touch.png',
+                        value: 'TOUCH', width: 128, height: 128, alt: 'TOUCH'},
+                    {src: 'static/extension-assets/arduino/SoilSensor.png',
+                        value: 'Soil', width: 128, height: 128, alt: 'Soil'},
+                    {src: 'static/extension-assets/arduino/FlameSensor.png',
+                        value: 'Flame', width: 128, height: 128, alt: 'Flame'},
+                    {src: 'static/extension-assets/arduino/GasSensor.png',
+                        value: 'Smoke', width: 128, height: 128, alt: 'Smoke'},
+                    {src: 'static/extension-assets/arduino/Button.png',
+                        value: 'Button', width: 128, height: 128, alt: 'Button'},
+                    {src: 'static/extension-assets/arduino/Bumper.png',
+                        value: 'Bumper', width: 128, height: 128, alt: 'Bumper'},
+                    {src: 'static/extension-assets/arduino/ViberateSensor.png',
+                        value: 'Viberate', width: 128, height: 128, alt: 'Viberate'},
+                ],*/
+                digi: ['button','tilt','rir'],
+                pat: [
+                  {text: '■■■', value: 1},
+                  {text: '□■■', value: 2},
+                  {text: '■□■', value: 3},
+                  {text: '□□■', value: 4},
+                  {text: '■■□', value: 5},
+                  {text: '□■□', value: 6},
+                  {text: '■□□', value: 7},
+                  {text: '□□□', value: 8},
+                ],
+                dht11function: ['temperature', 'humidity'],
+                /*aButton: ['1','2','3','4','5','6','7','8'],
+                aPort: [
+                  {text: '1', value: board._port.p1[2]},
+                  {text: '2', value: board._port.p2[2]},
+                  {text: '3', value: board._port.p3[2]},
+                  //{text: '4', value: board._port.p4[2]}
+                ],*/
+                dPort: ['1','2','3','5','6','7','8'],
+                dPort3: ['5','6','7'/*,'8'*/],
+                '#colorList': [
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/black.png',
+                        value: '0', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/white.png',
+                        value: '1', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/red.png',
+                        value: '2', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/green.png',
+                        value: '3', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/blue.png',
+                        value: '4', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/yellow.png',
+                        value: '5', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/orange.png',
+                        value: '6', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/purple.png',
+                        value: '7', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/cyan.png',
+                        value: '8', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/brown.png',
+                        value: '9', width: 95, height: 95, alt: ''},
+                ],
+                wb: ['dark', 'bright'],
+                light: ['reflected', 'ambient'],
+                imumenu: ['ax','ay','az','pitch','roll','gx','gy','gz'],
+            },
+
+            translation_map: {
+                'zh-tw': {
+                  'sensorAnalog': '接口[PIN]的類比感應器[SENSOR]讀值 (0~1023)',
+                  'sensorDigit': '接口[PIN]的[SENSOR]被觸發？',
+                  'tracers': '接口[PIN]的循線感應器讀值是[PAT]？',
+                  'rir': '接口[PIN]的反射式紅外線感應器被觸發？',
+                  'tilt': '接口[PIN]的傾斜開關被觸發？',
+                  'analogKeypad': '接口[PIN]的鍵盤 按下按鈕[BUT]?',
+                  'ultrasonic': '接口[PIN]的超音波感應器距離讀值 (公分)',
+                  'colorSensor': '接口 3 的顏色感應器顏色讀值 (hex)',
+                  'colorMatch': '[SENCOL]是[COLOR]?',
+                  'getLux': '接口 3 的顏色感應器[LIGHT]照度讀值 (lux)',
+                  'colorCal': '校正接口 3 的顏色感應器[WB]平衡',
+                  'dht': '接口[PIN]的溫溼度感應器[FUNC]讀值',
+                  'imuRead': '接口 3 的陀螺儀加速度計[MPUAXIS]讀值',
+                  'digi': {'button':'按鈕','tilt':'傾斜開關','rir':'反射式紅外線感應器'},
+                  'dht11function': {'temperature':'溫度(°C)', 'humidity':'濕度(%)'},
+                  'wb': {'dark':'黑','bright':'白'},
+                  'light': {'reflected':'反射光','ambient':'環境光'},
+                  'imumenu': {'ax':'加速度x軸分量','ay':'加速度y軸分量','az':'加速度z軸分量',
+                              'pitch':'攻角(°)','roll':'滾角(°)',
+                              'gx':'角速度x軸分量','gy':'角速度y軸分量','gz':'角速度z軸分量'},
+                },
+                'zh-cn': {
+                  'sensorAnalog':'端口[PIN]的模拟传感器[SENSOR]读数 (0~1023)',
+                  'sensorDigit': '端口[PIN]的[SENSOR]被触发？',
+                  'tracers': '端口[PIN]的循线感应器读值是[PAT]？ ',
+                  'rir': '端口[PIN]的反射式红外传感器被触发？ ',
+                  'tilt': '接口[PIN]的倾斜传感器被触发？',
+                  'analogKeypad': '端口[PIN]的键盘 按下按钮[BUT]?',
+                  'ultrasonic': '端口[PIN]的超声音传感器距离读数 (厘米)',
+                  'colorSensor': '端口 3 的颜色传感器颜色读数 (hex)',
+                  'colorMatch': '[SENCOL]是[COLOR]?',
+                  'getLux': '端口 3 的颜色传感器[LIGHT]照度读数 (lux)',
+                  'colorCal': '校正端口 3 的颜色传感器[WB]平衡',
+                  'dht': '端口[PIN]的温湿度传感器[FUNC]读值',
+                  'imuRead': '端口 3 的陀螺仪加速度计[MPUAXIS]读值',
+                  'digi': {'button':'按钮','tilt':'倾斜开关','rir':'反射式红外传感器'},
+                  'dht11function': {'temperature':'温度(°C)', 'humidity':'湿度(%)'},
+                  'wb': {'dark':'黑','bright':'白'},
+                  'light': {'reflected':'反射光','ambient':'环境光'},
+                }
+            }
+
+        };
+    }
+
+    noop (){
+        return Promise.reject(formatMessage({
+            id: 'kblock.notify.nosupportonlinemode',
+            defaultMessage: 'Not support in online mode'
+        }));
+    }
+    /*
+    analogKeypad (args){
+        let keypad = new five.Keypad({
+          pin: args.PIN, //in johnny-five.js, analogPin with 'A'
+          length: 8 // button number
+        });
+        keypad.on("change", function(event) {
+            return event.which == args.BUT;
+        });
+
+        return new Promise(resolve => {
+            board.analogRead(pin, ret => {
+                board.reportAnalogPin(pin, 0);
+                resolve(ret);
+            })
+        });
+    }
+
+    analogKeypadGen (gen, block){
+        gen.definitions_['whichkey'] = `
+int whichkey(int sensorValue) {
+        int keyValue = 0;
+        //Serial.println(sensorValue);
+        //switch(sensorValue)
+        if(sensorValue<930 && sensorValue>880)
+          keyValue=1;
+        else if(sensorValue<820 && sensorValue>780)
+          keyValue=2;
+        else if(sensorValue<700 && sensorValue>660)
+          keyValue=3;
+        else if(sensorValue<590 && sensorValue>550)
+          keyValue=4;
+        else if(sensorValue<470 && sensorValue>430)
+          keyValue=5;
+        else if(sensorValue<360 && sensorValue>320)
+          keyValue=6;
+        else if(sensorValue<240 && sensorValue>200)
+          keyValue=7;
+        else if(sensorValue<130 && sensorValue>90)
+          keyValue=8;
+        else keyValue=0;
+        //Serial.print("KeyPress is = AD Key " );
+        return keyValue;
+ }`;
+        const pin = gen.valueToCode(block, 'PIN');
+        const s = gen.valueToCode(block, 'BUT');
+        gen.setupCodes_['keypad'+pin] = `pinMode(${pin},INPUT)`;
+
+        return [`whichkey(analogRead(${pin}))==${s}`, gen.ORDER_ATOMIC];
+    }
+
+    sensorAnalog (args){
+        const pin = board.pin2firmata(args.PIN,1);// 1: in firmata.js, analogPin with no "A"
+        if (board.pins[board.analogPins[pin]].mode != board.MODES.ANALOG ){
+          //in Firmata.js, all analog pins are set to board.MODES.ANALOG (analog input) by default.
+            board.pinMode(board.analogPins[pin], board.MODES.ANALOG);
+            //console.log('pin2firmata=',pin); //for debug
+            //console.log('pin=',board.analogPins[pin]); //for debug
+            //console.log('mode=',board.pins[board.analogPins[pin]].mode); //for debug
+        }
+        return new Promise(resolve => {
+            board.analogRead(pin, ret => {    //firmata will report data every 19 ms unless the sampling interval is changed.
+                board.reportAnalogPin(pin, 0);//stop reporting analog value because need it just once
+                resolve(ret);
+            })
+        });
+    }
+
+    sensorAnalogGen (gen, block){
+        const pin = gen.valueToCode(block, 'PIN');
+        gen.setupCodes_['sensor'+pin] = `pinMode(${pin},INPUT)`;
+        return [`analogRead(${pin})`, gen.ORDER_ATOMIC];
+    }
+
+    rir (args){
+        const pin = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
+        if (board.pins[pin].mode != board.MODES.INPUT ){
+            board.pinMode(pin, board.MODES.INPUT);
+        }
+        if (board.eventNames().indexOf(`digital-read-${pin}`) === -1){ // just call once
+            board.digitalRead(pin, value => {   //只要call一次,即使沒執行此block仍會一直回報..
+            });
+        }
+
+        return board.pins[pin].value? 0:1;//RIR is normal on
+    }
+
+    rirGen (gen, block){
+        const pin = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][2]);
+        gen.setupCodes_['sensor'+pin] = `pinMode(${pin},INPUT)`;
+        return [`!digitalRead(${pin})`, gen.ORDER_ATOMIC]; //RIR is normal on
+    }
+    */
+    sensorDigit (args){
+        //const pin = board.pin2firmata(args.PIN);
+        const pin = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
+        if (board.pins[pin].mode != board.MODES.INPUT ){
+            //vm.emit('showAlert', {msg: 'Wrong PinMode defined'});
+            board.pinMode(pin, board.MODES.INPUT);
+            //in firmata.js, All digital pins are set to board.MODES.OUTPUT by default
+        }
+        /*return new Promise(resolve => {   // 會卡住block till pin mode changes
+            board.digitalRead(pin, ret => {     //only report data when it changes.所以會有時間差
+                board.reportDigitalPin(pin, 0); //stop reporting value because need it just once
+                resolve(ret);
+            });
+        });*/
+
+        if (board.eventNames().indexOf(`digital-read-${pin}`) === -1){ // just call once
+            board.digitalRead(pin, value => {   //只要call一次,即使沒執行此block仍會一直回報..
+                //console.log('pin value=', value); // let the data being fresh
+            });
+        }
+        if (args.SENSOR && args.SENSOR == 'rir') {
+            return board.pins[pin].value? 0:1;//RIR is normal on
+        } else {
+          return board.pins[pin].value;
+        }
+    }
+
+    sensorDigiGen (gen, block){
+        //const pin = board.pin2firmata(gen.valueToCode(block, 'PIN'));
+        const pin = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][2]);
+        const sen = gen.valueToCode(block, 'SENSOR');
+        console.log('sen=', typeof sen, sen);
+        gen.setupCodes_['sensor'+pin] = `pinMode(${pin},INPUT)`;
+
+        if (sen && sen == 'rir') {
+            return [`!digitalRead(${pin})`, gen.ORDER_ATOMIC]; //RIR is normal on
+        } else {
+          return [`digitalRead(${pin})`, gen.ORDER_ATOMIC];
+        }
+    }
+
+    tracers (args){
+        const pinA = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
+        const pinB = board.pin2firmata(board._port[parseInt(args.PIN)-1][1]);
+        const pinC = board.pin2firmata(board._port[parseInt(args.PIN)-1][0]);
+
+        if (board.pins[pinA].mode != board.MODES.INPUT ){
+            board.pinMode(pinA, board.MODES.INPUT);
+        }
+        if (board.pins[pinB].mode != board.MODES.INPUT ){
+            board.pinMode(pinB, board.MODES.INPUT);
+        }
+        if (board.pins[pinC].mode != board.MODES.INPUT ){
+            board.pinMode(pinC, board.MODES.INPUT);
+        }
+
+        if (board.eventNames().indexOf(`digital-read-${pinA}`) === -1){ // just call once
+            board.digitalRead(pinA, value => {});
+        }
+        if (board.eventNames().indexOf(`digital-read-${pinB}`) === -1){ // just call once
+            board.digitalRead(pinB, value => {});
+        }
+        if (board.eventNames().indexOf(`digital-read-${pinC}`) === -1){ // just call once
+            board.digitalRead(pinC, value => {});
+        }
+
+        switch (args.PAT) {
+          case 1:
+            return ( !board.pins[pinA].value && !board.pins[pinB].value && !board.pins[pinC].value );
+            break;
+          case 2:
+            return ( board.pins[pinA].value && !board.pins[pinB].value && !board.pins[pinC].value );
+            break;
+          case 3:
+            return ( !board.pins[pinA].value && board.pins[pinB].value && !board.pins[pinC].value );
+            break;
+          case 4:
+            return ( board.pins[pinA].value && board.pins[pinB].value && !board.pins[pinC].value );
+            break;
+          case 5:
+              return ( !board.pins[pinA].value && !board.pins[pinB].value && board.pins[pinC].value );
+              break;
+          case 6:
+              return ( board.pins[pinA].value && !board.pins[pinB].value && board.pins[pinC].value );
+              break;
+          case 7:
+              return ( !board.pins[pinA].value && board.pins[pinB].value && board.pins[pinC].value );
+              break;
+          case 8:
+              return ( board.pins[pinA].value && board.pins[pinB].value && board.pins[pinC].value );
+              break;
+        }
+    }
+
+    tracersGen (gen, block){
+        const pinA = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][2]);
+        const pinB = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][1]);
+        const pinC = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][0]);
+        const pat = gen.valueToCode(block, 'PAT');
+        gen.setupCodes_['sensor'+pinA] = `pinMode(${pinA},INPUT)`;
+        gen.setupCodes_['sensor'+pinB] = `pinMode(${pinB},INPUT)`;
+        gen.setupCodes_['sensor'+pinC] = `pinMode(${pinC},INPUT)`;
+
+        switch (pat) {
+          case '1':
+            return [`(!digitalRead(${pinA}) && !digitalRead(${pinB}) && !digitalRead(${pinC}))`, gen.ORDER_ATOMIC];
+            break;
+          case '2':
+            return [`(digitalRead(${pinA}) && !digitalRead(${pinB}) && !digitalRead(${pinC}))`, gen.ORDER_ATOMIC];
+            break;
+          case '3':
+            return [`(!digitalRead(${pinA}) && digitalRead(${pinB}) && !digitalRead(${pinC}))`, gen.ORDER_ATOMIC];
+            break;
+          case '4':
+            return [`(digitalRead(${pinA}) && digitalRead(${pinB}) && !digitalRead(${pinC}))`, gen.ORDER_ATOMIC];
+            break;
+          case '5':
+            return [`(!digitalRead(${pinA}) && !digitalRead(${pinB}) && digitalRead(${pinC}))`, gen.ORDER_ATOMIC];
+            break;
+          case '6':
+            return [`(digitalRead(${pinA}) && !digitalRead(${pinB}) && digitalRead(${pinC}))`, gen.ORDER_ATOMIC];
+            break;
+          case '7':
+            return [`(!digitalRead(${pinA}) && digitalRead(${pinB}) && digitalRead(${pinC}))`, gen.ORDER_ATOMIC];
+            break;
+          case '8':
+            return [`(digitalRead(${pinA}) && digitalRead(${pinB}) && digitalRead(${pinC}))`, gen.ORDER_ATOMIC];
+            break;
+        }
+    }
+
+    ultrasonic (args){
+       //const pin = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
+       const trig = board.pin2firmata(board._port[parseInt(args.PIN)-1][1]);
+       const echo = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
+       //board.pinMode(pin, board.MODES.PING_READ);
+       board.pinMode(trig, board.MODES.PING_READ);
+       return new Promise(resolve => {
+            board.pingRead({
+                //pin: pin, // trig & echo have to short
+                trigPin: trig,
+                echoPin: echo,
+                value: board.HIGH,
+                pulseOut: 10,//5,
+            }, ms => {
+                ms = ms || 0;
+                var cm = ms / 29.1 / 2;
+                resolve(cm.toFixed(1));
+            });
+        });
+    }
+
+    ultrasonicGen (gen, block){
+        gen.definitions_['ultrasonic'] = `
+int ultrasonicSensor(int trigPin, int echoPin){
+  float distance;
+  unsigned int duration;
+
+  pinMode(trigPin, OUTPUT);
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  pinMode(echoPin, INPUT);
+  duration = pulseIn(echoPin, HIGH);
+  distance = (float)duration / 58.2;
+  // un-comm this for nekomimi ultrasonic
+  /*
+  if(distance > 6){
+    distance *= 1.28;
+  }
+  */
+  if(distance == 0){
+    distance = 999;
+  }
+  return int(distance);
+}`;
+        const trig = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][1]);
+        const echo = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][2]);
+        return [`ultrasonicSensor(${trig}, ${echo})`, gen.ORDER_ATOMIC];
+    }
+    /*
+    tcs3200Gen (gen, block){
+      // pin out must connect to D5
+        const pin = gen.valueToCode(block, 'PIN');
+        let pinArray = pin.split(",");
+        const s3 = board.pin2firmata(pinArray[0]);
+        const s2 = board.pin2firmata(pinArray[2]);
+        gen.includes_['tcs230'] = `#include <MD_TCS230.h>
+#include <FreqCount.h>`;
+        gen.includes_['colormatch'] = `#include "ColorMatch.h"`;
+
+        gen.definitions_['tcs230'] = `MD_TCS230  CS(${s2}, ${s3});
+colorData rgb;`;
+        gen.definitions_['tcs230read'] = `
+void ScanColor(){
+  CS.read();
+  do{
+    delay(1000);
+    //Serial.println(".... wait....");
+  } while(!CS.available());
+  CS.getRGB(&rgb);
+  //Serial.println("   done!!  ");
+  //Serial.print("RGB [");
+  //Serial.print(rgb.value[TCS230_RGB_R]);
+  //Serial.print(",");
+  //Serial.print(rgb.value[TCS230_RGB_G]);
+  //Serial.print(",");
+  //Serial.print(rgb.value[TCS230_RGB_B]);
+  //Serial.println("]");
+}`;
+
+       gen.setupCodes_['tcs230_begin'] = `CS.begin();
+  CS.setDarkCal(&sdBlack);
+  CS.setWhiteCal(&sdWhite);`;
+       //return [`readSensor_${s2}()`, gen.ORDER_ATOMIC];
+       return gen.line(`ScanColor()`);
+    }
+    */
+    async tcs34725cal(args){
+      if (!this.i2cTCS){
+        this.i2cTCS = new TCS34725({
+          board: board,
+          //i2cAddr: 0x29,
+          it: 0xC0, // TCS34725_INTEGRATIONTIME_154MS
+          gain: 0x03, // TCS34725_GAIN_60X  // for indoor
+        });
+      };
+      if ( await this.i2cTCS.init() ) {
+        if (this.i2cTCS._tcs34725IntegrationTime != 0xC0) this.i2cTCS.setIntegrationTime(0xC0);
+        if (this.i2cTCS._tcs34725Gain != 0x03) this.i2cTCS.setGain(0x03);
+        await this.i2cTCS.setInterrupt(false);  // turn on LED
+        await timeout(155);  // takes time to read
+        const rgbc = await this.i2cTCS.getRawData();
+        this.i2cTCS.setInterrupt(true);  // turn off LED
+
+        if (args.WB === 'dark') {
+          this.i2cTCS.dark = rgbc;
+        } else if (args.WB === 'bright') {
+          this.i2cTCS.bright = rgbc;
+        } else {
+          vm.emit('showAlert', {msg: 'wrong input'});
+        }
+      } else {
+        vm.emit('showAlert', {msg: 'color sensor failed to connect'});
+      }
+    }
+
+    tcs34725calGen (gen, block){
+      const wb = gen.valueToCode(block, 'WB');
+
+      gen.includes_['tcs34725'] = `#include "Adafruit_TCS34725.h"`;
+      gen.includes_['colormatchHEX'] = `#include "ColorSample.h"`;
+      gen.definitions_['tcs34725'] = `
+Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_60X);`;
+      gen.definitions_['tcs34725cal_'+wb] = `
+void cal_${wb}(){
+  uint16_t r, g, b, c;
+
+  tcs34725.setInterrupt(false);  // turn on LED
+  delay(155); // takes time to read
+  tcs34725.getRawData(&r, &g, &b, &c);
+  tcs34725.setInterrupt(true);  // turn off LED
+
+  ${wb}[0] = r;
+  ${wb}[1] = g;
+  ${wb}[2] = b;
+  ${wb}[3] = c;
+}`;
+
+      gen.setupCodes_['tcs34725'] = `
+  if (tcs34725.begin()) {
+    //Serial.println("Found sensor");
+  } else {
+    Serial.println("No TCS34725 found ... check your connections");
+  };`;
+
+      return gen.line(`cal_${wb}()`);
+    }
+
+    async tcs34725(args){ //i2c color sensor
+      if (!this.i2cTCS){
+        this.i2cTCS = new TCS34725({
+          board: board,
+          //i2cAddr: 0x29,
+          it: 0xC0, // TCS34725_INTEGRATIONTIME_154MS
+          gain: 0x03, // TCS34725_GAIN_60X
+        });
+      };
+      //console.log('tsc object=',this.i2cTCS);
+      if ( await this.i2cTCS.init() ) {
+        if (this.i2cTCS._tcs34725IntegrationTime != 0xC0) this.i2cTCS.setIntegrationTime(0xC0);
+        if (this.i2cTCS._tcs34725Gain != 0x03) this.i2cTCS.setGain(0x03);
+        await this.i2cTCS.setInterrupt(false);  // turn on LED
+        await timeout(155);  // takes time to read
+        //const rgb = await this.i2cTCS.getRGB();
+        //console.log('rgb1=',rgb);
+        const rgb2 = await this.i2cTCS.getRGB2();
+        console.log('rgb2=',rgb2);
+        //const rgb3 = await this.i2cTCS.getRGB3();
+        //console.log('rgb3=',rgb3);
+        this.i2cTCS.setInterrupt(true);  // turn off LED
+
+        return five.Fn.uint24(rgb2.R, rgb2.G, rgb2.B); // RGB2HEX. type:number; without '#'
+
+      } else {
+        vm.emit('showAlert', {msg: 'color sensor failed to connect'});
+      }
+    }
+
+    tcs34725Gen (gen, block){
+      gen.includes_['tcs34725'] = `#include "Adafruit_TCS34725.h"`;
+      gen.includes_['colormatchHEX'] = `#include "ColorSample.h"`;
+      gen.definitions_['tcs34725'] = `
+Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_60X);`;
+      gen.definitions_['tcs34725read'] = `
+uint32_t scanColor(){
+  float i, cf, R, G, B;
+  uint16_t r, g, b, c;
+  uint32_t hex;
+
+  tcs34725.setInterrupt(false);  // turn on LED
+  delay(155); // takes time to read
+  tcs34725.getRawData(&r, &g, &b, &c);
+  tcs34725.setInterrupt(true);  // turn off LED
+  //Serial.println("rgbc: " + String(r) + ", " + String(g) + ", " + String(b) + ", " + String(c));
+
+  cf = (float)(c - dark[3]) / (float)(bright[3] - dark[3]);
+  if(r >= g && r >= b){
+    i = (float)r / 255.0 + 1.0;
+  } else if(g >= r && g >= b){
+    i = (float)g / 255.0 + 1.0;
+  } else if(b >=  g && b >= r){
+    i = (float)b / 255.0 + 1.0;
+  } else {
+    i = 1.0;
+  }
+  if(i!=0.0) {
+      R = (float)r / i;
+      G = (float)g / i;
+      B = (float)b / i;
+  }
+  if(R > 30.0) R = R - 30.0;
+  if(G > 30.0) G = G - 30.0;
+  if(B > 30.0) B = B - 30.0;
+  r = constrain(round(R * 255.0 / 225.0 * cf), 0,255);
+  g = constrain(round(G * 255.0 / 225.0 * cf), 0,255);
+  b = constrain(round(B * 255.0 / 225.0 * cf), 0,255);
+  //Serial.println("rgb: " + String(r) + ", " + String(g) + ", " + String(b));
+
+  hex = (long(r) << 16 | long(g) << 8 | long(b));   // rgb to hex
+  return hex; // type:number; without '#'
+}`;
+
+      gen.setupCodes_['tcs34725'] = `
+  if (tcs34725.begin()) {
+      //Serial.println("Found sensor");
+  } else {
+      Serial.println("No TCS34725 found ... check your connections");
+  };
+`;
+
+    return [`scanColor()`, gen.ORDER_ATOMIC];
+    }
+
+    colormatchHEX(args){
+      let se_rgb = [];
+      if (!this.cSample) {
+        this.cSample = require('./colorSample.js');
+      }
+      if (args.SENCOL) {
+        //console.log('SENCOL=',typeof args.SENCOL,args.SENCOL);
+        if (typeof args.SENCOL === 'number') { // hex number, without '#'
+          se_rgb[0] = parseInt('0x'+args.SENCOL.toString(16).substring(0,2));
+          se_rgb[1] = parseInt('0x'+args.SENCOL.toString(16).substring(2,4));
+          se_rgb[2] = parseInt('0x'+args.SENCOL.toString(16).substring(4,6));
+          //console.log('r=',args.SENCOL.toString(16).substring(0,2));
+          //console.log('g=',args.SENCOL.toString(16).substring(2,4));
+          //console.log('b=',args.SENCOL.toString(16).substring(4,6));
+        } else if (typeof args.SENCOL === 'string') { // with # hex string
+          se_rgb[0] = hexToR(args.SENCOL);
+          se_rgb[1] = hexToG(args.SENCOL);
+          se_rgb[2] = hexToB(args.SENCOL);
+        }
+      } else {
+        vm.emit('showAlert', {msg: 'wrong input'});
+        return;
+      }
+      //console.log('hex to r:',se_rgb[0]);
+      //console.log('hex to g:',se_rgb[1]);
+      //console.log('hex to b:',se_rgb[2]);
+      let sampleID = 0xFF; //that means not included in Sample table;
+      let d, minV = 999999;
+      for (let i = 0; i < this.cSample.length; i++) {
+        d = Math.sqrt(Math.pow((se_rgb[0] - this.cSample[i][0]), 2) +
+                 Math.pow((se_rgb[1] - this.cSample[i][1]), 2) +
+                 Math.pow((se_rgb[2] - this.cSample[i][2]), 2));
+
+    		if (d < minV){	// new best
+    			minV = d;
+          sampleID = i;
+    		}
+    		if (d == 0)		// perfect match, no need to search more
+    			break;
+      }
+      console.log('sampleID=',sampleID);
+
+      return(sampleID == parseInt(args.COLOR));
+    }
+
+    colormatchHEXGen (gen, block){
+        const color_no = gen.valueToCode(block, 'COLOR');
+        let se_color = gen.valueToCode(block, 'SENCOL');
+        //console.log('SENCOL=',typeof se_color,se_color);
+        if (typeof se_color === 'string') { // hex string with '#' ?
+          se_color = (se_color.charAt(0)=='\"') ? se_color.substr(1,se_color.length-2):se_color;
+          //console.log('se_color1=',typeof se_color,se_color);
+          se_color = (se_color.charAt(0)=='#') ? parseInt(se_color.substr(1,6),16):se_color;
+        }
+        //console.log('se_color=',typeof se_color,se_color);
+
+        gen.includes_['colormatchHEX'] = `#include "ColorSample.h"`;
+        gen.definitions_['colorMatchHEX'] = `
+uint8_t ColorMatchHEX(uint32_t se_color){
+  uint8_t		se_rgb[3];
+  uint8_t   sampleID = 0xFF;
+	uint32_t	d;
+	uint32_t	minV = 999999;
+
+  se_rgb[0] = byte(se_color >> 16);       //red
+  se_rgb[1] = byte(se_color >> 8 & 0xFF); //green
+  se_rgb[2] = byte(se_color & 0xFF);      //blue
+
+	for (uint8_t i=0; i<(sizeof(ct)/sizeof(ct[0])); i++){
+    // Root mean square distance between the color and colors in the table.
+    d = sqrt(pow(se_rgb[0] - ct[i][0], 2) +
+              pow(se_rgb[1] - ct[i][1], 2) +
+              pow(se_rgb[2] - ct[i][2], 2));
+		if (d < minV){	// new best
+			minV = d;
+			sampleID = i;
+		}
+		if (d == 0)		// perfect match, no need to search more
+			break;
+	}
+
+	return(sampleID);
+}`;
+
+       return [`ColorMatchHEX(${se_color}) == ${color_no}`, gen.ORDER_ATOMIC];
+    }
+    /*
+    colormatchGen (gen, block){
+        const iscolor = gen.valueToCode(block, 'COLOR');
+        gen.includes_['colormatch'] = `#include "ColorMatch.h"`;
+        gen.definitions_['colorMatch'] = `
+uint8_t colorMatch(uint8_t *rgb){
+// Root mean square distance between the color and colors in the table.
+// FOr a limited range of colors this method works ok using RGB
+// We don't work out the square root or the mean as it has no effect on the
+// comparison for minimum. Square of the distance is used to ensure that
+// negative distances do not subtract from the total.
+
+	int32_t		d;
+	uint32_t	v, minV = 999999L;
+	uint8_t		minI;
+
+	for (uint8_t i=0; i<(sizeof(ct)/sizeof(ct[0])); i++){
+		v = 0;
+		for (uint8_t j=0; j<3; j++){
+			d = ct[i].rgb.value[j] - rgb->value[j];
+			v += (d * d);
+		}
+		if (v < minV){	// new best
+			minV = v;
+			minI = i;
+		}
+		if (v == 0)		// perfect match, no need to search more
+			break;
+	}
+
+	return(minI);
+}`;
+
+       return [`colorMatch(&rgb) == ${iscolor}`, gen.ORDER_ATOMIC];
+    }
+    */
+    async tcs34725lux(args){
+      if (!this.i2cTCS){
+        this.i2cTCS = new TCS34725({
+          board: board,
+          //i2cAddr: 0x29,
+          it: 0xC0, // TCS34725_INTEGRATIONTIME_154MS
+          gain: 0x02, // TCS34725_GAIN_16X
+        });
+      };
+
+      if ( await this.i2cTCS.init() ) {
+        if (this.i2cTCS._tcs34725IntegrationTime != 0xC0) this.i2cTCS.setIntegrationTime(0xC0);
+        if (this.i2cTCS._tcs34725Gain != 0x02) this.i2cTCS.setGain(0x02);
+        if (args.LIGHT === 'reflected') await this.i2cTCS.setInterrupt(false);  // turn on LED
+        await timeout(155);  // takes time to read
+        //const lux = await this.i2cTCS.getLux();
+        //console.log('lux1=',lux);
+        const lux2 = await this.i2cTCS.getLux2();
+        //console.log('lux2=',lux2);
+        this.i2cTCS.setInterrupt(true);  // turn off LED
+
+        return lux2;
+
+      } else {
+        vm.emit('showAlert', {msg: 'color sensor failed to connect'});
+      }
+    }
+
+    tcs34725luxGen(gen, block) {
+      const light = gen.valueToCode(block, 'LIGHT');
+      //console.log('light', typeof light, light);
+      let l = 'true';
+      if (light === 'reflected') l = 'false';  // turn on LED
+      //console.log('l', typeof l, l);
+
+      gen.includes_['tcs34725'] = `#include "Adafruit_TCS34725.h"`;
+      gen.definitions_['tcs34725'] = `
+Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_60X);`;
+      gen.definitions_['tcs34725lux'] = `
+#define TCS34725_R_Coef 0.136
+#define TCS34725_G_Coef 1.000
+#define TCS34725_B_Coef -0.444
+#define TCS34725_GA 1.0
+#define TCS34725_DF 310.0
+#define TCS34725_CT_Coef 3810.0
+#define TCS34725_CT_Offset 1391.0
+
+uint16_t lux(boolean l){
+  uint16_t r, g, b, c, lx;
+  float atime_ms, ir, r_comp, g_comp, b_comp, cpl;
+  uint8_t Gain_temp=16; // TCS34725_GAIN_16X
+
+  tcs34725.setGain(0x02); // TCS34725_GAIN_16X
+  tcs34725.setInterrupt(l);  // turn on LED
+  delay(155); // takes time to read
+  tcs34725.getRawData(&r, &g, &b, &c);
+  tcs34725.setInterrupt(true);  // turn off LED
+  tcs34725.setGain(0x03); // TCS34725_GAIN_60X
+
+  atime_ms = ((256 - TCS34725_INTEGRATIONTIME_154MS) * 2.4);
+  ir = ((r + g + b) > c) ? ((float)(r + g + b - c) / 2.0) : 0;
+  r_comp = r - ir;
+  g_comp = g - ir;
+  b_comp = b - ir;
+  cpl = (atime_ms * (float)Gain_temp) / (TCS34725_GA * TCS34725_DF);
+  lx = word(round((TCS34725_R_Coef * r_comp + TCS34725_G_Coef * g_comp + TCS34725_B_Coef * b_comp) / cpl));
+
+  return lx;
+}`;
+
+      gen.setupCodes_['tcs34725'] = `
+  if (tcs34725.begin()) {
+    //Serial.println("Found sensor");
+  } else {
+    Serial.println("No TCS34725 found ... check your connections");
+  };
+`;
+
+      return [`lux(${l})`, gen.ORDER_ATOMIC];
+    }
+
+    async dht11(args){
+      const pin = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
+      if (!this.dht){
+        this.dht = new DHT({
+          //pin: pin,
+          board: board,
+        });
+        //console.log(`dht attached as`, this.dht);//for debug
+      }
+      //console.log(`dht status:`, this.dht);//for debug
+
+      this.dht.read(pin);
+
+      await timeout(500);
+
+      if (args.FUNC == 'temperature') {
+          return this.dht.temperature;
+      } else if (args.FUNC == 'humidity') {
+          return this.dht.humidity;
+      }
+    }
+
+    dht11Gen (gen, block){
+        gen.includes_['dht11'] = '#include <dht11.h>';
+        gen.definitions_['dht11'] = 'dht11 DHT11;';
+        const dht11func = gen.valueToCode(block, 'FUNC');
+        const pin = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][2]);
+        if (dht11func === 'temperature'){
+            gen.definitions_['dht11tempread'] = 'int dht11temp(int pin){\n\tDHT11.read(pin);\n\treturn DHT11.temperature;\n}\n';
+            return [`dht11temp(${pin})`, gen.ORDER_ATOMIC];
+        } else { // should be humidity
+            gen.definitions_['dht11humiread'] = 'int dht11humi(int pin){\n\tDHT11.read(pin);\n\treturn DHT11.humidity;\n}\n';
+            return [`dht11humi(${pin})`, gen.ORDER_ATOMIC];
+        }
+    }
+
+    imuRead (args, util){
+        if (!this.MPU6050){
+            this.MPU6050 = new five.IMU({
+                controller: "MPU6050",
+                board: j5board,
+            });
+            const MPU6050Data = {
+                celsius: null,
+                fahrenheit: null,
+                kelvin: null,
+                ax: null,
+                ay: null,
+                az: null,
+                pitch: null,
+                roll: null,
+                acceleration: null,
+                inclination: null,
+                orientation: null,
+                gx: null,
+                gy: null,
+                gz: null,
+                gpitch: null,
+                groll: null,
+                yaw: null,
+                rate: null,
+                isCalibrated: null,
+            }
+            this.MPU6050Data = MPU6050Data;
+        }
+        this.MPU6050.on('change', ()=>{
+        //this.MPU6050.on('data', ()=>{
+                this.MPU6050Data.celsius = this.MPU6050.thermometer.celsius;
+                this.MPU6050Data.fahrenheit = this.MPU6050.thermometer.fahrenheit;
+                this.MPU6050Data.kelvin = this.MPU6050.thermometer.kelvin;
+                this.MPU6050Data.ax = this.MPU6050.accelerometer.x;
+                this.MPU6050Data.ay = this.MPU6050.accelerometer.y;
+                this.MPU6050Data.az = this.MPU6050.accelerometer.z;
+                this.MPU6050Data.pitch = this.MPU6050.accelerometer.pitch;
+                this.MPU6050Data.roll = this.MPU6050.accelerometer.roll;
+                this.MPU6050Data.acceleration = this.MPU6050.accelerometer.acceleration;
+                this.MPU6050Data.inclination = this.MPU6050.accelerometer.inclination;
+                this.MPU6050Data.orientation = this.MPU6050.accelerometer.orientation;
+                this.MPU6050Data.gx = this.MPU6050.gyro.x;
+                this.MPU6050Data.gy = this.MPU6050.gyro.y;
+                this.MPU6050Data.gz = this.MPU6050.gyro.z;
+                this.MPU6050Data.gpitch = this.MPU6050.gyro.pitch;
+                this.MPU6050Data.groll = this.MPU6050.gyro.roll;
+                this.MPU6050Data.yaw = this.MPU6050.gyro.yaw;
+                this.MPU6050Data.rate = this.MPU6050.gyro.rate;
+                this.MPU6050Data.isCalibrated = this.MPU6050.gyro.isCalibrated;
+        });
+        console.log('mpuData:',this.MPU6050Data);
+        return this.MPU6050Data[args.MPUAXIS];
+    }
+
+    imuReadGen(gen, block){
+      const ax = gen.valueToCode(block, 'MPUAXIS');
+      //console.log('ax=',typeof ax, ax);
+      let d = 255;
+      switch (ax) {
+        case 'ax':
+            d = 1;
+          break;
+        case 'ay':
+            d = 2;
+          break;
+        case 'az':
+            d = 3;
+          break;
+        case 'gx':
+            d = 11;
+          break;
+        case 'gy':
+            d= 22;
+          break;
+        case 'gz':
+            d = 33;
+          break;
+        default:
+            d = 255;
+      }
+
+      gen.includes_['mpu6050'] = `
+// I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
+// for both classes must be in the include path of your project
+#include "I2Cdev.h"
+#include "MPU6050.h"
+
+// Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
+// is used in I2Cdev.h
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+    #include "Wire.h"
+#endif
+`;
+      gen.definitions_['mpu6050'] = `
+// class default I2C address is 0x68
+// specific I2C addresses may be passed as a parameter here
+// AD0 low = 0x68 (default for InvenSense evaluation board)
+// AD0 high = 0x69
+MPU6050 accelgyro;
+
+// uncomment "OUTPUT_READABLE_ACCELGYRO" if you want to see a tab-separated
+// list of the accel X/Y/Z and then gyro X/Y/Z values in decimal. Easy to read,
+// not so easy to parse, and slow(er) over UART.
+#define OUTPUT_READABLE_ACCELGYRO
+`;
+      gen.definitions_['mpu6050read'] = `
+int16_t mpu6050read(uint8_t d){
+  int16_t ax, ay, az;
+  int16_t gx, gy, gz;
+
+  // read raw accel/gyro measurements from device
+  accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+
+  switch (d) {
+    case 1:
+        return ax;
+      break;
+    case 2:
+        return ay;
+      break;
+    case 3:
+        return az;
+      break;
+    case 11:
+        return gx;
+      break;
+    case 22:
+        return gy;
+      break;
+    case 33:
+        return gz;
+      break;
+    default:
+        return;
+  }
+}`;
+      gen.setupCodes_['mpu6050'] = `
+  // join I2C bus (I2Cdev library doesn't do this automatically)
+  #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+      Wire.begin();
+  #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
+      Fastwire::setup(400, true);
+  #endif
+
+  accelgyro.initialize();
+  while(!accelgyro.testConnection()){
+    Serial.println("MPU6050 connection failed, check wiring!");
+    delay(1000);
+  }
+`;
+      return [`mpu6050read(${d})`, gen.ORDER_ATOMIC];
+    }
+
+    /*
+    ds18b20Setup (args){
+        const pin = board.pin2firmata(args.PIN);
+        this.thm = new five.Thermometer({
+            controller: "DS18B20",
+            pin: pin,
+            board: j5board
+        });
+        this.thm.on('change', function(data){
+            this.thmdata = data;
+        });
+    }
+
+    ds18b20SetupGen (gen, block){
+        gen.includes_['ds18b20'] = '#include "OneWire.h"\n' +
+            '#include "DallasTemperature.h"';
+        gen.definitions_['ds18b20'] = 'OneWire onewire;\n' +
+            'DallasTemperature ds18b20(&onewire);';
+        const pin = gen.valueToCode(block, 'PIN');
+        return gen.line(`onewire.updatePin(${pin})`) + gen.line(`ds18b20.begin()`);
+    }
+
+    ds18b20Read (args){
+
+    }
+
+    ds18b20ReadGen (gen, block){
+        return gen.line('ds18b20.requestTemperatures()');
+    }
+
+    ds18b20 (args){
+        return this.thmdata ? this.thmdata.C : -273;
+    }
+
+    ds18b20Gen (gen, block){
+        const index = gen.valueToCode(block, 'INDEX');
+        return [`ds18b20.getTempCByIndex(${index})`, gen.ORDER_ATOMIC];
+    }
+    */
+    /*
+    infraenGen (gen, block){
+        const pin = gen.valueToCode(block, 'RXPIN');
+
+        gen.includes_['infra'] = '#include <IRremote.h>';
+        gen.definitions_['infra'] = `IRrecv irrecv(${pin});\n` +
+            'decode_results results;';
+
+        return `irrecv.enableIRIn()`;
+    }
+
+    infraloopGen (gen, block){
+        const branch = gen.statementToCode(block, 'SUBSTACK');
+        const code = `if (irrecv.decode(&results)) {
+    if (results.value != 0xFFFFFFFF)
+    {
+    ${branch}
+    }
+    irrecv.resume();
+}`;
+        return code;
+    }
+
+
+    infraresultGen (gen, block){
+        return ['results.value', gen.ORDER_ATOMIC];
+    }
+
+    infrasend (gen, block){
+        const data = gen.valueToCode(block, 'DATA');
+        gen.includes_['infra'] = '#include <IRremote.h>';
+        gen.definitions_['infratx'] = `IRsend irsend;`;
+
+        return `irsend.sendNEC(${data}, 32)`;
+    }
+    */
+
+}
+
+module.exports = cSensorsExtension;

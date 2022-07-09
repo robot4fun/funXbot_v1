@@ -1,0 +1,6 @@
+{
+    "name": "cActuators",
+    "type": "arduino",
+    "image": "servo.png",
+    "example": "Arduino"
+}

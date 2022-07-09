@@ -1,0 +1,6 @@
+{
+    "name": "Data Process",
+    "type": "scratch3",
+    "extensions": ["dataprocess"],
+    "image": "dataprocess.jpg"
+}
