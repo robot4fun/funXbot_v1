@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
     <meta name="google" value="notranslate">
     <link rel="shortcut icon" href="static/favicon.ico">
-    <title>xblock 1.0.0</title>
+    <title>Kittenblock 1.84z</title>
     <!-- <link rel="stylesheet" href="./static/font-awesome.min.css" /> -->
     <link rel="stylesheet" href="./static/antd.css" />
     <link rel="stylesheet" href="./static/braft.css" />
@@ -14,11 +14,20 @@
       <script>
         window.kbver = "1.84z"
       </script>
-         
+    
+    
+        <!-- Sentry error logging to help with finding bugs -->
+      
+        <script src="./raven.min.js" crossorigin="anonymous"></script>
+      
+        <script>
+            Raven.config("https://d94ff05837f240ceb692d9f12150022f@sentry.io/254755").install();
+        </script>
+        <!-- /Sentry -->
+    
   </head>
-
   <body>
-    <script type="text/javascript" src="lib.min.js"></script>
-    <script type="text/javascript" src="chunks/gui.js"></script>
+     <script type="text/javascript" src="lib.min.js"></script>
+     <script type="text/javascript" src="chunks/gui.js"></script>
   </body>
 </html>

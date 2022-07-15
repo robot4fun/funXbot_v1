@@ -55,7 +55,7 @@ autoUpdater.on('update-downloaded', (info) => {
 });
 
 let closeWd = false;
-/*
+
 ipcMain.on('update', (event, msg) => {
     if(msg == 'downloadupdate'){
         autoUpdater.downloadUpdate();
@@ -63,7 +63,7 @@ ipcMain.on('update', (event, msg) => {
         autoUpdater.quitAndInstall();
     }
 });
-*/
+
 ipcMain.on('quitapp', (event, msg) => {
     app.exit(0);
 });
