@@ -47,6 +47,23 @@ class cActuatorsExtension{
                   }
               },
               {
+                opcode: 'motorHstop',
+                blockType: BlockType.COMMAND,
+                text: 'Stop the big motor at port [PIN]',
+                arguments: {
+                    PIN: {
+                        type: ArgumentType.STRING,
+                        defaultValue: '6',
+                        menu: 'pwmPort2'
+                    }
+                },
+                func: 'motorHstop',
+                gen: {
+                    arduino: this.motorHstopGen
+                }
+            },
+            '---',
+            {
                   opcode: 'continuousServo',
                   blockType: BlockType.COMMAND,
                   text: 'Set the small motor speed at port [PIN] to [SPEED](-255~255)',
@@ -267,7 +284,8 @@ class cActuatorsExtension{
                     'continuousServo': '接口[PIN]的小馬達轉動速度設為[SPEED](-255~255)',
                     'McontinuousServo': '接口[PORT][PIN]的小馬達轉動速度設為[SPEED](-255~255)',
                     'motorH': '接口[PIN]的大馬達轉動速度設為[SPEED](-255~255)',
-                },
+                    'motorHstop': '停止接口[PIN]的大馬達',
+                  },
                 'zh-cn': {
                     'servoGo': '端口[PIN]的舵机( 角度范围[MAX]° )转动到[DEG]°，速度为[SPEED](1~255)',
                     'MservoGo': '端口[PORT][PIN]的舵机( 角度范围[MAX]° )转动到[DEG]°，速度为[SPEED](1~255)',
@@ -276,7 +294,8 @@ class cActuatorsExtension{
                     'continuousServo': '端口[PIN]的小电机转动速度设为[SPEED](-255~255)',
                     'McontinuousServo': '端口[PORT][PIN]的小电机转动速度设为[SPEED](-255~255)',
                     'motorH': '端口[PIN]的大电机转动速度设为[SPEED](-255~255)',
-                },
+                    'motorHstop': '停止端口[PIN]的大电机',
+                  },
             }
         };
     }
@@ -525,18 +544,18 @@ uint16_t sp2pulse(int16_t speed){
       } else {
           board.pinMode(in1, board.MODES.OUTPUT);
           board.pinMode(in2, board.MODES.OUTPUT);
-          board.digitalWrite(in1, board.HIGH);
-          board.digitalWrite(in2, board.HIGH);
+          board.digitalWrite(in1, board.LOW);
+          board.digitalWrite(in2, board.LOW);
       }
     }
-
+    
     motorHGen (gen, block){
         gen.definitions_['motorBridge'] = `void motorBridge(int in1, int in2, int speed){
     pinMode(in1, OUTPUT);
     pinMode(in2, OUTPUT);
     if (speed==0){
-        digitalWrite(in1, HIGH);
-        digitalWrite(in2, HIGH);
+        digitalWrite(in1, LOW);
+        digitalWrite(in2, LOW);
     } else if (speed>0){
         if(speed>255) speed=255;
         analogWrite(in1, abs(speed));
@@ -551,8 +570,49 @@ uint16_t sp2pulse(int16_t speed){
         const p1 = board.pin2firmata(board._port[pin-1][1]);
         const p2 = board.pin2firmata(board._port[pin-1][2]);
         const speed = gen.valueToCode(block, 'SPEED');
-        return `motorBridge(${p1}, ${p2}, ${speed})`;
+        gen.includes_['mx1508'] = `#include "MX1508.h"\n`;
+        gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2});`;
+        return `motor${pin}.motorGo(${speed})`;
+        //return `motorBridge(${p1}, ${p2}, ${speed})`;
     }
+
+    motorHstop(args){
+      const pin = parseInt(args.PIN);
+      const in1 = board.pin2firmata(board._port[pin-1][1]);
+      const in2 = board.pin2firmata(board._port[pin-1][2]);
+
+      board.pinMode(in1, board.MODES.OUTPUT);
+      board.pinMode(in2, board.MODES.OUTPUT);
+      board.digitalWrite(in1, board.LOW);
+      board.digitalWrite(in2, board.LOW);
+    }
+
+    motorHstopGen (gen, block){
+      gen.definitions_['motorBridge'] = `void motorBridge(int in1, int in2, int speed){
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  if (speed==0){
+      digitalWrite(in1, LOW);
+      digitalWrite(in2, LOW);
+  } else if (speed>0){
+      if(speed>255) speed=255;
+      analogWrite(in1, abs(speed));
+      analogWrite(in2, 0);
+  } else if (speed<0){
+      if(speed<-255) speed=-255;
+      analogWrite(in1, 0);
+      analogWrite(in2, abs(speed));
+  }
+}`;
+      const pin = gen.valueToCode(block,'PIN');
+      const p1 = board.pin2firmata(board._port[pin-1][1]);
+      const p2 = board.pin2firmata(board._port[pin-1][2]);
+
+      gen.includes_['mx1508'] = `#include "MX1508.h"\n`;
+      gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2});`;
+      return `motor${pin}.stopMotor()`;
+      //return `motorBridge(${p1}, ${p2}, 0)`;
+  }
 
 }
 
