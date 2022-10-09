@@ -1,10 +1,10 @@
 {
-    "name": "X-Bot",
+    "name": "funXbot V1",
     "type": "arduino",
     "extensions": ["cBrain", "cSensors", "cDisplays", "cActuators"],
     "cmd": "arduino:avr:uno",
     "baud": 115200,
     "hex": "cBrainFirmata.hex",
     "image": "cBrain-black-small.png",
-    "example": "cBrain"
+    "example": "funXbot_v1"
 }
