@@ -71,7 +71,7 @@ class cActuatorsExtension{
                       PIN: {
                           type: ArgumentType.STRING,
                           defaultValue: '6',
-                          menu: 'mPort'//'dPort3'//'pwmPort'
+                          menu: 'dPort'//'mPort'//'dPort3'//'pwmPort'
                       },
                       SPEED: {
                           type: ArgumentType.SLIDER,
@@ -149,7 +149,7 @@ class cActuatorsExtension{
                         PORT: {
                           type: ArgumentType.STRING,
                           defaultValue: '6',
-                          menu: 'pwmPort2'
+                          menu: 'dPort'//'pwmPort2'
                         },
                         PIN: {
                             type: ArgumentType.STRING,

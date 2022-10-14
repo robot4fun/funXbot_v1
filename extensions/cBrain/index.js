@@ -25,7 +25,7 @@ const Ports_rj = [
   ['8','9','10','V','G',''],  //port7
   ['13','11','12','V','G',''],//port8
 ];
-
+// pwm: D3、D5、D6、D9、D10、D11
 const Sensors = {
     TXpin: 1,
     RXpin: 0,
