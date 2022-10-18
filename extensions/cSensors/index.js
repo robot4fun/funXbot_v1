@@ -554,6 +554,15 @@ class cSensorsExtension {
                     }
                 },
                 {
+                    opcode: 'qtrReadCal',
+                    blockType: BlockType.COMMAND,
+                    text: 'read the calibrated data of line sensors',
+                    func: 'noop',
+                    gen: {
+                        arduino: this.qtreadcalGen
+                    }
+                },
+                {
                     opcode: 'qtrRaw',
                     blockType: BlockType.REPORTER,
                     text: 'the raw data of the [I] IR sensor',
@@ -824,7 +833,8 @@ class cSensorsExtension {
                   'qtrCal':'校正QTR循線感應器',
                   'qtrRead':'[WB]線位置(x1000)',
                   'qtrReadRaw':'讀取循線感應器數據',
-                  'qtrRaw':'第[I]個循線感應器的讀值(0~1023)',
+                  'qtrReadCal':'讀取循線感應器校正後數據',
+                  'qtrRaw':'第[I]個循線感應器的讀值',
                   'rir': '接口[PIN]的反射式紅外線感應器被觸發？',
                   'tilt': '接口[PIN]的傾斜開關被觸發？',
                   'analogKeypad': '接口[PIN]的鍵盤 按下按鈕[BUT]?',
@@ -862,7 +872,8 @@ class cSensorsExtension {
                   'qtrCal':'校正QTR循迹传感器',
                   'qtrRead':'[WB]线位置(x1000)',
                   'qtrReadRaw':'读循迹传感器读数',
-                  'qtrRaw':'第[I]个循迹传感器读数(0~1023)',
+                  'qtrReadCal':'读循迹传感器校正读数',
+                  'qtrRaw':'第[I]个循迹传感器读数',
                   'rir': '端口[PIN]的反射式红外传感器被触发？ ',
                   'tilt': '端口[PIN]的倾斜传感器被触发？',
                   'analogKeypad': '端口[PIN]的键盘 按下按钮[BUT]?',
@@ -1636,10 +1647,11 @@ uint16_t qtrValues[qtrCount];
     }
 
     qtrcalGen (gen, block){
-      gen.setupCodes_['qtrCal'] = `
+    /*  gen.setupCodes_['qtrCal'] = `
     for (uint8_t i = 0; i < 250; i++) {
       qtr.calibrate();
-    }`;
+    }`;*/
+      return gen.line(`qtr.calibrate()`);
     }
 
     qtreadlineGen (gen, block){
@@ -1649,6 +1661,10 @@ uint16_t qtrValues[qtrCount];
 
     qtreadrawGen (gen, block){
       return gen.line(`qtr.read(qtrValues)`);
+    }
+
+    qtreadcalGen (gen, block){
+      return gen.line(`qtr.readCalibrated(qtrValues)`);
     }
 
     qtrawGen (gen, block){
