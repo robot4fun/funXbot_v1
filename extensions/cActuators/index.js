@@ -548,9 +548,9 @@ uint16_t sp2pulse(int16_t speed){
           board.digitalWrite(in2, board.LOW);
       }
     }
-    
+
     motorHGen (gen, block){
-        gen.definitions_['motorBridge'] = `void motorBridge(int in1, int in2, int speed){
+/*        gen.definitions_['motorBridge'] = `void motorBridge(int in1, int in2, int speed){
     pinMode(in1, OUTPUT);
     pinMode(in2, OUTPUT);
     if (speed==0){
@@ -565,13 +565,13 @@ uint16_t sp2pulse(int16_t speed){
         analogWrite(in1, 0);
         analogWrite(in2, abs(speed));
     }
-}`;
+}`;*/
         const pin = gen.valueToCode(block,'PIN');
         const p1 = board.pin2firmata(board._port[pin-1][1]);
         const p2 = board.pin2firmata(board._port[pin-1][2]);
         const speed = gen.valueToCode(block, 'SPEED');
         gen.includes_['mx1508'] = `#include "MX1508.h"\n`;
-        gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2});`;
+        gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2},SLOW_DECAY,2);`;
         return `motor${pin}.motorGo(${speed})`;
         //return `motorBridge(${p1}, ${p2}, ${speed})`;
     }
@@ -588,7 +588,7 @@ uint16_t sp2pulse(int16_t speed){
     }
 
     motorHstopGen (gen, block){
-      gen.definitions_['motorBridge'] = `void motorBridge(int in1, int in2, int speed){
+/*      gen.definitions_['motorBridge'] = `void motorBridge(int in1, int in2, int speed){
   pinMode(in1, OUTPUT);
   pinMode(in2, OUTPUT);
   if (speed==0){
@@ -603,13 +603,13 @@ uint16_t sp2pulse(int16_t speed){
       analogWrite(in1, 0);
       analogWrite(in2, abs(speed));
   }
-}`;
+}`;*/
       const pin = gen.valueToCode(block,'PIN');
       const p1 = board.pin2firmata(board._port[pin-1][1]);
       const p2 = board.pin2firmata(board._port[pin-1][2]);
 
       gen.includes_['mx1508'] = `#include "MX1508.h"\n`;
-      gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2});`;
+      gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2},SLOW_DECAY,2);`;
       return `motor${pin}.stopMotor()`;
       //return `motorBridge(${p1}, ${p2}, 0)`;
   }
