@@ -964,7 +964,11 @@ class cBrain {
                 ],
                 Sounds: this._buildMenu(this.SOUNDS_INFO),
                 //Sounds: [],
-                StrTypo: ['HEX', 'BIN', 'DEC'],
+                StrTypo: [
+                    {text: '十六', value: 'HEX'},
+                    {text: '二', value: 'BIN'},
+                    {text: '十', value: 'DEC'}
+                ],
                 Typo: ['byte', 'char', 'int', 'long', 'word', 'float']
             },
 
@@ -984,6 +988,8 @@ class cBrain {
                     'ledpin': {'Red':'紅色', 'Green':'綠色', 'Blue':'藍色'},
                     'onoff': {'ON':'打開', 'OFF':'關閉'},
                     'v': '電源電壓 (mV)',
+                    'stringtypo': '將[TEXT]以[TYPO]進制展示',
+                    'typecast': '轉換[VALUE]的資料型態為[TYPO]',
                 },
                 'zh-cn': { // 簡體中文
                     //'cBrain': '鸡车脑',
@@ -1000,6 +1006,8 @@ class cBrain {
                     'ledpin': {'Red':'红色', 'Green':'绿色', 'Blue':'蓝色'},
                     'onoff': {'ON':'打开', 'OFF':'关闭'},
                     'v': '电源电压 (mV)',
+                    'stringtypo': '将[TEXT]以[TYPO]进制展示',
+                    'typecast': '转换[VALUE]的资料型态为[TYPO]',
                 },
             }
 
