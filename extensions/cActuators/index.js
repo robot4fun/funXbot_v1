@@ -574,8 +574,11 @@ uint16_t sp2pulse(int16_t speed){
         const p1 = board.pin2firmata(board._port[pin-1][1]);
         const p2 = board.pin2firmata(board._port[pin-1][2]);
         const speed = gen.valueToCode(block, 'SPEED');
+        if(speed>255) speed=255;
+        if(speed<-255) speed=-255;
         gen.includes_['mx1508'] = `#include "MX1508.h"\n`;
-        gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2},SLOW_DECAY,2);`;
+        gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2});`;
+        //gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2},SLOW_DECAY,2);`;
         return `motor${pin}.motorGo(${speed})`;
         //return `motorBridge(${p1}, ${p2}, ${speed})`;
     }
