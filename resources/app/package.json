@@ -1,0 +1,25 @@
+{
+  "name": "funXblock",
+  "description": "funXblock",
+  "version": "1.8.4z",
+  "author": "tonyet",
+  "main": "main.js",
+  "dependencies": {
+    "adm-zip": "^0.4.7",
+    "electron-google-analytics": "^0.1.0",
+    "electron-is-dev": "^0.3.0",
+    "electron-updater": "4.0.6",
+    "fs-extra": "^7.0.1",
+    "ip": "^1.1.5",
+    "mosca": "^2.8.3",
+    "mqtt": "^2.16.0",
+    "johnny-five": "^1.1.0",
+    "nan": "^2.14.0",
+    "net-ping": "^1.2.3",
+    "noble": "^1.9.1",
+    "raw-socket": "^1.6.2",
+    "react-clmtrackr": "^1.1.3",
+    "serialport": "^6.1.1",
+    "usb": "^2.5.2"
+  }
+}
