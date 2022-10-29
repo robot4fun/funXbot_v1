@@ -165,7 +165,7 @@ class cBrain {
         this.session = null;
         console.log("cBrain closed");//for debug
         console.log('window.board:',board);
-        console.log('window.j5board:',j5board);
+        //console.log('window.j5board:',j5board);
     }
 
     // method required by vm runtime

@@ -1,8 +1,8 @@
 {
-  "name": "funXblock",
-  "description": "funXblock",
-  "version": "1.8.4z",
-  "author": "tonyet",
+  "name": "Kittenblock",
+  "description": "Kittenblock",
+  "version": "1.8.4",
+  "author": "Riven",
   "main": "main.js",
   "dependencies": {
     "adm-zip": "^0.4.7",
@@ -20,6 +20,6 @@
     "raw-socket": "^1.6.2",
     "react-clmtrackr": "^1.1.3",
     "serialport": "^6.1.1",
-    "usb": "^2.5.2"
+    "usb": "^1.5.0"
   }
 }
