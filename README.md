@@ -1,4 +1,4 @@
-# xblock1.84z
+# funXblock 1.84z
 # for funXbot v1
 
 first, install Kittenblock 1.8.4,
