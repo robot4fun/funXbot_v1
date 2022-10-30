@@ -125,8 +125,8 @@ function sendStartConfig(){
 function createWindow () {
   console.log("cwd", app.getAppPath());
   splash = new BrowserWindow({
-      width: 418,
-      height: 480,
+      width: 726,
+      height: 360,
       resizable: false,
       backgroundColor: '#000',
       frame: false
