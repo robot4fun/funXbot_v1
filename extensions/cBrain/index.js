@@ -29,14 +29,14 @@ const Ports_rj = [
 const Sensors = {
     TXpin: 1,
     RXpin: 0,
-    button: 4,
-    sound: 'A2',
-    slider: 'A0',
-    light: 'A1',
-    rled: 10,
-    gled: 11,
-    bled: 13,
-    buzzer: 9
+    button: 4, //port5[0]
+    sound: 'A2', //port2[1]
+    slider: 'A0', //port1[1]
+    light: 'A1', //port1[2]
+    rled: 10, //port7[2], pwm
+    gled: 11, //port8[1], pwm
+    bled: 13, //port8[0]
+    buzzer: 9 //port7[1], pwm
 };
 
 class TransportStub extends Emitter {
