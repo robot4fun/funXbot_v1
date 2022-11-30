@@ -261,7 +261,9 @@ class cBrain {
                     //   BlockType.CONDITIONAL - control flow, like "if {}" or "if {} else {}"
                     //     A CONDITIONAL block may return the one-based index of a branch to
                     //     run, or it may return zero/falsy to run no branch.
-                    //   BlockType.EVENT - starts a stack in response to an event (full spec TBD)
+                    //   BlockType.EVENT - Specialized hat block with no implementation function
+                    //     only runs if the corresponding event is emitted by other code
+                    //     starts a stack in response to an event (full spec TBD)
                     //   BlockType.LOOP - control flow, like "repeat {} {}" or "forever {}"
                     //     A LOOP block is like a CONDITIONAL block with two differences:
                     //     - the block is assumed to have exactly one child branch, and
@@ -276,7 +278,7 @@ class cBrain {
 
                     isTerminal: true,
                     message2: 'loop',
-                    text: ['hBrain Setup', 'loop'],
+                    text: ['cBrain Setup', 'loop'],
                     hatType: true,
                     func: 'noop'
                     // Optional: the function implementing this block.
@@ -297,6 +299,22 @@ class cBrain {
                     arguments: {
                         SERIAL: {
                             type: ArgumentType.STRING,
+                            //ArgumentType...
+                              //ANGLE: 'angle', // Numeric value with angle picker -180-180
+                              //BOOLEAN: 'Boolean', // Boolean value with hexagonal placeholder
+                              //COLOR: 'color', // Numeric value with color picker
+                              //NUMBER: 'number', // Numeric value with text field
+                              //SLIDER: 'slider', // -255-255
+                              //SLIDERANALOGWR: 'slideranalogwr', // 0-255
+                              //SLIDERSERVO: 'sliderservo', // 0-180
+                              //LEDMATRIX: 'ledmatrix',
+                              //RGBPANEL: 'rgbpanel',
+                              //BITLEDS: 'bitleds',
+                              //FILEINPUT: 'fileinput',
+                              //STRING: 'string', //String value with text field
+                              //MATRIX: 'matrix', //String value with matrix field
+                              //NOTE: 'note' //MIDI note number with note picker (piano) field
+
                             menu: 'serialtype',
                             defaultValue: 'Serial'
                         }
