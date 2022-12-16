@@ -15,9 +15,22 @@ const TCS34725_ATIME = 0x01, /**< Integration time */
 const TCS34725_INTEGRATIONTIME_2_4MS = 0xFF, /**<  2.4ms - 1 cycle    - Max Count: 1024  */
       TCS34725_INTEGRATIONTIME_24MS =  0xF6, /**<  24ms  - 10 cycles  - Max Count: 10240 */
       TCS34725_INTEGRATIONTIME_50MS =  0xEB, /**<  50ms  - 20 cycles  - Max Count: 20480 */
+      TCS34725_INTEGRATIONTIME_60MS =  0xE7, /**< 60.0ms - 25 cycles - Max Count: 25700 */
       TCS34725_INTEGRATIONTIME_101MS = 0xD5, /**<  101ms - 42 cycles  - Max Count: 43008 */
+      TCS34725_INTEGRATIONTIME_120MS = 0xCE, /**< 120.0ms - 50 cycles - Max Count: 51200 */
       TCS34725_INTEGRATIONTIME_154MS = 0xC0, /**<  154ms - 64 cycles  - Max Count: 65535 */
-      TCS34725_INTEGRATIONTIME_700MS = 0x00; /**<  700ms - 256 cycles - Max Count: 65535 */
+      TCS34725_INTEGRATIONTIME_180MS = 0xB5, /**< 180.0ms - 75 cycles - Max Count: 65535 */
+      TCS34725_INTEGRATIONTIME_199MS = 0xAD, /**< 199.2ms - 83 cycles - Max Count: 65535 */
+      TCS34725_INTEGRATIONTIME_240MS = 0x9C, /**< 240.0ms - 100 cycles - Max Count: 65535 */
+      TCS34725_INTEGRATIONTIME_300MS = 0x83, /**< 300.0ms - 125 cycles - Max Count: 65535 */
+      TCS34725_INTEGRATIONTIME_360MS = 0x6A, /**< 360.0ms - 150 cycles - Max Count: 65535 */
+      TCS34725_INTEGRATIONTIME_401MS = 0x59, /**< 400.8ms - 167 cycles - Max Count: 65535 */
+      TCS34725_INTEGRATIONTIME_420MS = 0x51, /**< 420.0ms - 175 cycles - Max Count: 65535 */
+      TCS34725_INTEGRATIONTIME_480MS = 0x38, /**< 480.0ms - 200 cycles - Max Count: 65535 */
+      TCS34725_INTEGRATIONTIME_499MS = 0x30, /**< 499.2ms - 208 cycles - Max Count: 65535 */
+      TCS34725_INTEGRATIONTIME_540MS = 0x1F, /**< 540.0ms - 225 cycles - Max Count: 65535 */
+      TCS34725_INTEGRATIONTIME_600MS = 0x06, /**< 600.0ms - 250 cycles - Max Count: 65535 */
+      TCS34725_INTEGRATIONTIME_614MS = 0x00; /**<  614.4ms - 256 cycles - Max Count: 65535 */
 const TCS34725_GAIN_1X = 0x00,  /**<  No gain  */
       TCS34725_GAIN_4X = 0x01,  /**<  4x gain  */
       TCS34725_GAIN_16X = 0x02, /**<  16x gain */
@@ -109,7 +122,7 @@ class TCS34725 {
      */
     async enable() {
       this.write8(TCS34725_ENABLE, TCS34725_ENABLE_PON); // power on
-      await timeout(3);
+      await timeout(3); // 2.4ms
       this.write8(TCS34725_ENABLE, TCS34725_ENABLE_PON | TCS34725_ENABLE_AEN); // start to read cycle
       // Set a delay for the integration time.
       // This is only necessary in the case where enabling and then
@@ -117,7 +130,9 @@ class TCS34725 {
       //  AEN triggers an automatic integration, so if a read RGBC is
       //  performed too quickly, the data is not yet valid and all 0's are
       //  returned
-      switch (this._tcs34725IntegrationTime) {
+      /* 12/5 = 2.4, add 1 to account for integer truncation */
+      await timeout((256 - this._tcs34725IntegrationTime) * 12 / 5 + 1);
+      /*switch (this._tcs34725IntegrationTime) {
         case TCS34725_INTEGRATIONTIME_2_4MS:
           await timeout(3);
           break;
@@ -136,15 +151,15 @@ class TCS34725 {
         case TCS34725_INTEGRATIONTIME_700MS:
           await timeout(700);
           break;
-      }
+      }*/
     };
 
     /*!
      *  @brief  Disables the device (putting it in lower power sleep mode)
      */
-    disable() {
+    async disable() {
       // Turn the device off to save power
-      const reg = this.read8(TCS34725_ENABLE);
+      const reg = await this.read8(TCS34725_ENABLE);
       this.write8(TCS34725_ENABLE, reg & ~(TCS34725_ENABLE_PON | TCS34725_ENABLE_AEN));
     };
 
@@ -215,7 +230,7 @@ class TCS34725 {
       if (!this._tcs34725Initialised) this.init();
 
       // Set a delay for the integration time. why after not befor?
-      switch (this._tcs34725IntegrationTime) {
+      /*switch (this._tcs34725IntegrationTime) {
         case TCS34725_INTEGRATIONTIME_2_4MS:
           await timeout(3);
           break;
@@ -234,7 +249,9 @@ class TCS34725 {
         case TCS34725_INTEGRATIONTIME_700MS:
           await timeout(700);
           break;
-      }
+      }*/
+      /* 12/5 = 2.4, add 1 to account for integer truncation */
+      //await timeout((256 - this._tcs34725IntegrationTime) * 12 / 5 + 1);
 
       let rgbc = [];
       rgbc[0] = await this.read16(TCS34725_RDATAL); // red
@@ -242,6 +259,10 @@ class TCS34725 {
       rgbc[2] = await this.read16(TCS34725_BDATAL); // blue
       rgbc[3] = await this.read16(TCS34725_CDATAL); // clear
       console.log('rgbc=',rgbc);
+      
+      // Set a delay for the integration time. why after not befor?
+      /* 12/5 = 2.4, add 1 to account for integer truncation */
+      await timeout((256 - this._tcs34725IntegrationTime) * 12 / 5 + 1);
 
       return rgbc;
     };
@@ -289,9 +310,9 @@ class TCS34725 {
           rgb.G = (rgb.G) / i;
           rgb.B = (rgb.B) / i;
       }
-      console.log('i=',i);
+      //console.log('i=',i);
       cf = (rgbc[3] - this.dark[3]) / (this.bright[3] - this.dark[3]);
-      console.log('cf=',cf);
+      //console.log('cf=',cf);
       //Amplify data differences
       /*Please don't try to make the data negative,
           unless you don't change the data type*/

@@ -117,7 +117,7 @@ uint16_t Adafruit_TCS34725::read16(uint8_t reg) {
  */
 void Adafruit_TCS34725::enable() {
   write8(TCS34725_ENABLE, TCS34725_ENABLE_PON);
-  delay(3);
+  delay(3); // 2.4ms
   write8(TCS34725_ENABLE, TCS34725_ENABLE_PON | TCS34725_ENABLE_AEN);
   /* Set a delay for the integration time.
     This is only necessary in the case where enabling and then
@@ -125,26 +125,8 @@ void Adafruit_TCS34725::enable() {
     AEN triggers an automatic integration, so if a read RGBC is
     performed too quickly, the data is not yet valid and all 0's are
     returned */
-  switch (_tcs34725IntegrationTime) {
-  case TCS34725_INTEGRATIONTIME_2_4MS:
-    delay(3);
-    break;
-  case TCS34725_INTEGRATIONTIME_24MS:
-    delay(24);
-    break;
-  case TCS34725_INTEGRATIONTIME_50MS:
-    delay(50);
-    break;
-  case TCS34725_INTEGRATIONTIME_101MS:
-    delay(101);
-    break;
-  case TCS34725_INTEGRATIONTIME_154MS:
-    delay(154);
-    break;
-  case TCS34725_INTEGRATIONTIME_700MS:
-    delay(700);
-    break;
-  }
+  /* 12/5 = 2.4, add 1 to account for integer truncation */
+  delay((256 - _tcs34725IntegrationTime) * 12 / 5 + 1);
 }
 
 /*!
@@ -164,7 +146,7 @@ void Adafruit_TCS34725::disable() {
  *  @param  gain
  *          Gain
  */
-Adafruit_TCS34725::Adafruit_TCS34725(tcs34725IntegrationTime_t it,
+Adafruit_TCS34725::Adafruit_TCS34725(uint8_t it,
                                      tcs34725Gain_t gain) {
   _tcs34725Initialised = false;
   _tcs34725IntegrationTime = it;
@@ -239,7 +221,7 @@ boolean Adafruit_TCS34725::init() {
  *  @param  it
  *          Integration Time
  */
-void Adafruit_TCS34725::setIntegrationTime(tcs34725IntegrationTime_t it) {
+void Adafruit_TCS34725::setIntegrationTime(uint8_t it) {
   if (!_tcs34725Initialised)
     begin();
 
@@ -248,6 +230,14 @@ void Adafruit_TCS34725::setIntegrationTime(tcs34725IntegrationTime_t it) {
 
   /* Update value placeholders */
   _tcs34725IntegrationTime = it;
+}
+
+uint8_t Adafruit_TCS34725::getIntegrationTime() {
+  return (uint8_t)_tcs34725IntegrationTime;
+}
+
+tcs34725Gain_t Adafruit_TCS34725::getGain() {
+  return _tcs34725Gain;
 }
 
 /*!
@@ -283,31 +273,17 @@ void Adafruit_TCS34725::getRawData(uint16_t *r, uint16_t *g, uint16_t *b,
     begin();
 
   /* Set a delay for the integration time */
-  switch (_tcs34725IntegrationTime) {
-  case TCS34725_INTEGRATIONTIME_2_4MS:
-    delay(3);
-    break;
-  case TCS34725_INTEGRATIONTIME_24MS:
-    delay(24);
-    break;
-  case TCS34725_INTEGRATIONTIME_50MS:
-    delay(50);
-    break;
-  case TCS34725_INTEGRATIONTIME_101MS:
-    delay(101);
-    break;
-  case TCS34725_INTEGRATIONTIME_154MS:
-    delay(154);
-    break;
-  case TCS34725_INTEGRATIONTIME_700MS:
-    delay(700);
-    break;
-  }
+  /* 12/5 = 2.4, add 1 to account for integer truncation */
+  //delay((256 - _tcs34725IntegrationTime) * 12 / 5 + 1);
 
   *c = read16(TCS34725_CDATAL);
   *r = read16(TCS34725_RDATAL);
   *g = read16(TCS34725_GDATAL);
   *b = read16(TCS34725_BDATAL);
+
+  /* Set a delay for the integration time. why after not befor? */
+  /* 12/5 = 2.4, add 1 to account for integer truncation */
+  delay((256 - _tcs34725IntegrationTime) * 12 / 5 + 1);
 }
 
 /*!

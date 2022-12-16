@@ -1,8 +1,8 @@
 // Header file for the ColorMatch application
 #include <stdint.h>
 // Calibration data
-uint16_t dark[4] = { 0, 0, 0, 0 };
-uint16_t bright[4] = { 65535, 65535, 65535, 65535 };
+//uint16_t dark[4] = { 0, 0, 0, 0 };
+//uint16_t bright[4] = { 65535, 65535, 65535, 65535 };
 
 // Color Table for matching
 // it=154ms, gain=60x; 2019/9/24 pm1:30 indoor

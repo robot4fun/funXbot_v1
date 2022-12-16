@@ -210,6 +210,12 @@ class cSensorsExtension {
                         arduino: this.dht11Gen
                     }
                 },
+                '---',
+                {
+                    func: 'noop',
+                    blockType: BlockType.DIVLABEL,
+                    text: 'color sensor'
+                },
                 {
                     opcode: 'getLux',
                     blockType: BlockType.REPORTER,
@@ -226,7 +232,6 @@ class cSensorsExtension {
                         arduino: this.tcs34725luxGen
                     }
                 },
-                '---',
                 {
                     opcode: 'colorSensor',
                     blockType: BlockType.REPORTER,
@@ -257,6 +262,26 @@ class cSensorsExtension {
                     }
                 },
                 {
+                    opcode: 'hex2rgb',
+                    blockType: BlockType.REPORTER,
+                    text: '[SENCOL] (hex color) to [RGB] of RGB',
+                    arguments: {
+                        SENCOL: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '#FFFFFF',
+                        },
+                        RGB: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 0,
+                            menu: 'rgb'
+                        },
+                    },
+                    func: 'hex2rgb',
+                    gen: {
+                        arduino: this.hex2rgbGen
+                    }
+                },
+                /*{
                     opcode: 'colorCal',
                     blockType: BlockType.COMMAND,
                     text: 'set [WB] balance for color sensor at port 3',
@@ -270,6 +295,38 @@ class cSensorsExtension {
                     func: 'tcs34725cal',
                     gen: {
                         arduino: this.tcs34725calGen
+                    }
+                },*/
+                {
+                    opcode: 'setIT',
+                    blockType: BlockType.COMMAND,
+                    text: 'set TCS34725_INTEGRATIONTIME to [IT]ms',
+                    arguments: {
+                        IT: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 0xC0, // 154ms
+                            menu: 'it'
+                        },
+                    },
+                    func: 'tcs34725it',
+                    gen: {
+                        arduino: this.tcs34725itGen
+                    }
+                },
+                {
+                    opcode: 'setGain',
+                    blockType: BlockType.COMMAND,
+                    text: 'set TCS34725_GAIN to [GAIN]X',
+                    arguments: {
+                        GAIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 0x03, // 60X
+                            menu: 'gain'
+                        },
+                    },
+                    func: 'tcs34725gain',
+                    gen: {
+                        arduino: this.tcs34725gainGen
                     }
                 },
                 '---',
@@ -771,6 +828,38 @@ class cSensorsExtension {
                   {text: '□□□□', value: 0b1111}, // 黑黑黑黑
                 ],
                 lcolor: ['Black', 'White'],
+                it:[
+                    {text: '2.4', value: 0xFF},
+                    {text: '24', value: 0xF6},
+                    {text: '50', value: 0xEB},
+                    {text: '60', value: 0xE7},
+                    {text: '101', value: 0xD5},
+                    {text: '120', value: 0xCE},
+                    {text: '154', value: 0xC0},
+                    {text: '180', value: 0xB5},
+                    {text: '199', value: 0xAD},
+                    {text: '240', value: 0x9C},
+                    {text: '300', value: 0x83},
+                    {text: '360', value: 0x6A},
+                    {text: '401', value: 0x59},
+                    {text: '420', value: 0x51},
+                    {text: '480', value: 0x38},
+                    {text: '499', value: 0x30},
+                    {text: '540', value: 0x1F},
+                    {text: '600', value: 0x06},
+                    {text: '614', value: 0x00},
+                ],
+                gain:[
+                    {text: '1', value: 0x00},
+                    {text: '4', value: 0x01},
+                    {text: '16', value: 0x02},
+                    {text: '60', value: 0x03},
+                ],
+                rgb:[
+                    {text: 'R', value: 0},
+                    {text: 'G', value: 1},
+                    {text: 'B', value: 2},
+                ],
                 qtr_type:['RC','Analog'],
                 dht11function: ['temperature', 'humidity'],
                 /*aButton: ['1','2','3','4','5','6','7','8'],
@@ -841,10 +930,14 @@ class cSensorsExtension {
                   'ultrasonic': '接口[PIN]的超音波感應器距離讀值 (公分)',
                   'colorSensor': '接口 3 的顏色感應器顏色讀值 (hex)',
                   'colorMatch': '[SENCOL]是[COLOR]?',
+                  'hex2rgb':'[SENCOL] (hex顏色) 的 [RGB]量',
                   'getLux': '接口 3 的顏色感應器[LIGHT]照度讀值 (lux)',
                   'colorCal': '校正接口 3 的顏色感應器[WB]平衡',
+                  'setIT':'設定曝光時間為[IT]毫秒',
+                  'setGain':'設定感光度為[GAIN]倍',
                   'dht': '接口[PIN]的溫溼度感應器[FUNC]讀值',
                   'imuRead': '接口 3 的陀螺儀加速度計[MPUAXIS]讀值',
+                  //'rgb': {'R':'紅','G':'綠','B':'藍'},
                   'digi': {'button':'按鈕','tilt':'傾斜開關','rir':'反射式紅外線感應器'},
                   'dht11function': {'temperature':'溫度(°C)', 'humidity':'濕度(%)'},
                   'wb': {'dark':'黑','bright':'白'},
@@ -880,8 +973,11 @@ class cSensorsExtension {
                   'ultrasonic': '端口[PIN]的超声音传感器距离读数 (厘米)',
                   'colorSensor': '端口 3 的颜色传感器颜色读数 (hex)',
                   'colorMatch': '[SENCOL]是[COLOR]?',
+                  'hex2rgb':'[SENCOL] (hex颜色) 的 [RGB]量',
                   'getLux': '端口 3 的颜色传感器[LIGHT]照度读数 (lux)',
                   'colorCal': '校正端口 3 的颜色传感器[WB]平衡',
+                  'setIT':'设定曝光时间为[IT]毫秒',
+                  'setGain':'设定感光度为[GAIN]倍',
                   'dht': '端口[PIN]的温湿度传感器[FUNC]读值',
                   'imuRead': '端口 3 的陀螺仪加速度计[MPUAXIS]读值',
                   'digi': {'button':'按钮','tilt':'倾斜开关','rir':'反射式红外传感器'},
@@ -890,6 +986,10 @@ class cSensorsExtension {
                   'light': {'reflected':'反射光','ambient':'环境光'},
                   'qtr_type':{'RC':'数字','Analog':'模拟'},
                   'lcolor':{'Black':'黑','White':'白'},
+                  //'rgb': {'R':'红','G':'绿','B':'蓝'},
+                  'imumenu': {'ax':'加速度x轴分量','ay':'加速度y轴分量','az':'加速度z轴分量',
+                              'pitch':'攻角(°)','roll':'滚角(°)',
+                              'gx':'角速度x轴分量','gy':'角速度y轴分量','gz':'角速度z轴分量'},
                 }
             }
 
@@ -1771,10 +1871,10 @@ void ScanColor(){
         });
       };
       if ( await this.i2cTCS.init() ) {
-        if (this.i2cTCS._tcs34725IntegrationTime != 0xC0) this.i2cTCS.setIntegrationTime(0xC0);
-        if (this.i2cTCS._tcs34725Gain != 0x03) this.i2cTCS.setGain(0x03);
+        //if (this.i2cTCS._tcs34725IntegrationTime != 0xC0) this.i2cTCS.setIntegrationTime(0xC0);
+        //if (this.i2cTCS._tcs34725Gain != 0x03) this.i2cTCS.setGain(0x03);
         await this.i2cTCS.setInterrupt(false);  // turn on LED
-        await timeout(155);  // takes time to read
+        await timeout((256 - this.i2cTCS._tcs34725IntegrationTime) * 12 / 5 + 1);  // takes time to read
         const rgbc = await this.i2cTCS.getRawData();
         this.i2cTCS.setInterrupt(true);  // turn off LED
 
@@ -1791,25 +1891,33 @@ void ScanColor(){
     }
 
     tcs34725calGen (gen, block){
-      const wb = gen.valueToCode(block, 'WB');
-
+      let add = gen.valueToCode(block, 'WB');
+      if (add === 'dark') {
+        add = 1;
+      } else if (add === 'bright') {
+        add = 3;
+      }
+      gen.includes_['eeprom'] = `#include <EEPROM.h>`;
       gen.includes_['tcs34725'] = `#include "Adafruit_TCS34725.h"`;
       gen.includes_['colormatchHEX'] = `#include "ColorSample.h"`;
       gen.definitions_['tcs34725'] = `
 Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_60X);`;
-      gen.definitions_['tcs34725cal_'+wb] = `
-void cal_${wb}(){
-  uint16_t r, g, b, c;
+      gen.definitions_['tcs34725cal'] = `
+void cal_TCS34725(uint8_t add){
+  uint16_t r, g, b, c, c_eeprom;
 
   tcs34725.setInterrupt(false);  // turn on LED
-  delay(155); // takes time to read
+  delay(256-tcs34725.getIntegrationTime())*12/5 + 1); // takes time to read
   tcs34725.getRawData(&r, &g, &b, &c);
   tcs34725.setInterrupt(true);  // turn off LED
 
-  ${wb}[0] = r;
-  ${wb}[1] = g;
-  ${wb}[2] = b;
-  ${wb}[3] = c;
+  // EEPROM add0-1: dark; add2-3: bright
+  EEPROM.get(add, c_eeprom);
+  if (c_eeprom != c) {
+    EEPROM.put(add, c);
+    delay(10);
+  }
+  
 }`;
 
       gen.setupCodes_['tcs34725'] = `
@@ -1819,8 +1927,66 @@ void cal_${wb}(){
     Serial.println("No TCS34725 found ... check your connections");
   };`;
 
-      return gen.line(`cal_${wb}()`);
+      return gen.line(`cal_TCS34725(${add})`);
     }
+
+    tcs34725it(args){
+        if (!this.i2cTCS){
+          this.i2cTCS = new TCS34725({
+            board: board,
+            //i2cAddr: 0x29,
+            it: 0xC0, // TCS34725_INTEGRATIONTIME_154MS
+            gain: 0x03, // TCS34725_GAIN_60X  // for indoor
+          });
+        };
+        if (this.i2cTCS._tcs34725IntegrationTime != args.IT) this.i2cTCS.setIntegrationTime(args.IT);
+        console.log('it=', this.i2cTCS._tcs34725IntegrationTime);
+    }
+  
+    tcs34725itGen (gen, block){
+        const it = gen.valueToCode(block, 'IT');
+
+        gen.includes_['tcs34725'] = `#include "Adafruit_TCS34725.h"`;
+        gen.definitions_['tcs34725'] = `
+Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_60X);`;
+        gen.setupCodes_['tcs34725'] = `
+  if (tcs34725.begin()) {
+    //Serial.println("Found sensor");
+  } else {
+    Serial.println("No TCS34725 found ... check your connections");
+  };`;
+  
+        return gen.line(`tcs34725.setIntegrationTime(${it})`);
+      }
+
+    tcs34725gain(args){
+        if (!this.i2cTCS){
+          this.i2cTCS = new TCS34725({
+            board: board,
+            //i2cAddr: 0x29,
+            it: 0xC0, // TCS34725_INTEGRATIONTIME_154MS
+            gain: 0x03, // TCS34725_GAIN_60X  // for indoor
+          });
+        };
+        if (this.i2cTCS._tcs34725Gain != args.GAIN) this.i2cTCS.setGain(args.GAIN);
+        console.log('gain=', this.i2cTCS._tcs34725Gain);
+    }
+  
+    tcs34725gainGen (gen, block){
+        const gain = gen.valueToCode(block, 'GAIN');
+
+        gen.includes_['tcs34725'] = `#include "Adafruit_TCS34725.h"`;
+        gen.definitions_['tcs34725'] = `
+Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_60X);`;
+        gen.setupCodes_['tcs34725'] = `
+  if (tcs34725.begin()) {
+    //Serial.println("Found sensor");
+  } else {
+    Serial.println("No TCS34725 found ... check your connections");
+  };`;
+  
+        return gen.line(`tcs34725.setGain(${gain})`);
+      }
 
     async tcs34725(args){ //i2c color sensor
       if (!this.i2cTCS){
@@ -1828,21 +1994,23 @@ void cal_${wb}(){
           board: board,
           //i2cAddr: 0x29,
           it: 0xC0, // TCS34725_INTEGRATIONTIME_154MS
-          gain: 0x03, // TCS34725_GAIN_60X
+          gain: 0x03, // TCS34725_GAIN_60X  // for indoor
         });
       };
-      //console.log('tsc object=',this.i2cTCS);
+      console.log('tsc object=',this.i2cTCS);
       if ( await this.i2cTCS.init() ) {
-        if (this.i2cTCS._tcs34725IntegrationTime != 0xC0) this.i2cTCS.setIntegrationTime(0xC0);
-        if (this.i2cTCS._tcs34725Gain != 0x03) this.i2cTCS.setGain(0x03);
-        await this.i2cTCS.setInterrupt(false);  // turn on LED
-        await timeout(155);  // takes time to read
-        //const rgb = await this.i2cTCS.getRGB();
-        //console.log('rgb1=',rgb);
+        //if (this.i2cTCS._tcs34725IntegrationTime != TCS34725_INTEGRATIONTIME_300MS) this.i2cTCS.setIntegrationTime(TCS34725_INTEGRATIONTIME_300MS);
+        //if (this.i2cTCS._tcs34725Gain != 0x03) this.i2cTCS.setGain(0x03);
+        this.i2cTCS.setInterrupt(false);  // turn on LED
+        await timeout(2*(256 - this.i2cTCS._tcs34725IntegrationTime) * 12 / 5 + 1);  // takes time to read
+        const rgb = await this.i2cTCS.getRGB();
+        console.log('rgb1=',rgb);
+        await timeout((256 - this.i2cTCS._tcs34725IntegrationTime) * 12 / 5 + 1);  // takes time to read
         const rgb2 = await this.i2cTCS.getRGB2();
         console.log('rgb2=',rgb2);
-        //const rgb3 = await this.i2cTCS.getRGB3();
-        //console.log('rgb3=',rgb3);
+        await timeout((256 - this.i2cTCS._tcs34725IntegrationTime) * 12 / 5 + 1);
+        const rgb3 = await this.i2cTCS.getRGB3();
+        console.log('rgb3=',rgb3);
         this.i2cTCS.setInterrupt(true);  // turn off LED
 
         return five.Fn.uint24(rgb2.R, rgb2.G, rgb2.B); // RGB2HEX. type:number; without '#'
@@ -1853,23 +2021,52 @@ void cal_${wb}(){
     }
 
     tcs34725Gen (gen, block){
+      //gen.includes_['eeprom'] = `#include <EEPROM.h>`;
       gen.includes_['tcs34725'] = `#include "Adafruit_TCS34725.h"`;
-      gen.includes_['colormatchHEX'] = `#include "ColorSample.h"`;
+      //gen.includes_['colormatchHEX'] = `#include "ColorSample.h"`;
       gen.definitions_['tcs34725'] = `
 Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_60X);`;
-      gen.definitions_['tcs34725read'] = `
-uint32_t scanColor(){
+      gen.definitions_['tcs34725read1'] = `
+uint32_t scanColor1(){
+    float R, G, B;
+    uint16_t r, g, b;
+    uint32_t hex;
+    
+    tcs34725.setInterrupt(false);  // turn on LED
+    //delay(154); // Delay for one old integ. time period (to finish old reading)
+    delay(2*(256-tcs34725.getIntegrationTime())*12/5 + 1); // Delay for one new integ. time period (to allow new reading)
+    tcs34725.getRGB(&R, &G, &B);
+    tcs34725.setInterrupt(true);  // turn off LED
+
+    r = constrain(round(R), 0,255);
+    g = constrain(round(G), 0,255);
+    b = constrain(round(B), 0,255);
+    //Serial.println("rgb: " + String(r) + ", " + String(g) + ", " + String(b));
+
+    hex = (long(r) << 16 | long(g) << 8 | long(b));   // rgb to hex
+    return hex; // type:number; without '#'
+}`;
+
+    gen.definitions_['tcs34725read2'] = `
+uint32_t scanColor2(){
   float i, cf, R, G, B;
-  uint16_t r, g, b, c;
+  uint16_t r, g, b, c, c_dark, c_bright;
   uint32_t hex;
 
+  //EEPROM.get(1, c_dark);
+  //EEPROM.get(3, c_bright);
+  c_dark = 0;
+  c_bright = 65535;
+
   tcs34725.setInterrupt(false);  // turn on LED
-  delay(155); // takes time to read
+  //delay(155); // takes time to read
+  delay(2*(256-tcs34725.getIntegrationTime())*12/5 + 1); // Delay for one new integ. time period (to allow new reading)
   tcs34725.getRawData(&r, &g, &b, &c);
   tcs34725.setInterrupt(true);  // turn off LED
   //Serial.println("rgbc: " + String(r) + ", " + String(g) + ", " + String(b) + ", " + String(c));
 
-  cf = (float)(c - dark[3]) / (float)(bright[3] - dark[3]);
+  //cf = (float)(c - dark[3]) / (float)(bright[3] - dark[3]);
+  cf = (float)(c - c_dark) / (float)(c_bright - c_dark);
   if(r >= g && r >= b){
     i = (float)r / 255.0 + 1.0;
   } else if(g >= r && g >= b){
@@ -1904,7 +2101,57 @@ uint32_t scanColor(){
   };
 `;
 
-    return [`scanColor()`, gen.ORDER_ATOMIC];
+    return [`scanColor2()`, gen.ORDER_ATOMIC];
+    }
+
+    hex2rgb(args){
+        let se_rgb = [];
+
+        if (args.SENCOL) {
+          //console.log('SENCOL=',typeof args.SENCOL,args.SENCOL);
+          if (typeof args.SENCOL === 'number') { // hex number, without '#'
+            se_rgb[0] = parseInt('0x'+args.SENCOL.toString(16).substring(0,2));
+            se_rgb[1] = parseInt('0x'+args.SENCOL.toString(16).substring(2,4));
+            se_rgb[2] = parseInt('0x'+args.SENCOL.toString(16).substring(4,6));
+            //console.log('r=',args.SENCOL.toString(16).substring(0,2));
+            //console.log('g=',args.SENCOL.toString(16).substring(2,4));
+            //console.log('b=',args.SENCOL.toString(16).substring(4,6));
+          } else if (typeof args.SENCOL === 'string') { // with # hex string
+            se_rgb[0] = hexToR(args.SENCOL);
+            se_rgb[1] = hexToG(args.SENCOL);
+            se_rgb[2] = hexToB(args.SENCOL);
+          }
+        } else {
+          vm.emit('showAlert', {msg: 'wrong input'});
+          return;
+        }
+
+        return se_rgb[args.RGB];
+    }
+
+    hex2rgbGen (gen, block){
+        const rgb = gen.valueToCode(block, 'RGB');
+        let se_color = gen.valueToCode(block, 'SENCOL');
+        //console.log('SENCOL=',typeof se_color,se_color);
+        if (typeof se_color === 'string') { // hex string with '#' ?
+          se_color = (se_color.charAt(0)=='\"') ? se_color.substr(1,se_color.length-2):se_color;
+          //console.log('se_color1=',typeof se_color,se_color);
+          se_color = (se_color.charAt(0)=='#') ? parseInt(se_color.substr(1,6),16):se_color;
+        }
+        //console.log('se_color=',typeof se_color,se_color);
+
+        gen.definitions_['hex2rgb'] = `
+uint8_t hex2rgb(uint32_t hex, uint8_t rgb){
+    uint8_t se_rgb[3];
+    
+    se_rgb[0] = byte(hex >> 16);       //red
+    se_rgb[1] = byte(hex >> 8 & 0xFF); //green
+    se_rgb[2] = byte(hex & 0xFF);      //blue
+    
+    return se_rgb[rgb];
+}`
+
+        return [`hex2rgb(${se_color}, ${rgb})`, gen.ORDER_ATOMIC];
     }
 
     colormatchHEX(args){
@@ -2035,19 +2282,20 @@ uint8_t colorMatch(uint8_t *rgb){
           board: board,
           //i2cAddr: 0x29,
           it: 0xC0, // TCS34725_INTEGRATIONTIME_154MS
-          gain: 0x02, // TCS34725_GAIN_16X
+          gain: 0x03, // TCS34725_GAIN_60X
         });
       };
 
       if ( await this.i2cTCS.init() ) {
-        if (this.i2cTCS._tcs34725IntegrationTime != 0xC0) this.i2cTCS.setIntegrationTime(0xC0);
-        if (this.i2cTCS._tcs34725Gain != 0x02) this.i2cTCS.setGain(0x02);
+        //if (this.i2cTCS._tcs34725IntegrationTime != 0xC0) this.i2cTCS.setIntegrationTime(0xC0);
+        //if (this.i2cTCS._tcs34725Gain != 0x02) this.i2cTCS.setGain(0x02);
         if (args.LIGHT === 'reflected') await this.i2cTCS.setInterrupt(false);  // turn on LED
-        await timeout(155);  // takes time to read
-        //const lux = await this.i2cTCS.getLux();
-        //console.log('lux1=',lux);
+        await timeout(2*(256 - this.i2cTCS._tcs34725IntegrationTime) * 12 / 5 + 1);  // takes time to read
+        const lux = await this.i2cTCS.getLux();
+        console.log('lux1=',lux);
+        await timeout((256 - this.i2cTCS._tcs34725IntegrationTime) * 12 / 5 + 1);  // takes time to read
         const lux2 = await this.i2cTCS.getLux2();
-        //console.log('lux2=',lux2);
+        console.log('lux2=',lux2);
         this.i2cTCS.setInterrupt(true);  // turn off LED
 
         return lux2;
@@ -2079,16 +2327,33 @@ Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, T
 uint16_t lux(boolean l){
   uint16_t r, g, b, c, lx;
   float atime_ms, ir, r_comp, g_comp, b_comp, cpl;
-  uint8_t Gain_temp=16; // TCS34725_GAIN_16X
+  uint8_t Gain_temp; // =16 if TCS34725_GAIN_16X
+  tcs34725Gain_t gain = tcs34725.getGain(); 
+  uint8_t it = tcs34725.getIntegrationTime();
 
-  tcs34725.setGain(0x02); // TCS34725_GAIN_16X
-  tcs34725.setInterrupt(l);  // turn on LED
-  delay(155); // takes time to read
+  switch (gain) {
+    case TCS34725_GAIN_1X: 
+        Gain_temp = 1;
+        break;
+    case TCS34725_GAIN_4X: 
+        Gain_temp = 4;
+        break;
+    case TCS34725_GAIN_16X: 
+        Gain_temp = 16;
+        break;
+    case TCS34725_GAIN_60X: 
+        Gain_temp = 60;
+        break;
+  }
+
+  //tcs34725.setGain(0x02); // TCS34725_GAIN_16X
+  tcs34725.setInterrupt(l);  // turn on/off LED
+  delay(2*(256-it)*12/5 + 1); // takes time to read
   tcs34725.getRawData(&r, &g, &b, &c);
   tcs34725.setInterrupt(true);  // turn off LED
-  tcs34725.setGain(0x03); // TCS34725_GAIN_60X
+  //tcs34725.setGain(0x03); // TCS34725_GAIN_60X
 
-  atime_ms = ((256 - TCS34725_INTEGRATIONTIME_154MS) * 2.4);
+  atime_ms = ((256 - it) * 2.4);
   ir = ((r + g + b) > c) ? ((float)(r + g + b - c) / 2.0) : 0;
   r_comp = r - ir;
   g_comp = g - ir;

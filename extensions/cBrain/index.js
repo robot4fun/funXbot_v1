@@ -825,7 +825,7 @@ class cBrain {
                     },
                     func: 'noop',
                     gen: {
-                        arduino: this.stringtypo
+                        arduino: this.stringtypoGen
                     }
                 },
                 {
@@ -848,7 +848,65 @@ class cBrain {
                     },
                     func: 'noop',
                     gen: {
-                        arduino: this.typecast
+                        arduino: this.typecastGen
+                    }
+                },
+                {
+                    opcode: 'var',
+                    blockType: BlockType.COMMAND,
+                    text: '[VAR] = [VALUE] ([TYPO])',
+                    arguments: {
+                        VAR: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'c'
+                        },
+                        VALUE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 0
+                        },
+                        TYPO: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'long',
+                            menu: 'Typo'
+                        }
+                    },
+                    func: 'noop',
+                    gen: {
+                        arduino: this.varGen
+                    }
+                },
+                /*{
+                    opcode: 'var_data',
+                    blockType: BlockType.COMMAND,
+                    text: 'variable [TYPO] = [VALUE]',
+                    arguments: {
+                        VALUE: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        },
+                        TYPO: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'a',
+                        }
+                    },
+                    func: 'noop',
+                    gen: {
+                        arduino: this.var_dataGen
+                    }
+                },*/
+                {
+                    opcode: 'var_value',
+                    blockType: BlockType.REPORTER,
+                    text: '[VAR]',
+                    arguments: {
+                        VAR: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'c',
+                        }
+                    },
+                    func: 'noop',
+                    gen: {
+                        arduino: this.var_valueGen
                     }
                 },
                 '---',
@@ -1008,6 +1066,7 @@ class cBrain {
                     'v': '電源電壓 (mV)',
                     'stringtypo': '將[TEXT]以[TYPO]進制展示',
                     'typecast': '轉換[VALUE]的資料型態為[TYPO]',
+                    'var': '變數[VAR]設為[VALUE], 資料型態為[TYPO]',
                 },
                 'zh-cn': { // 簡體中文
                     //'cBrain': '鸡车脑',
@@ -1026,6 +1085,7 @@ class cBrain {
                     'v': '电源电压 (mV)',
                     'stringtypo': '将[TEXT]以[TYPO]进制展示',
                     'typecast': '转换[VALUE]的资料型态为[TYPO]',
+                    'var': '变数[VAR]设为[VALUE], 资料型态为[TYPO]',
                 },
             }
 
@@ -1905,17 +1965,35 @@ while (${sertype}.available()) {
         return ['Wire.endTransmission()', 0];
     }    */
 
-    stringtypo (gen, block){
+    stringtypoGen (gen, block){
         const text = gen.valueToCode(block, 'TEXT');
         const typo = gen.valueToCode(block, 'TYPO');
         const code = `String(${text}, ${typo})`;
         return [code, 0];
     }
 
-    typecast (gen, block){
+    typecastGen (gen, block){
         const value = gen.valueToCode(block, 'VALUE');
         const typo = gen.valueToCode(block, 'TYPO');
         const code = `${typo}(${value})`;
+        return [code, 0];
+    }
+
+    varGen (gen, block){
+        let va = gen.valueToCode(block, 'VAR');
+        const value = gen.valueToCode(block, 'VALUE');
+        const typo = gen.valueToCode(block, 'TYPO');
+        va = va.substr(1,va.length-2);
+        gen.includes_['stdint'] = `#include <stdint.h>`;
+        gen.definitions_['var'] = `${typo} ${va};`;
+        
+        return gen.line(`${va} = ${value}`);
+    }
+    
+    var_valueGen (gen, block){
+        let va = gen.valueToCode(block, 'VAR');
+        va = va.substr(1,va.length-2);
+        const code = `${va}`;
         return [code, 0];
     }
     /*
