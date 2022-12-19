@@ -616,6 +616,23 @@ class cBrain {
               },
               '---',
               {
+                opcode: 'imuRead',
+                blockType: BlockType.REPORTER,
+                text: 'MPU6050 [MPUAXIS] reading',
+                arguments: {
+                    MPUAXIS: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'ax',
+                        menu: 'imumenu'
+                    }
+                },
+                func: 'imuRead',
+                gen: {
+                    arduino: this.imuReadGen
+                }
+              },
+              '---',
+              {
                   opcode: 'led',
                   blockType: BlockType.COMMAND,
                   text: '[VALUE] [PIN] LED',
@@ -1045,7 +1062,8 @@ class cBrain {
                     {text: '二', value: 'BIN'},
                     {text: '十', value: 'DEC'}
                 ],
-                Typo: ['byte', 'char', 'int', 'long', 'word', 'float']
+                Typo: ['byte', 'char', 'int', 'long', 'word', 'float'],
+                imumenu: ['ax','ay','az','pitch','roll','yaw','gx','gy','gz'],
             },
 
             translation_map: {
@@ -1067,6 +1085,10 @@ class cBrain {
                     'stringtypo': '將[TEXT]以[TYPO]進制展示',
                     'typecast': '轉換[VALUE]的資料型態為[TYPO]',
                     'var': '變數[VAR]設為[VALUE], 資料型態為[TYPO]',
+                    'imuRead': '陀螺儀加速度計[MPUAXIS]讀值',
+                    'imumenu': {'ax':'加速度x軸分量','ay':'加速度y軸分量','az':'加速度z軸分量',
+                              'pitch':'攻角(°)','roll':'滾角(°)','yaw':'偏航(°)',
+                              'gx':'角速度x軸分量','gy':'角速度y軸分量','gz':'角速度z軸分量'},
                 },
                 'zh-cn': { // 簡體中文
                     //'cBrain': '鸡车脑',
@@ -1086,6 +1108,10 @@ class cBrain {
                     'stringtypo': '将[TEXT]以[TYPO]进制展示',
                     'typecast': '转换[VALUE]的资料型态为[TYPO]',
                     'var': '变数[VAR]设为[VALUE], 资料型态为[TYPO]',
+                    'imuRead': '陀螺仪加速度计[MPUAXIS]读值',
+                    'imumenu': {'ax':'加速度x轴分量','ay':'加速度y轴分量','az':'加速度z轴分量',
+                              'pitch':'攻角(°)','roll':'滚角(°)','yaw':'偏航(°)',
+                              'gx':'角速度x轴分量','gy':'角速度y轴分量','gz':'角速度z轴分量'},
                 },
             }
 
@@ -1363,6 +1389,160 @@ class cBrain {
         const pin = Sensors.slider;
         gen.setupCodes_['slider'+pin] = `pinMode(${pin},INPUT)`;
         return [`analogRead(${pin})`, gen.ORDER_ATOMIC];
+    }
+
+    imuRead (args){
+        if (!this.MPU6050){
+            this.MPU6050 = new five.IMU({
+                controller: "MPU6050",
+                board: j5board,
+            });
+            const MPU6050Data = {
+                celsius: null,
+                fahrenheit: null,
+                kelvin: null,
+                ax: null,
+                ay: null,
+                az: null,
+                pitch: null,
+                roll: null,
+                acceleration: null,
+                inclination: null,
+                orientation: null,
+                gx: null,
+                gy: null,
+                gz: null,
+                gpitch: null,
+                groll: null,
+                yaw: null,
+                rate: null,
+                isCalibrated: null,
+            }
+            this.MPU6050Data = MPU6050Data;
+        }
+        this.MPU6050.on('change', ()=>{
+        //this.MPU6050.on('data', ()=>{
+                this.MPU6050Data.celsius = this.MPU6050.thermometer.celsius;
+                this.MPU6050Data.fahrenheit = this.MPU6050.thermometer.fahrenheit;
+                this.MPU6050Data.kelvin = this.MPU6050.thermometer.kelvin;
+                this.MPU6050Data.ax = this.MPU6050.accelerometer.x;
+                this.MPU6050Data.ay = this.MPU6050.accelerometer.y;
+                this.MPU6050Data.az = this.MPU6050.accelerometer.z;
+                this.MPU6050Data.pitch = this.MPU6050.accelerometer.pitch;
+                this.MPU6050Data.roll = this.MPU6050.accelerometer.roll;
+                this.MPU6050Data.acceleration = this.MPU6050.accelerometer.acceleration;
+                this.MPU6050Data.inclination = this.MPU6050.accelerometer.inclination;
+                this.MPU6050Data.orientation = this.MPU6050.accelerometer.orientation;
+                this.MPU6050Data.gx = this.MPU6050.gyro.x;
+                this.MPU6050Data.gy = this.MPU6050.gyro.y;
+                this.MPU6050Data.gz = this.MPU6050.gyro.z;
+                this.MPU6050Data.gpitch = this.MPU6050.gyro.pitch;
+                this.MPU6050Data.groll = this.MPU6050.gyro.roll;
+                this.MPU6050Data.yaw = this.MPU6050.gyro.yaw;
+                this.MPU6050Data.rate = this.MPU6050.gyro.rate;
+                this.MPU6050Data.isCalibrated = this.MPU6050.gyro.isCalibrated;
+        });
+        console.log('mpuData:',this.MPU6050Data);
+        return this.MPU6050Data[args.MPUAXIS];
+    }
+
+    imuReadGen(gen, block){
+      const ax = gen.valueToCode(block, 'MPUAXIS');
+      //console.log('ax=',typeof ax, ax);
+      let d = 255;
+      switch (ax) {
+        case 'ax':
+            d = 1;
+          break;
+        case 'ay':
+            d = 2;
+          break;
+        case 'az':
+            d = 3;
+          break;
+        case 'gx':
+            d = 11;
+          break;
+        case 'gy':
+            d= 22;
+          break;
+        case 'gz':
+            d = 33;
+          break;
+        default:
+            d = 255;
+      }
+
+      gen.includes_['mpu6050'] = `
+// I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
+// for both classes must be in the include path of your project
+#include "I2Cdev.h"
+#include "MPU6050.h"
+
+// Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
+// is used in I2Cdev.h
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+    #include "Wire.h"
+#endif
+`;
+      gen.definitions_['mpu6050'] = `
+// class default I2C address is 0x68
+// specific I2C addresses may be passed as a parameter here
+// AD0 low = 0x68 (default for InvenSense evaluation board)
+// AD0 high = 0x69
+MPU6050 accelgyro;
+
+// uncomment "OUTPUT_READABLE_ACCELGYRO" if you want to see a tab-separated
+// list of the accel X/Y/Z and then gyro X/Y/Z values in decimal. Easy to read,
+// not so easy to parse, and slow(er) over UART.
+#define OUTPUT_READABLE_ACCELGYRO
+`;
+      gen.definitions_['mpu6050read'] = `
+int16_t mpu6050read(uint8_t d){
+  int16_t ax, ay, az;
+  int16_t gx, gy, gz;
+
+  // read raw accel/gyro measurements from device
+  accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+
+  switch (d) {
+    case 1:
+        return ax;
+      break;
+    case 2:
+        return ay;
+      break;
+    case 3:
+        return az;
+      break;
+    case 11:
+        return gx;
+      break;
+    case 22:
+        return gy;
+      break;
+    case 33:
+        return gz;
+      break;
+    default:
+        return;
+  }
+}`;
+      gen.setupCodes_['mpu6050'] = `
+  // join I2C bus (I2Cdev library doesn't do this automatically)
+  #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+      Wire.begin();
+  #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
+      Fastwire::setup(400, true);
+  #endif
+
+  accelgyro.initialize();
+  while(!accelgyro.testConnection()){
+    Serial.println("MPU6050 connection failed, check wiring!");
+    delay(1000);
+  }
+`;
+      return [`mpu6050read(${d})`, gen.ORDER_ATOMIC];
     }
 
     led (args){
@@ -1985,9 +2165,9 @@ while (${sertype}.available()) {
         const typo = gen.valueToCode(block, 'TYPO');
         va = va.substr(1,va.length-2);
         gen.includes_['stdint'] = `#include <stdint.h>`;
-        gen.definitions_['var'] = `${typo} ${va};`;
+        //gen.definitions_['var'] = `${typo} ${va};`;
         
-        return gen.line(`${va} = ${value}`);
+        return gen.line(`${typo} ${va} = ${value}`);
     }
     
     var_valueGen (gen, block){
