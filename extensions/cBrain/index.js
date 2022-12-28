@@ -615,22 +615,70 @@ class cBrain {
                   }
               },
               '---',
-              {
-                opcode: 'imuRead',
-                blockType: BlockType.REPORTER,
-                text: 'MPU6050 [MPUAXIS] reading',
+            {
+                opcode: 'Gesture',
+                blockType: BlockType.BOOLEAN,
+                text: 'Gesture is [GESTURE]?',
                 arguments: {
-                    MPUAXIS: {
+                    GESTURE: {
                         type: ArgumentType.STRING,
-                        defaultValue: 'ax',
-                        menu: 'imumenu'
+                        defaultValue: '0',
+                        menu: '#gestureList'
+                    },
+                },
+                func: 'isGesture',
+                gen: {
+                    arduino: this.isGestureGen
+                }
+            },
+            {
+                opcode: 'imuYPR',
+                blockType: BlockType.REPORTER,
+                text: 'IMU [IMU] reading',
+                arguments: {
+                    IMU: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'yaw',
+                        menu: 'ypr'
                     }
                 },
                 func: 'imuRead',
                 gen: {
                     arduino: this.imuReadGen
                 }
-              },
+            },
+            {
+                opcode: 'imuAcc',
+                blockType: BlockType.REPORTER,
+                text: 'IMU [IMU] reading',
+                arguments: {
+                    IMU: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'ax',
+                        menu: 'acc'
+                    }
+                },
+                func: 'imuRead',
+                gen: {
+                    arduino: this.imuReadGen
+                }
+            },
+            {
+                opcode: 'imuAV',
+                blockType: BlockType.REPORTER,
+                text: 'IMU [IMU] reading',
+                arguments: {
+                    IMU: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'gx',
+                        menu: 'av'
+                    }
+                },
+                func: 'imuRead',
+                gen: {
+                    arduino: this.imuReadGen
+                }
+            },
               '---',
               {
                   opcode: 'led',
@@ -1057,13 +1105,33 @@ class cBrain {
                 ],
                 Sounds: this._buildMenu(this.SOUNDS_INFO),
                 //Sounds: [],
-                StrTypo: [
-                    {text: '十六', value: 'HEX'},
-                    {text: '二', value: 'BIN'},
-                    {text: '十', value: 'DEC'}
-                ],
+                StrTypo: ['HEX', 'BIN', 'DEC'],
                 Typo: ['byte', 'char', 'int', 'long', 'word', 'float'],
-                imumenu: ['ax','ay','az','pitch','roll','yaw','gx','gy','gz'],
+                ypr: ['pitch','roll','yaw'],
+                acc:['ax','ay','az'],
+                av:['gx','gy','gz'],
+                '#gestureList': [
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/black.png',
+                        value: '0', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/white.png',
+                        value: '1', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/red.png',
+                        value: '2', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/green.png',
+                        value: '3', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/blue.png',
+                        value: '4', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/yellow.png',
+                        value: '5', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/orange.png',
+                        value: '6', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/purple.png',
+                        value: '7', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/cyan.png',
+                        value: '8', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/brown.png',
+                        value: '9', width: 95, height: 95, alt: ''},
+                ],
             },
 
             translation_map: {
@@ -1083,12 +1151,16 @@ class cBrain {
                     'onoff': {'ON':'打開', 'OFF':'關閉'},
                     'v': '電源電壓 (mV)',
                     'stringtypo': '將[TEXT]以[TYPO]進制展示',
+                    'StrTypo': {'HEX':'十六','BIN':'二','DEC':'十'},
                     'typecast': '轉換[VALUE]的資料型態為[TYPO]',
                     'var': '變數[VAR]設為[VALUE], 資料型態為[TYPO]',
-                    'imuRead': '陀螺儀加速度計[MPUAXIS]讀值',
-                    'imumenu': {'ax':'加速度x軸分量','ay':'加速度y軸分量','az':'加速度z軸分量',
-                              'pitch':'攻角(°)','roll':'滾角(°)','yaw':'偏航(°)',
-                              'gx':'角速度x軸分量','gy':'角速度y軸分量','gz':'角速度z軸分量'},
+                    'imuYPR': '[IMU]角度(°)',
+                    'imuAcc': '加速度[IMU]分量',
+                    'imuAV': '角速度[IMU]分量',
+                    'ypr': {'pitch':'俯仰','roll':'橫滾','yaw':'偏航'},
+                    'acc': {'ax':'x軸','ay':'y軸','az':'z軸'},
+                    'av': {'gx':'x軸','gy':'y軸','gz':'z軸'},
+                    'Gesture':'姿態是[GESTURE]?',
                 },
                 'zh-cn': { // 簡體中文
                     //'cBrain': '鸡车脑',
@@ -1106,12 +1178,16 @@ class cBrain {
                     'onoff': {'ON':'打开', 'OFF':'关闭'},
                     'v': '电源电压 (mV)',
                     'stringtypo': '将[TEXT]以[TYPO]进制展示',
+                    'StrTypo': {'HEX':'十六','BIN':'二','DEC':'十'},
                     'typecast': '转换[VALUE]的资料型态为[TYPO]',
                     'var': '变数[VAR]设为[VALUE], 资料型态为[TYPO]',
-                    'imuRead': '陀螺仪加速度计[MPUAXIS]读值',
-                    'imumenu': {'ax':'加速度x轴分量','ay':'加速度y轴分量','az':'加速度z轴分量',
-                              'pitch':'攻角(°)','roll':'滚角(°)','yaw':'偏航(°)',
-                              'gx':'角速度x轴分量','gy':'角速度y轴分量','gz':'角速度z轴分量'},
+                    'imuYPR': '[IMU]角度(°)',
+                    'imuAcc': '加速度[IMU]分量读值',
+                    'imuAV': '角速度[IMU]分量读值',
+                    'ypr': {'pitch':'俯仰','roll':'橫滚','yaw':'航向'},
+                    'acc': {'ax':'x轴','ay':'y轴','az':'z轴'},
+                    'av': {'gx':'x轴','gy':'y轴','gz':'z轴'},
+                    'Gesture':'姿态是[GESTURE]?',
                 },
             }
 
@@ -1391,6 +1467,14 @@ class cBrain {
         return [`analogRead(${pin})`, gen.ORDER_ATOMIC];
     }
 
+    isGesture (args){
+        return;
+    }
+
+    isGestureGen (gen, block){
+        return;
+    }
+
     imuRead (args){
         if (!this.MPU6050){
             this.MPU6050 = new five.IMU({
@@ -1443,14 +1527,14 @@ class cBrain {
                 this.MPU6050Data.isCalibrated = this.MPU6050.gyro.isCalibrated;
         });
         console.log('mpuData:',this.MPU6050Data);
-        return this.MPU6050Data[args.MPUAXIS];
+        return this.MPU6050Data[args.IMU];
     }
 
     imuReadGen(gen, block){
-      const ax = gen.valueToCode(block, 'MPUAXIS');
-      //console.log('ax=',typeof ax, ax);
+      const x = gen.valueToCode(block, 'IMU');
+      //console.log('x=',typeof x, x);
       let d = 255;
-      switch (ax) {
+      switch (x) {
         case 'ax':
             d = 1;
           break;
