@@ -2045,8 +2045,9 @@ void cal_TCS34725(uint8_t add){
         gen.definitions_['tcs34725'] = `
 Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_60X);`;
         gen.setupCodes_['tcs34725'] = `
-    Serial.println(tcs34725.begin() ? "TCS34725 connection successful" : "TCS34725 connection failed");`;
-        
+    if (!tcs34725.begin())
+        //{ Serial.println("TCS34725 connection failed"); }
+`;
         return gen.line(`tcs34725.setInterrupt(${onoff});`);
     }
 
@@ -2070,8 +2071,9 @@ Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, T
         gen.definitions_['tcs34725'] = `
 Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_60X);`;
         gen.setupCodes_['tcs34725'] = `
-    Serial.println(tcs34725.begin() ? "TCS34725 connection successful" : "TCS34725 connection failed");`;
-  
+    if (!tcs34725.begin())
+        //{ Serial.println("TCS34725 connection failed"); }
+`;
         return gen.line(`tcs34725.setIntegrationTime(${it})`);
     }
 
@@ -2095,8 +2097,9 @@ Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, T
         gen.definitions_['tcs34725'] = `
 Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, TCS34725_GAIN_60X);`;
         gen.setupCodes_['tcs34725'] = `
-    Serial.println(tcs34725.begin() ? "TCS34725 connection successful" : "TCS34725 connection failed");`;
-  
+    if (!tcs34725.begin())
+        //{ Serial.println("TCS34725 connection failed"); }
+`;
         return gen.line(`tcs34725.setGain(${gain})`);
     }
 
@@ -2223,9 +2226,9 @@ uint32_t scanColor(){
       gen.setupCodes_['tcs34725'] = `
     // TCS34725AutoGain.h
     //Wire.begin();
-    //Serial.println(tcs34725.attach() ?
-    Serial.println(tcs34725.begin() ?
-        "TCS34725 connection successful" : "TCS34725 connection failed");
+    //if (!tcs34725.attach())
+    if (!tcs34725.begin())
+        //{ Serial.println("TCS34725 connection failed"); }
 `;
       return [`scanColor()`, gen.ORDER_ATOMIC];
     }
@@ -2493,9 +2496,9 @@ uint16_t lux(boolean l){
       gen.setupCodes_['tcs34725'] = `
     // TCS34725AutoGain.h
     //Wire.begin();
-    //Serial.println(tcs34725.attach() ?
-    Serial.println(tcs34725.begin() ?
-        "TCS34725 connection successful" : "TCS34725 connection failed");
+    //if (!tcs34725.attach())
+    if (!tcs34725.begin())
+        //{ Serial.println("TCS34725 connection failed"); }
 `;
 
       return [`lux(${l})`, gen.ORDER_ATOMIC];

@@ -1107,7 +1107,7 @@ class cBrain {
                 //Sounds: [],
                 StrTypo: ['HEX', 'BIN', 'DEC'],
                 Typo: ['byte', 'char', 'int', 'long', 'word', 'float'],
-                ypr: ['pitch','roll','yaw'],
+                ypr: ['yaw','pitch','roll'],
                 acc:['ax','ay','az'],
                 av:['gx','gy','gz'],
                 '#gestureList': [
@@ -1157,7 +1157,7 @@ class cBrain {
                     'imuYPR': '[IMU]角度(°)',
                     'imuAcc': '加速度[IMU]分量',
                     'imuAV': '角速度[IMU]分量',
-                    'ypr': {'pitch':'俯仰','roll':'橫滾','yaw':'偏航'},
+                    'ypr': {'yaw':'偏航','pitch':'俯仰','roll':'橫滾'},
                     'acc': {'ax':'x軸','ay':'y軸','az':'z軸'},
                     'av': {'gx':'x軸','gy':'y軸','gz':'z軸'},
                     'Gesture':'姿態是[GESTURE]?',
@@ -1184,7 +1184,7 @@ class cBrain {
                     'imuYPR': '[IMU]角度(°)',
                     'imuAcc': '加速度[IMU]分量读值',
                     'imuAV': '角速度[IMU]分量读值',
-                    'ypr': {'pitch':'俯仰','roll':'橫滚','yaw':'航向'},
+                    'ypr': {'yaw':'航向','pitch':'俯仰','roll':'橫滚'},
                     'acc': {'ax':'x轴','ay':'y轴','az':'z轴'},
                     'av': {'gx':'x轴','gy':'y轴','gz':'z轴'},
                     'Gesture':'姿态是[GESTURE]?',
@@ -1535,33 +1535,40 @@ class cBrain {
       //console.log('x=',typeof x, x);
       let d = 255;
       switch (x) {
-        case 'ax':
+        case 'yaw':
             d = 1;
           break;
-        case 'ay':
+        case 'pitch':
             d = 2;
           break;
-        case 'az':
+        case 'roll':
             d = 3;
           break;
-        case 'gx':
+        case 'ax':
             d = 11;
           break;
+        case 'ay':
+            d = 22;
+          break;
+        case 'az':
+            d = 33;
+          break;
+        case 'gx':
+            d = 111;
+          break;
         case 'gy':
-            d= 22;
+            d= 122;
           break;
         case 'gz':
-            d = 33;
+            d = 133;
           break;
         default:
             d = 255;
       }
 
       gen.includes_['mpu6050'] = `
-// I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
-// for both classes must be in the include path of your project
 #include "I2Cdev.h"
-#include "MPU6050.h"
+#include "MPU6050_6Axis_MotionApps20.h"
 
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
 // is used in I2Cdev.h
@@ -1569,48 +1576,100 @@ class cBrain {
     #include "Wire.h"
 #endif
 `;
-      gen.definitions_['mpu6050'] = `
-// class default I2C address is 0x68
-// specific I2C addresses may be passed as a parameter here
-// AD0 low = 0x68 (default for InvenSense evaluation board)
-// AD0 high = 0x69
-MPU6050 accelgyro;
 
-// uncomment "OUTPUT_READABLE_ACCELGYRO" if you want to see a tab-separated
-// list of the accel X/Y/Z and then gyro X/Y/Z values in decimal. Easy to read,
-// not so easy to parse, and slow(er) over UART.
-#define OUTPUT_READABLE_ACCELGYRO
-`;
       gen.definitions_['mpu6050read'] = `
+MPU6050 mpu;
+
 int16_t mpu6050read(uint8_t d){
-  int16_t ax, ay, az;
-  int16_t gx, gy, gz;
+  uint8_t fifoBuffer[64]; // FIFO storage buffer
+  Quaternion q;           // [w, x, y, z]         quaternion container
+  VectorInt16 aa;         // [x, y, z]            accel sensor measurements
+  VectorInt16 gyro;       // [x, y, z]            gyro sensor measurements
+  VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
+  VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
+  VectorFloat gravity;    // [x, y, z]            gravity vector
+  float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
-  // read raw accel/gyro measurements from device
-  accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet 
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+    mpu.dmpGetAccel(&aa, fifoBuffer);
+    mpu.dmpGetGyro(&gyro, fifoBuffer);
+    mpu.dmpGetGravity(&gravity, &q);
+    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+    mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+    /*
+    Serial.print("ypr\t");
+    Serial.print(ypr[0] * 180/M_PI);
+    Serial.print("\t");
+    Serial.print(ypr[1] * 180/M_PI);
+    Serial.print("\t");
+    Serial.println(ypr[2] * 180/M_PI);
+    Serial.print("acc\t");
+    Serial.print(aa.x);
+    Serial.print("\t");
+    Serial.print(aa.y);
+    Serial.print("\t");
+    Serial.println(aa.z);
+    Serial.print("gyro\t");
+    Serial.print(gyro.x);
+    Serial.print("\t");
+    Serial.print(gyro.y);
+    Serial.print("\t");
+    Serial.println(gyro.z);
+    Serial.print("areal\t");
+    Serial.print(aaReal.x);
+    Serial.print("\t");
+    Serial.print(aaReal.y);
+    Serial.print("\t");
+    Serial.println(aaReal.z);
+    Serial.print("arealW\t");
+    Serial.print(aaWorld.x);
+    Serial.print("\t");
+    Serial.print(aaWorld.y);
+    Serial.print("\t");
+    Serial.println(aaWorld.z);
+    Serial.print("gravity\t");
+    Serial.print(gravity.x);
+    Serial.print("\t");
+    Serial.print(gravity.y);
+    Serial.print("\t");
+    Serial.println(gravity.z);
+    */
+    switch (d) {
+        case 1: //yaw
+            return int(ypr[0] * 180/M_PI);
+          break;
+        case 2: //pitch
+            return int(ypr[1] * 180/M_PI);
+          break;
+        case 3: //roll
+            return int(ypr[2] * 180/M_PI);
+          break;
+        case 11: //ax
+            return aaReal.x;
+          break;
+        case 22: //ay
+            return aaReal.y;
+          break;
+        case 33: //az
+            return aaReal.z;
+          break;
+        case 111: //gx
+            return gyro.x;
+          break;
+        case 122: //gy
+            return gyro.y;
+          break;
+        case 133: //gz
+            return gyro.z;
+          break;
+        default:
+            return;
+      }
 
-  switch (d) {
-    case 1:
-        return ax;
-      break;
-    case 2:
-        return ay;
-      break;
-    case 3:
-        return az;
-      break;
-    case 11:
-        return gx;
-      break;
-    case 22:
-        return gy;
-      break;
-    case 33:
-        return gz;
-      break;
-    default:
-        return;
   }
+
 }`;
       gen.setupCodes_['mpu6050'] = `
   // join I2C bus (I2Cdev library doesn't do this automatically)
@@ -1620,10 +1679,28 @@ int16_t mpu6050read(uint8_t d){
       Fastwire::setup(400, true);
   #endif
 
-  accelgyro.initialize();
-  while(!accelgyro.testConnection()){
-    Serial.println("MPU6050 connection failed, check wiring!");
-    delay(1000);
+  mpu.initialize();
+  if (!mpu.testConnection()) //Serial.println("MPU6050 connection failed");
+  // supply your own gyro offsets here, scaled for min sensitivity
+  mpu.setXGyroOffset(220);
+  mpu.setYGyroOffset(76);
+  mpu.setZGyroOffset(-85);
+  mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
+
+  // make sure it worked (returns 0 if so)
+  if (mpu.dmpInitialize() == 0) {
+      // Calibration Time: generate offsets and calibrate our MPU6050
+      mpu.CalibrateAccel(6);
+      mpu.CalibrateGyro(6);
+      //mpu.PrintActiveOffsets();
+      // turn on the DMP, now that it's ready
+      //Serial.println(F("Enabling DMP..."));
+      mpu.setDMPEnabled(true);
+      // set our DMP Ready flag so the main loop() function knows it's okay to use it
+      //Serial.println(F("DMP ready! Waiting for first interrupt..."));
+      //dmpReady = true;
+  } else {
+      //Serial.print(F("DMP Initialization failed"));
   }
 `;
       return [`mpu6050read(${d})`, gen.ORDER_ATOMIC];
