@@ -1641,10 +1641,10 @@ int16_t mpu6050read(uint8_t d){
             return int(ypr[0] * 180/M_PI);
           break;
         case 2: //pitch
-            return int(ypr[1] * 180/M_PI);
+            return int(ypr[2] * 180/M_PI); // imu x-y軸與主機不同
           break;
         case 3: //roll
-            return int(ypr[2] * 180/M_PI);
+            return int(ypr[1] * 180/M_PI); // imu x-y軸與主機不同
           break;
         case 11: //ax
             return aaReal.x;
@@ -1675,18 +1675,29 @@ int16_t mpu6050read(uint8_t d){
   // join I2C bus (I2Cdev library doesn't do this automatically)
   #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
       Wire.begin();
+      Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
   #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
       Fastwire::setup(400, true);
   #endif
 
   mpu.initialize();
-  if (!mpu.testConnection()) //Serial.println("MPU6050 connection failed");
+  if (!mpu.testConnection()) {
+    #define LED_PIN 13
+    bool blinkState = false;
+    for ( uint8_t i=0; i<5; i++) {
+        blinkState = !blinkState;
+        digitalWrite(LED_PIN, blinkState);
+        delay(500);
+    }
+    //Serial.println("MPU6050 connection failed");
+  }
+  /*
   // supply your own gyro offsets here, scaled for min sensitivity
-  mpu.setXGyroOffset(220);
-  mpu.setYGyroOffset(76);
-  mpu.setZGyroOffset(-85);
-  mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
-
+  mpu.setXGyroOffset(147);
+  mpu.setYGyroOffset(43);
+  mpu.setZGyroOffset(-13);
+  mpu.setZAccelOffset(962); // 1688 factory default for my test chip
+  */
   // make sure it worked (returns 0 if so)
   if (mpu.dmpInitialize() == 0) {
       // Calibration Time: generate offsets and calibrate our MPU6050
