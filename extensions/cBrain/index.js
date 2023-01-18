@@ -618,12 +618,60 @@ class cBrain {
             {
                 opcode: 'Gesture',
                 blockType: BlockType.BOOLEAN,
+                text: '[GESTURE] is up?',
+                arguments: {
+                    GESTURE: {
+                        type: ArgumentType.STRING,
+                        defaultValue: '1',
+                        menu: '#gestureList'
+                    },
+                },
+                func: 'isGesture',
+                gen: {
+                    arduino: this.isGestureGen
+                }
+            },
+            {
+                opcode: 'Gesture1',
+                blockType: BlockType.BOOLEAN,
                 text: 'Gesture is [GESTURE]?',
                 arguments: {
                     GESTURE: {
                         type: ArgumentType.STRING,
-                        defaultValue: '0',
-                        menu: '#gestureList'
+                        defaultValue: '14',
+                        menu: '#gesture1List'
+                    },
+                },
+                func: 'isGesture',
+                gen: {
+                    arduino: this.isGestureGen
+                }
+            },
+            {
+                opcode: 'Motion',
+                blockType: BlockType.BOOLEAN,
+                text: 'motion state is [GESTURE]?',
+                arguments: {
+                    GESTURE: {
+                        type: ArgumentType.STRING,
+                        defaultValue: '21',
+                        menu: '#motionList'
+                    },
+                },
+                func: 'isGesture',
+                gen: {
+                    arduino: this.isGestureGen
+                }
+            },
+            {
+                opcode: 'Motion1',
+                blockType: BlockType.BOOLEAN,
+                text: 'state is [GESTURE]?',
+                arguments: {
+                    GESTURE: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'still',
+                        menu: 'm1'
                     },
                 },
                 func: 'isGesture',
@@ -634,7 +682,7 @@ class cBrain {
             {
                 opcode: 'imuYPR',
                 blockType: BlockType.REPORTER,
-                text: 'IMU [IMU] reading',
+                text: 'IMU [IMU] reading(°)',
                 arguments: {
                     IMU: {
                         type: ArgumentType.STRING,
@@ -648,35 +696,12 @@ class cBrain {
                 }
             },
             {
-                opcode: 'imuAcc',
-                blockType: BlockType.REPORTER,
-                text: 'IMU [IMU] reading',
-                arguments: {
-                    IMU: {
-                        type: ArgumentType.STRING,
-                        defaultValue: 'ax',
-                        menu: 'acc'
-                    }
-                },
-                func: 'imuRead',
+                opcode: 'resetYaw',
+                blockType: BlockType.COMMAND,
+                text: 'reset Yaw angle',
+                func: 'resetyaw',
                 gen: {
-                    arduino: this.imuReadGen
-                }
-            },
-            {
-                opcode: 'imuAV',
-                blockType: BlockType.REPORTER,
-                text: 'IMU [IMU] reading',
-                arguments: {
-                    IMU: {
-                        type: ArgumentType.STRING,
-                        defaultValue: 'gx',
-                        menu: 'av'
-                    }
-                },
-                func: 'imuRead',
-                gen: {
-                    arduino: this.imuReadGen
+                     arduino: this.resetyawGen
                 }
             },
               '---',
@@ -780,6 +805,59 @@ class cBrain {
                   text: 'more..'
               },
               {
+                opcode: 'imuAcc',
+                blockType: BlockType.REPORTER,
+                text: 'IMU [IMU] reading(mm/s²)',
+                arguments: {
+                    IMU: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'ax',
+                        menu: 'acc'
+                    }
+                },
+                func: 'imuRead',
+                gen: {
+                    arduino: this.imuReadGen
+                }
+              },
+              {
+                opcode: 'imuAV',
+                blockType: BlockType.REPORTER,
+                text: 'IMU [IMU] reading(°/s)',
+                arguments: {
+                    IMU: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'gx',
+                        menu: 'av'
+                    }
+                },
+                func: 'imuRead',
+                gen: {
+                    arduino: this.imuReadGen
+                }
+              },
+              {
+                opcode: 'v',
+                blockType: BlockType.REPORTER,
+                text: 'Vcc reading (mV)',
+                func: 'noop',
+                gen: {
+                    arduino: this.vGen
+                }
+              },
+              {
+                opcode: 'millis',
+                blockType: BlockType.REPORTER,
+                text: formatMessage({
+                    id: 'arduino.millis',
+                    default: 'millis'
+                }),
+                func: 'noop',
+                gen: {
+                    arduino: this.millisGen
+                }
+              },
+              {
                   opcode: 'reset',
                   blockType: BlockType.COMMAND,
                   text: 'reset',
@@ -846,30 +924,66 @@ class cBrain {
                   func: 'noop',
                   sepafter: 36
               },
-
               '---',
               */
-              {
-                    opcode: 'v',
-                    blockType: BlockType.REPORTER,
-                    text: 'Vcc reading (mV)',
-                    func: 'noop',
-                    gen: {
-                        arduino: this.vGen
-                    }
-              },
-              {
-                    opcode: 'millis',
-                    blockType: BlockType.REPORTER,
-                    text: formatMessage({
-                        id: 'arduino.millis',
-                        default: 'millis'
-                    }),
-                    func: 'noop',
-                    gen: {
-                        arduino: this.millisGen
+            {
+                opcode: 'var',
+                blockType: BlockType.COMMAND,
+                text: 'variable [VAR] = [VALUE] ([TYPO])',
+                arguments: {
+                    VAR: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'c'
+                    },
+                    VALUE: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 0
+                    },
+                    TYPO: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'long',
+                        menu: 'Typo'
                     }
                 },
+                func: 'noop',
+                gen: {
+                    arduino: this.varGen
+                }
+            },
+            /*{
+                opcode: 'var_data',
+                blockType: BlockType.COMMAND,
+                text: 'variable [TYPO] = [VALUE]',
+                arguments: {
+                    VALUE: {
+                        type: ArgumentType.NUMBER,
+                        defaultValue: 0
+                    },
+                    TYPO: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'a',
+                    }
+                },
+                func: 'noop',
+                gen: {
+                    arduino: this.var_dataGen
+                }
+            },*/
+            {
+                opcode: 'var_value',
+                blockType: BlockType.REPORTER,
+                text: 'variable [VAR]',
+                arguments: {
+                    VAR: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'c',
+                    }
+                },
+                func: 'noop',
+                gen: {
+                    arduino: this.var_valueGen
+                }
+            },
                 {
                     opcode: 'stringtypo',
                     blockType: BlockType.REPORTER,
@@ -914,64 +1028,6 @@ class cBrain {
                     func: 'noop',
                     gen: {
                         arduino: this.typecastGen
-                    }
-                },
-                {
-                    opcode: 'var',
-                    blockType: BlockType.COMMAND,
-                    text: '[VAR] = [VALUE] ([TYPO])',
-                    arguments: {
-                        VAR: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'c'
-                        },
-                        VALUE: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 0
-                        },
-                        TYPO: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'long',
-                            menu: 'Typo'
-                        }
-                    },
-                    func: 'noop',
-                    gen: {
-                        arduino: this.varGen
-                    }
-                },
-                /*{
-                    opcode: 'var_data',
-                    blockType: BlockType.COMMAND,
-                    text: 'variable [TYPO] = [VALUE]',
-                    arguments: {
-                        VALUE: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 0
-                        },
-                        TYPO: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'a',
-                        }
-                    },
-                    func: 'noop',
-                    gen: {
-                        arduino: this.var_dataGen
-                    }
-                },*/
-                {
-                    opcode: 'var_value',
-                    blockType: BlockType.REPORTER,
-                    text: '[VAR]',
-                    arguments: {
-                        VAR: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'c',
-                        }
-                    },
-                    func: 'noop',
-                    gen: {
-                        arduino: this.var_valueGen
                     }
                 },
                 '---',
@@ -1110,27 +1166,48 @@ class cBrain {
                 ypr: ['yaw','pitch','roll'],
                 acc:['ax','ay','az'],
                 av:['gx','gy','gz'],
+                m1:['freefall','shake','still'],
                 '#gestureList': [
-                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/black.png',
-                        value: '0', width: 95, height: 95, alt: ''},
-                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/white.png',
-                        value: '1', width: 95, height: 95, alt: ''},
-                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/red.png',
-                        value: '2', width: 95, height: 95, alt: ''},
-                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/green.png',
-                        value: '3', width: 95, height: 95, alt: ''},
-                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/blue.png',
-                        value: '4', width: 95, height: 95, alt: ''},
-                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/yellow.png',
-                        value: '5', width: 95, height: 95, alt: ''},
-                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/orange.png',
-                        value: '6', width: 95, height: 95, alt: ''},
-                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/purple.png',
-                        value: '7', width: 95, height: 95, alt: ''},
-                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/cyan.png',
-                        value: '8', width: 95, height: 95, alt: ''},
-                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/brown.png',
-                        value: '9', width: 95, height: 95, alt: ''},
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/up.png',
+                        value: '1', width: 95, height: 95, alt: ''}, //
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/down.png',
+                        value: '2', width: 95, height: 95, alt: ''}, //
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/left.png',
+                        value: '3', width: 95, height: 95, alt: ''}, //
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/right.png',
+                        value: '4', width: 95, height: 95, alt: ''}, //
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/faceup.png',
+                        value: '5', width: 95, height: 95, alt: ''}, //
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/facedown.png',
+                        value: '6', width: 95, height: 95, alt: ''}, //
+                ],
+                '#gesture1List': [
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/yawcc.png',
+                        value: '11', width: 95, height: 95, alt: ''}, //逆旋
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/yawc.png',
+                        value: '12', width: 95, height: 95, alt: ''}, //順旋
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/pitchdown.png',
+                        value: '13', width: 95, height: 95, alt: ''}, //前俯
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/pitchup.png',
+                        value: '14', width: 95, height: 95, alt: ''}, //後仰
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/rollleft.png',
+                        value: '15', width: 95, height: 95, alt: ''}, //左傾
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/rollright.png',
+                        value: '16', width: 95, height: 95, alt: ''}, //右傾
+                ],
+                '#motionList': [
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/forward.png',
+                        value: '21', width: 95, height: 95, alt: ''}, //往前
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/back.png',
+                        value: '22', width: 95, height: 95, alt: ''}, //往後
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/moveleft.png',
+                        value: '23', width: 95, height: 95, alt: ''}, //往左
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/moveright.png',
+                        value: '24', width: 95, height: 95, alt: ''}, //往右
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/moveup.png',
+                        value: '25', width: 95, height: 95, alt: ''}, //往上
+                    {src: 'static/extension-assets/Robot4FUN-cBrain-assets/movedown.png',
+                        value: '26', width: 95, height: 95, alt: ''}, //往下
                 ],
             },
 
@@ -1154,13 +1231,19 @@ class cBrain {
                     'StrTypo': {'HEX':'十六','BIN':'二','DEC':'十'},
                     'typecast': '轉換[VALUE]的資料型態為[TYPO]',
                     'var': '變數[VAR]設為[VALUE], 資料型態為[TYPO]',
+                    'var_value': '變數[VAR]',
                     'imuYPR': '[IMU]角度(°)',
-                    'imuAcc': '加速度[IMU]分量',
-                    'imuAV': '角速度[IMU]分量',
-                    'ypr': {'yaw':'偏航','pitch':'俯仰','roll':'橫滾'},
+                    'imuAcc': '[IMU]的加速度(mm/s²)',
+                    'imuAV': '[IMU]的角速度(°/s)',
+                    'ypr': {'yaw':'偏航','pitch':'俯仰','roll':'翻滾'},
                     'acc': {'ax':'x軸','ay':'y軸','az':'z軸'},
                     'av': {'gx':'x軸','gy':'y軸','gz':'z軸'},
-                    'Gesture':'姿態是[GESTURE]?',
+                    'm1': {'freefall':'自由掉落','shake':'搖晃','still':'靜止'},
+                    'Gesture':'[GESTURE]朝上?',
+                    'Gesture1':'姿態是[GESTURE]?',
+                    'Motion':'運動狀態是[GESTURE]?',
+                    'Motion1':'狀態是[GESTURE]?',
+                    'resetYaw':'將偏航角歸零',
                 },
                 'zh-cn': { // 簡體中文
                     //'cBrain': '鸡车脑',
@@ -1181,13 +1264,19 @@ class cBrain {
                     'StrTypo': {'HEX':'十六','BIN':'二','DEC':'十'},
                     'typecast': '转换[VALUE]的资料型态为[TYPO]',
                     'var': '变数[VAR]设为[VALUE], 资料型态为[TYPO]',
+                    'var_value': '变数[VAR]',
                     'imuYPR': '[IMU]角度(°)',
-                    'imuAcc': '加速度[IMU]分量读值',
-                    'imuAV': '角速度[IMU]分量读值',
+                    'imuAcc': '[IMU]的加速度(mm/s²)',
+                    'imuAV': '[IMU]的角速度(°/s)',
                     'ypr': {'yaw':'航向','pitch':'俯仰','roll':'橫滚'},
                     'acc': {'ax':'x轴','ay':'y轴','az':'z轴'},
                     'av': {'gx':'x轴','gy':'y轴','gz':'z轴'},
-                    'Gesture':'姿态是[GESTURE]?',
+                    'm1': {'freefall':'自由掉落','shake':'摇晃','still':'静止'},
+                    'Gesture':'[GESTURE]朝上?',
+                    'Gesture1':'姿态是[GESTURE]?',
+                    'Motion':'运动状态是[GESTURE]?',
+                    'Motion1':'状态是[GESTURE]?',
+                    'resetYaw':'将航向角归零',
                 },
             }
 
@@ -1467,12 +1556,180 @@ class cBrain {
         return [`analogRead(${pin})`, gen.ORDER_ATOMIC];
     }
 
+    resetyaw (args){
+        return;
+    }
+
+    resetyawGen(gen, block){
+        gen.includes_['mpu6050'] = `
+#include "I2Cdev.h"
+#include "MPU6050_6Axis_MotionApps20.h"
+        
+// Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
+// is used in I2Cdev.h
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+    #include "Wire.h"
+#endif
+
+MPU6050 mpu;
+`;
+
+        gen.definitions_['mpufailed'] = `
+void mpufailed(){
+    #define LED_PIN 13
+    bool blinkState = false;
+    pinMode(LED_PIN, OUTPUT);
+    for ( uint8_t i=0; i<5; i++) {
+        blinkState = !blinkState;
+        digitalWrite(LED_PIN, blinkState);
+        delay(500);
+    }
+}
+`;
+        gen.setupCodes_['mpu6050'] = `
+  // join I2C bus (I2Cdev library doesn't do this automatically)
+  #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+      Wire.begin();
+      Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+  #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
+      Fastwire::setup(400, true);
+  #endif
+  //Serial.begin(115200);
+  mpu.initialize();
+  if (!mpu.testConnection()) {
+    mpufailed();
+    //Serial.println("MPU6050 connection failed");
+  } else {
+    // make sure it worked (returns 0 if so)
+    if (mpu.dmpInitialize() == 0) {
+      // Calibration Time: generate offsets and calibrate our MPU6050
+      mpu.CalibrateAccel(6);
+      mpu.CalibrateGyro(6);
+      //mpu.PrintActiveOffsets();
+      //Serial.println(F("Enabling DMP..."));
+      mpu.setDMPEnabled(true);
+      //Serial.println(F("DMP ready!"));
+      //DEBUG_PRINTLN("Setting DHPF bandwidth to 5Hz...");
+      mpu.setDHPFMode(1);
+      mpu.setFreefallDetectionThreshold(17);
+      mpu.setFreefallDetectionDuration(2);
+      mpu.setMotionDetectionThreshold(2);
+      mpu.setMotionDetectionDuration(40);
+      mpu.setZeroMotionDetectionThreshold(4);
+      mpu.setZeroMotionDetectionDuration(1);
+    } else {
+      mpufailed();
+      //Serial.print(F("DMP Initialization failed"));
+    }
+  }
+`;
+    }
+
     isGesture (args){
         return;
     }
 
     isGestureGen (gen, block){
-        return;
+        gen.includes_['mpu6050'] = `
+#include "I2Cdev.h"
+#include "MPU6050_6Axis_MotionApps20.h"
+        
+// Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
+// is used in I2Cdev.h
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+    #include "Wire.h"
+#endif
+
+MPU6050 mpu;
+`;
+
+        gen.definitions_['mpufailed'] = `
+void mpufailed(){
+    #define LED_PIN 13
+    bool blinkState = false;
+    pinMode(LED_PIN, OUTPUT);
+    for ( uint8_t i=0; i<5; i++) {
+        blinkState = !blinkState;
+        digitalWrite(LED_PIN, blinkState);
+        delay(500);
+    }
+}
+`;
+        gen.setupCodes_['mpu6050'] = `
+  // join I2C bus (I2Cdev library doesn't do this automatically)
+  #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+      Wire.begin();
+      Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+  #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
+      Fastwire::setup(400, true);
+  #endif
+  //Serial.begin(115200);
+  mpu.initialize();
+  if (!mpu.testConnection()) {
+    mpufailed();
+    //Serial.println("MPU6050 connection failed");
+  } else {
+    // make sure it worked (returns 0 if so)
+    if (mpu.dmpInitialize() == 0) {
+      // Calibration Time: generate offsets and calibrate our MPU6050
+      mpu.CalibrateAccel(6);
+      mpu.CalibrateGyro(6);
+      //mpu.PrintActiveOffsets();
+      //Serial.println(F("Enabling DMP..."));
+      mpu.setDMPEnabled(true);
+      //Serial.println(F("DMP ready!"));
+      //DEBUG_PRINTLN("Setting DHPF bandwidth to 5Hz...");
+      mpu.setDHPFMode(1);
+      mpu.setFreefallDetectionThreshold(17);
+      mpu.setFreefallDetectionDuration(2);
+      mpu.setMotionDetectionThreshold(2);
+      mpu.setMotionDetectionDuration(40);
+      mpu.setZeroMotionDetectionThreshold(4);
+      mpu.setZeroMotionDetectionDuration(1);
+    } else {
+      mpufailed();
+      //Serial.print(F("DMP Initialization failed"));
+    }
+  }
+`;
+
+        const x = gen.valueToCode(block, 'GESTURE');
+        //console.log('x=',typeof x, x);
+        switch (x) {
+            case '0': //運動
+                return [`(!mpu.getZeroMotionDetected())`, gen.ORDER_ATOMIC];
+              break;
+            case '1': //往右
+                return [`mpu.getXNegMotionDetected()`, gen.ORDER_ATOMIC];
+              break;
+            case '2': //往左
+                return [`mpu.getXPosMotionDetected()`, gen.ORDER_ATOMIC];
+              break;
+            case '3': //往前
+                return [`mpu.getYNegMotionDetected()`, gen.ORDER_ATOMIC];
+              break;
+            case '4': //往後
+                return [`mpu.getYPosMotionDetected()`, gen.ORDER_ATOMIC];
+              break;
+            case '5': //往上
+                return [`mpu.getZPosMotionDetected()`, gen.ORDER_ATOMIC];
+              break;
+            case '6': //往下
+                return [`mpu.getZNegMotionDetected()`, gen.ORDER_ATOMIC];
+              break;
+            case 'freefall': //free fall
+                return [`mpu.getIntFreefallStatus()`, gen.ORDER_ATOMIC];
+              break;
+            case 'shake': //shake
+                return [`(!mpu.getZeroMotionDetected())`, gen.ORDER_ATOMIC];
+              break;
+            case 'still': //靜止
+                return [`mpu.getZeroMotionDetected()`, gen.ORDER_ATOMIC];
+              break;
+            default:
+                return;
+        }
+
     }
 
     imuRead (args){
@@ -1575,11 +1832,23 @@ class cBrain {
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     #include "Wire.h"
 #endif
+
+MPU6050 mpu;
 `;
 
+      gen.definitions_['mpufailed'] = `
+void mpufailed(){
+    #define LED_PIN 13
+    bool blinkState = false;
+    pinMode(LED_PIN, OUTPUT);
+    for ( uint8_t i=0; i<5; i++) {
+        blinkState = !blinkState;
+        digitalWrite(LED_PIN, blinkState);
+        delay(500);
+    }
+}
+`;
       gen.definitions_['mpu6050read'] = `
-MPU6050 mpu;
-
 int16_t mpu6050read(uint8_t d){
   uint8_t fifoBuffer[64]; // FIFO storage buffer
   Quaternion q;           // [w, x, y, z]         quaternion container
@@ -1636,33 +1905,33 @@ int16_t mpu6050read(uint8_t d){
     Serial.print("\t");
     Serial.println(gravity.z);
     */
-    switch (d) {
+    switch (d) { // imu x-y-z軸與主機不同
         case 1: //yaw
             return int(ypr[0] * 180/M_PI);
           break;
         case 2: //pitch
-            return int(ypr[2] * 180/M_PI); // imu x-y軸與主機不同
+            return int(ypr[2] * -180/M_PI);
           break;
         case 3: //roll
-            return int(ypr[1] * 180/M_PI); // imu x-y軸與主機不同
+            return int(ypr[1] * 180/M_PI);
           break;
-        case 11: //ax
-            return aaReal.x;
+        case 11: //ax, unit:
+            return -aaReal.x;
           break;
         case 22: //ay
-            return aaReal.y;
+            return -aaReal.y;
           break;
         case 33: //az
-            return aaReal.z;
+            return -aaReal.z;
           break;
         case 111: //gx
-            return gyro.x;
+            return -gyro.x;
           break;
         case 122: //gy
-            return gyro.y;
+            return -gyro.y;
           break;
         case 133: //gz
-            return gyro.z;
+            return -gyro.z;
           break;
         default:
             return;
@@ -1679,27 +1948,14 @@ int16_t mpu6050read(uint8_t d){
   #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
       Fastwire::setup(400, true);
   #endif
-
+  //Serial.begin(115200);
   mpu.initialize();
   if (!mpu.testConnection()) {
-    #define LED_PIN 13
-    bool blinkState = false;
-    for ( uint8_t i=0; i<5; i++) {
-        blinkState = !blinkState;
-        digitalWrite(LED_PIN, blinkState);
-        delay(500);
-    }
+    mpufailed();
     //Serial.println("MPU6050 connection failed");
-  }
-  /*
-  // supply your own gyro offsets here, scaled for min sensitivity
-  mpu.setXGyroOffset(147);
-  mpu.setYGyroOffset(43);
-  mpu.setZGyroOffset(-13);
-  mpu.setZAccelOffset(962); // 1688 factory default for my test chip
-  */
-  // make sure it worked (returns 0 if so)
-  if (mpu.dmpInitialize() == 0) {
+  } else {
+    // make sure it worked (returns 0 if so)
+    if (mpu.dmpInitialize() == 0) {
       // Calibration Time: generate offsets and calibrate our MPU6050
       mpu.CalibrateAccel(6);
       mpu.CalibrateGyro(6);
@@ -1707,11 +1963,19 @@ int16_t mpu6050read(uint8_t d){
       // turn on the DMP, now that it's ready
       //Serial.println(F("Enabling DMP..."));
       mpu.setDMPEnabled(true);
-      // set our DMP Ready flag so the main loop() function knows it's okay to use it
-      //Serial.println(F("DMP ready! Waiting for first interrupt..."));
-      //dmpReady = true;
-  } else {
+      //Serial.println(F("DMP ready!"));
+      //DEBUG_PRINTLN("Setting DHPF bandwidth to 5Hz...");
+      mpu.setDHPFMode(1);
+      mpu.setFreefallDetectionThreshold(17);
+      mpu.setFreefallDetectionDuration(2);
+      mpu.setMotionDetectionThreshold(2);
+      mpu.setMotionDetectionDuration(40);
+      mpu.setZeroMotionDetectionThreshold(4);
+      mpu.setZeroMotionDetectionDuration(1);
+    } else {
+      mpufailed();
       //Serial.print(F("DMP Initialization failed"));
+    }
   }
 `;
       return [`mpu6050read(${d})`, gen.ORDER_ATOMIC];
