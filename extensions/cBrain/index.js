@@ -1572,6 +1572,8 @@ class cBrain {
 #endif
 
 MPU6050 mpu;
+
+//#define DEBUG
 `;
 
         gen.definitions_['mpufailed'] = `
@@ -1586,7 +1588,9 @@ void mpufailed(){
     }
 }
 `;
-        gen.setupCodes_['mpu6050'] = `
+      gen.setupCodes_['mpu6050'] = `
+  //uint8_t devStatus;
+
   // join I2C bus (I2Cdev library doesn't do this automatically)
   #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
       Wire.begin();
@@ -1594,32 +1598,51 @@ void mpufailed(){
   #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
       Fastwire::setup(400, true);
   #endif
-  //Serial.begin(115200);
+
+  #ifdef DEBUG
+    Serial.begin(115200);
+  #endif
+
   mpu.initialize();
   if (!mpu.testConnection()) {
     mpufailed();
-    //Serial.println("MPU6050 connection failed");
+    #ifdef DEBUG
+        Serial.println(F("MPU6050 connection failed"));
+    #endif
   } else {
+    uint8_t devStatus = mpu.dmpInitialize();
     // make sure it worked (returns 0 if so)
-    if (mpu.dmpInitialize() == 0) {
+    if (devStatus == 0) {
       // Calibration Time: generate offsets and calibrate our MPU6050
       mpu.CalibrateAccel(6);
       mpu.CalibrateGyro(6);
-      //mpu.PrintActiveOffsets();
-      //Serial.println(F("Enabling DMP..."));
+      #ifdef DEBUG
+        mpu.PrintActiveOffsets();
+        Serial.println(F("Enabling DMP..."));
+      #endif
       mpu.setDMPEnabled(true);
-      //Serial.println(F("DMP ready!"));
-      //DEBUG_PRINTLN("Setting DHPF bandwidth to 5Hz...");
+      #ifdef DEBUG
+        Serial.println(F("DMP ready!"));
+        Serial.println(F("Setting DHPF bandwidth to 5Hz..."));
+      #endif
       mpu.setDHPFMode(1);
       mpu.setFreefallDetectionThreshold(17);
       mpu.setFreefallDetectionDuration(2);
       mpu.setMotionDetectionThreshold(2);
-      mpu.setMotionDetectionDuration(40);
+      mpu.setMotionDetectionDuration(20);
       mpu.setZeroMotionDetectionThreshold(4);
       mpu.setZeroMotionDetectionDuration(1);
     } else {
       mpufailed();
-      //Serial.print(F("DMP Initialization failed"));
+      // ERROR!
+      // 1 = initial memory load failed
+      // 2 = DMP configuration updates failed
+      // (if it's going to break, usually the code will be 1)
+      #ifdef DEBUG
+        Serial.print(F("DMP Initialization failed (code "));
+        Serial.print(devStatus);
+        Serial.println(F(")"));
+      #endif
     }
   }
 `;
@@ -1641,6 +1664,8 @@ void mpufailed(){
 #endif
 
 MPU6050 mpu;
+
+//#define DEBUG
 `;
 
         gen.definitions_['mpufailed'] = `
@@ -1655,7 +1680,113 @@ void mpufailed(){
     }
 }
 `;
+        gen.definitions_['mpu6050read'] = `
+int16_t mpu6050read(uint8_t d){
+  uint8_t fifoBuffer[64]; // FIFO storage buffer
+  Quaternion q;           // [w, x, y, z]         quaternion container
+  VectorInt16 aa;         // [x, y, z]            accel sensor measurements
+  VectorInt16 gyro;       // [x, y, z]            gyro sensor measurements
+  VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
+  VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
+  VectorFloat gravity;    // [x, y, z]            gravity vector
+  float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+
+  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet 
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+    mpu.dmpGetAccel(&aa, fifoBuffer);
+    mpu.dmpGetGyro(&gyro, fifoBuffer);
+    mpu.dmpGetGravity(&gravity, &q);
+    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+    mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+    
+    #ifdef DEBUG
+        Serial.print("ypr\t");
+        Serial.print(ypr[0] * 180/M_PI);
+        Serial.print("\t");
+        Serial.print(ypr[1] * 180/M_PI);
+        Serial.print("\t");
+        Serial.println(ypr[2] * 180/M_PI);
+        Serial.print("acc\t");
+        Serial.print(aa.x);
+        Serial.print("\t");
+        Serial.print(aa.y);
+        Serial.print("\t");
+        Serial.println(aa.z);
+        Serial.print("gyro\t");
+        Serial.print(gyro.x);
+        Serial.print("\t");
+        Serial.print(gyro.y);
+        Serial.print("\t");
+        Serial.println(gyro.z);
+        Serial.print("areal\t");
+        Serial.print(aaReal.x);
+        Serial.print("\t");
+        Serial.print(aaReal.y);
+        Serial.print("\t");
+        Serial.println(aaReal.z);
+        Serial.print("arealW\t");
+        Serial.print(aaWorld.x);
+        Serial.print("\t");
+        Serial.print(aaWorld.y);
+        Serial.print("\t");
+        Serial.println(aaWorld.z);
+        Serial.print("gravity\t");
+        Serial.print(gravity.x);
+        Serial.print("\t");
+        Serial.print(gravity.y);
+        Serial.print("\t");
+        Serial.println(gravity.z);
+    #endif
+
+    switch (d) { // imu x-y-z軸與主機不同
+        case 1: //yaw
+            return int(ypr[0] * 180/M_PI);
+          break;
+        case 2: //pitch
+            return int(ypr[2] * -180/M_PI);
+          break;
+        case 3: //roll
+            return int(ypr[1] * 180/M_PI);
+          break;
+        case 11: //ax, unit:mm/s2
+            return -aaReal.y;
+          break;
+        case 22: //ay
+            return -aaReal.x;
+          break;
+        case 33: //az
+            return -aaReal.z;
+          break;
+        case 111: //gx
+            return -gyro.y;
+          break;
+        case 122: //gy
+            return -gyro.x;
+          break;
+        case 133: //gz
+            return -gyro.z;
+          break;
+        case 55: // ax, unit:mg
+            return int(1000*gravity.y);
+          break;
+        case 66: // ay, unit:mg
+            return int(1000*gravity.x);
+          break;
+        case 77: // az, unit:mg
+            return int(1000*gravity.z);
+          break;
+        default:
+            return;
+      }
+
+  }
+
+}`;
+
         gen.setupCodes_['mpu6050'] = `
+  //uint8_t devStatus;
+
   // join I2C bus (I2Cdev library doesn't do this automatically)
   #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
       Wire.begin();
@@ -1663,65 +1794,139 @@ void mpufailed(){
   #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
       Fastwire::setup(400, true);
   #endif
-  //Serial.begin(115200);
+
+  #ifdef DEBUG
+    Serial.begin(115200);
+  #endif
+
   mpu.initialize();
   if (!mpu.testConnection()) {
     mpufailed();
-    //Serial.println("MPU6050 connection failed");
+    #ifdef DEBUG
+        Serial.println(F("MPU6050 connection failed"));
+    #endif
   } else {
+    uint8_t devStatus = mpu.dmpInitialize();
     // make sure it worked (returns 0 if so)
-    if (mpu.dmpInitialize() == 0) {
+    if (devStatus == 0) {
       // Calibration Time: generate offsets and calibrate our MPU6050
       mpu.CalibrateAccel(6);
       mpu.CalibrateGyro(6);
-      //mpu.PrintActiveOffsets();
-      //Serial.println(F("Enabling DMP..."));
+      #ifdef DEBUG
+        mpu.PrintActiveOffsets();
+        Serial.println(F("Enabling DMP..."));
+      #endif
       mpu.setDMPEnabled(true);
-      //Serial.println(F("DMP ready!"));
-      //DEBUG_PRINTLN("Setting DHPF bandwidth to 5Hz...");
+      #ifdef DEBUG
+        Serial.println(F("DMP ready!"));
+        Serial.println(F("Setting DHPF bandwidth to 5Hz..."));
+      #endif
       mpu.setDHPFMode(1);
       mpu.setFreefallDetectionThreshold(17);
       mpu.setFreefallDetectionDuration(2);
       mpu.setMotionDetectionThreshold(2);
-      mpu.setMotionDetectionDuration(40);
+      mpu.setMotionDetectionDuration(20);
       mpu.setZeroMotionDetectionThreshold(4);
       mpu.setZeroMotionDetectionDuration(1);
+      #ifdef DEBUG
+        Serial.print("FF Threshold:	");
+        Serial.println(mpu.getFreefallDetectionThreshold());
+        Serial.print("FF duration:	");
+        Serial.println(mpu.getFreefallDetectionDuration());
+        Serial.print("motion Threshold:	");
+        Serial.println(mpu.getMotionDetectionThreshold());
+        Serial.print("motion duration:	");
+        Serial.println(mpu.getMotionDetectionDuration());
+        Serial.print("0 Threshold:	");
+        Serial.println(mpu.getZeroMotionDetectionThreshold());
+        Serial.print("0 duration:	");
+        Serial.println(mpu.getZeroMotionDetectionDuration());
+    
+        Serial.print(F("Int Enable?	"));
+        Serial.println(mpu.getIntEnabled(),BIN);
+        Serial.print(F("IntFF enable?	"));
+        Serial.println(mpu.getIntFreefallEnabled());
+        Serial.print(F("IntMotion enable?	"));
+        Serial.println(mpu.getIntMotionEnabled());
+        Serial.print(F("0motionInt enable?	"));
+        Serial.println(mpu.getIntZeroMotionEnabled());
+      #endif
     } else {
       mpufailed();
-      //Serial.print(F("DMP Initialization failed"));
+      // ERROR!
+      // 1 = initial memory load failed
+      // 2 = DMP configuration updates failed
+      // (if it's going to break, usually the code will be 1)
+      #ifdef DEBUG
+        Serial.print(F("DMP Initialization failed (code "));
+        Serial.print(devStatus);
+        Serial.println(F(")"));
+      #endif
     }
   }
 `;
-
         const x = gen.valueToCode(block, 'GESTURE');
         //console.log('x=',typeof x, x);
         switch (x) {
-            case '0': //運動
-                return [`(!mpu.getZeroMotionDetected())`, gen.ORDER_ATOMIC];
+            case '1': //up
+                return [`abs(mpu6050read(2)-90)<5`, gen.ORDER_ATOMIC];
               break;
-            case '1': //往右
+            case '2': //down
+                return [`abs(mpu6050read(2)+90)<5`, gen.ORDER_ATOMIC];
+              break;
+            case '3': //left
+                return [`abs(mpu6050read(3)-90)<5`, gen.ORDER_ATOMIC];
+              break;
+            case '4': //right
+                return [`abs(mpu6050read(3)+90)<5`, gen.ORDER_ATOMIC];
+              break;
+            case '5': //face up
+                return [`abs(mpu6050read(66)-1000)<10`, gen.ORDER_ATOMIC];
+              break;
+            case '6': //face down
+                return [`abs(mpu6050read(66)+1000)<10`, gen.ORDER_ATOMIC];
+              break;
+            case '11': //逆旋
+              return [`mpu6050read(1)>5`, gen.ORDER_ATOMIC];
+                break;
+            case '12': //順旋
+              return [`mpu6050read(1)<-5`, gen.ORDER_ATOMIC];
+                break;
+            case '13': //前俯
+              return [`mpu6050read(2)>5`, gen.ORDER_ATOMIC];
+                break;
+            case '14': //後仰
+              return [`mpu6050read(2)<-5`, gen.ORDER_ATOMIC];
+                break;
+            case '15': //左傾
+              return [`mpu6050read(3)>5`, gen.ORDER_ATOMIC];
+                break;
+            case '16': //右傾
+              return [`mpu6050read(3)<-5`, gen.ORDER_ATOMIC];
+                break;
+            case '21': //往前
                 return [`mpu.getXNegMotionDetected()`, gen.ORDER_ATOMIC];
               break;
-            case '2': //往左
+            case '22': //往後
                 return [`mpu.getXPosMotionDetected()`, gen.ORDER_ATOMIC];
               break;
-            case '3': //往前
+            case '23': //往左
                 return [`mpu.getYNegMotionDetected()`, gen.ORDER_ATOMIC];
               break;
-            case '4': //往後
+            case '24': //往右
                 return [`mpu.getYPosMotionDetected()`, gen.ORDER_ATOMIC];
               break;
-            case '5': //往上
-                return [`mpu.getZPosMotionDetected()`, gen.ORDER_ATOMIC];
-              break;
-            case '6': //往下
+            case '25': //往上
                 return [`mpu.getZNegMotionDetected()`, gen.ORDER_ATOMIC];
+              break;
+            case '26': //往下
+                return [`mpu.getZPosMotionDetected()`, gen.ORDER_ATOMIC];
               break;
             case 'freefall': //free fall
                 return [`mpu.getIntFreefallStatus()`, gen.ORDER_ATOMIC];
               break;
             case 'shake': //shake
-                return [`(!mpu.getZeroMotionDetected())`, gen.ORDER_ATOMIC];
+                return [`shaked()`, gen.ORDER_ATOMIC];
               break;
             case 'still': //靜止
                 return [`mpu.getZeroMotionDetected()`, gen.ORDER_ATOMIC];
@@ -1834,6 +2039,8 @@ void mpufailed(){
 #endif
 
 MPU6050 mpu;
+
+//#define DEBUG
 `;
 
       gen.definitions_['mpufailed'] = `
@@ -1867,44 +2074,46 @@ int16_t mpu6050read(uint8_t d){
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
     mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
     mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-    /*
-    Serial.print("ypr\t");
-    Serial.print(ypr[0] * 180/M_PI);
-    Serial.print("\t");
-    Serial.print(ypr[1] * 180/M_PI);
-    Serial.print("\t");
-    Serial.println(ypr[2] * 180/M_PI);
-    Serial.print("acc\t");
-    Serial.print(aa.x);
-    Serial.print("\t");
-    Serial.print(aa.y);
-    Serial.print("\t");
-    Serial.println(aa.z);
-    Serial.print("gyro\t");
-    Serial.print(gyro.x);
-    Serial.print("\t");
-    Serial.print(gyro.y);
-    Serial.print("\t");
-    Serial.println(gyro.z);
-    Serial.print("areal\t");
-    Serial.print(aaReal.x);
-    Serial.print("\t");
-    Serial.print(aaReal.y);
-    Serial.print("\t");
-    Serial.println(aaReal.z);
-    Serial.print("arealW\t");
-    Serial.print(aaWorld.x);
-    Serial.print("\t");
-    Serial.print(aaWorld.y);
-    Serial.print("\t");
-    Serial.println(aaWorld.z);
-    Serial.print("gravity\t");
-    Serial.print(gravity.x);
-    Serial.print("\t");
-    Serial.print(gravity.y);
-    Serial.print("\t");
-    Serial.println(gravity.z);
-    */
+    
+    #ifdef DEBUG
+        Serial.print("ypr\t");
+        Serial.print(ypr[0] * 180/M_PI);
+        Serial.print("\t");
+        Serial.print(ypr[1] * 180/M_PI);
+        Serial.print("\t");
+        Serial.println(ypr[2] * 180/M_PI);
+        Serial.print("acc\t");
+        Serial.print(aa.x);
+        Serial.print("\t");
+        Serial.print(aa.y);
+        Serial.print("\t");
+        Serial.println(aa.z);
+        Serial.print("gyro\t");
+        Serial.print(gyro.x);
+        Serial.print("\t");
+        Serial.print(gyro.y);
+        Serial.print("\t");
+        Serial.println(gyro.z);
+        Serial.print("areal\t");
+        Serial.print(aaReal.x);
+        Serial.print("\t");
+        Serial.print(aaReal.y);
+        Serial.print("\t");
+        Serial.println(aaReal.z);
+        Serial.print("arealW\t");
+        Serial.print(aaWorld.x);
+        Serial.print("\t");
+        Serial.print(aaWorld.y);
+        Serial.print("\t");
+        Serial.println(aaWorld.z);
+        Serial.print("gravity\t");
+        Serial.print(gravity.x);
+        Serial.print("\t");
+        Serial.print(gravity.y);
+        Serial.print("\t");
+        Serial.println(gravity.z);
+    #endif
+
     switch (d) { // imu x-y-z軸與主機不同
         case 1: //yaw
             return int(ypr[0] * 180/M_PI);
@@ -1915,23 +2124,32 @@ int16_t mpu6050read(uint8_t d){
         case 3: //roll
             return int(ypr[1] * 180/M_PI);
           break;
-        case 11: //ax, unit:
-            return -aaReal.x;
+        case 11: //ax, unit:mm/s2
+            return -aaReal.y;
           break;
         case 22: //ay
-            return -aaReal.y;
+            return -aaReal.x;
           break;
         case 33: //az
             return -aaReal.z;
           break;
         case 111: //gx
-            return -gyro.x;
+            return -gyro.y;
           break;
         case 122: //gy
-            return -gyro.y;
+            return -gyro.x;
           break;
         case 133: //gz
             return -gyro.z;
+          break;
+        case 55: // ax, unit:mg
+            return int(1000*gravity.y);
+          break;
+        case 66: // ay, unit:mg
+            return int(1000*gravity.x);
+          break;
+        case 77: // az, unit:mg
+            return int(1000*gravity.z);
           break;
         default:
             return;
@@ -1940,7 +2158,10 @@ int16_t mpu6050read(uint8_t d){
   }
 
 }`;
-      gen.setupCodes_['mpu6050'] = `
+
+        gen.setupCodes_['mpu6050'] = `
+  //uint8_t devStatus;
+
   // join I2C bus (I2Cdev library doesn't do this automatically)
   #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
       Wire.begin();
@@ -1948,33 +2169,74 @@ int16_t mpu6050read(uint8_t d){
   #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
       Fastwire::setup(400, true);
   #endif
-  //Serial.begin(115200);
+
+  #ifdef DEBUG
+    Serial.begin(115200);
+  #endif
+
   mpu.initialize();
   if (!mpu.testConnection()) {
     mpufailed();
-    //Serial.println("MPU6050 connection failed");
+    #ifdef DEBUG
+        Serial.println(F("MPU6050 connection failed"));
+    #endif
   } else {
+    uint8_t devStatus = mpu.dmpInitialize();
     // make sure it worked (returns 0 if so)
-    if (mpu.dmpInitialize() == 0) {
+    if (devStatus == 0) {
       // Calibration Time: generate offsets and calibrate our MPU6050
       mpu.CalibrateAccel(6);
       mpu.CalibrateGyro(6);
-      //mpu.PrintActiveOffsets();
-      // turn on the DMP, now that it's ready
-      //Serial.println(F("Enabling DMP..."));
+      #ifdef DEBUG
+        mpu.PrintActiveOffsets();
+        Serial.println(F("Enabling DMP..."));
+      #endif
       mpu.setDMPEnabled(true);
-      //Serial.println(F("DMP ready!"));
-      //DEBUG_PRINTLN("Setting DHPF bandwidth to 5Hz...");
+      #ifdef DEBUG
+        Serial.println(F("DMP ready!"));
+        Serial.println(F("Setting DHPF bandwidth to 5Hz..."));
+      #endif
       mpu.setDHPFMode(1);
       mpu.setFreefallDetectionThreshold(17);
       mpu.setFreefallDetectionDuration(2);
       mpu.setMotionDetectionThreshold(2);
-      mpu.setMotionDetectionDuration(40);
+      mpu.setMotionDetectionDuration(20);
       mpu.setZeroMotionDetectionThreshold(4);
       mpu.setZeroMotionDetectionDuration(1);
+      #ifdef DEBUG
+        Serial.print("FF Threshold:	");
+        Serial.println(mpu.getFreefallDetectionThreshold());
+        Serial.print("FF duration:	");
+        Serial.println(mpu.getFreefallDetectionDuration());
+        Serial.print("motion Threshold:	");
+        Serial.println(mpu.getMotionDetectionThreshold());
+        Serial.print("motion duration:	");
+        Serial.println(mpu.getMotionDetectionDuration());
+        Serial.print("0 Threshold:	");
+        Serial.println(mpu.getZeroMotionDetectionThreshold());
+        Serial.print("0 duration:	");
+        Serial.println(mpu.getZeroMotionDetectionDuration());
+    
+        Serial.print(F("Int Enable?	"));
+        Serial.println(mpu.getIntEnabled(),BIN);
+        Serial.print(F("IntFF enable?	"));
+        Serial.println(mpu.getIntFreefallEnabled());
+        Serial.print(F("IntMotion enable?	"));
+        Serial.println(mpu.getIntMotionEnabled());
+        Serial.print(F("0motionInt enable?	"));
+        Serial.println(mpu.getIntZeroMotionEnabled());
+      #endif
     } else {
       mpufailed();
-      //Serial.print(F("DMP Initialization failed"));
+      // ERROR!
+      // 1 = initial memory load failed
+      // 2 = DMP configuration updates failed
+      // (if it's going to break, usually the code will be 1)
+      #ifdef DEBUG
+        Serial.print(F("DMP Initialization failed (code "));
+        Serial.print(devStatus);
+        Serial.println(F(")"));
+      #endif
     }
   }
 `;
