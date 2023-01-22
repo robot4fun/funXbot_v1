@@ -1564,7 +1564,7 @@ class cBrain {
         gen.includes_['mpu6050'] = `
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
-        
+
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
 // is used in I2Cdev.h
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
@@ -1656,7 +1656,7 @@ void mpufailed(){
         gen.includes_['mpu6050'] = `
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
-        
+
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
 // is used in I2Cdev.h
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
@@ -1691,7 +1691,7 @@ int16_t mpu6050read(uint8_t d){
   VectorFloat gravity;    // [x, y, z]            gravity vector
   float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
-  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet 
+  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet
     mpu.dmpGetQuaternion(&q, fifoBuffer);
     mpu.dmpGetAccel(&aa, fifoBuffer);
     mpu.dmpGetGyro(&gyro, fifoBuffer);
@@ -1699,7 +1699,7 @@ int16_t mpu6050read(uint8_t d){
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
     mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
     mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-    
+
     #ifdef DEBUG
         Serial.print("ypr\t");
         Serial.print(ypr[0] * 180/M_PI);
@@ -1747,31 +1747,31 @@ int16_t mpu6050read(uint8_t d){
             return int(ypr[2] * -180/M_PI);
           break;
         case 3: //roll
-            return int(ypr[1] * 180/M_PI);
+            return int(ypr[1] * -180/M_PI);
           break;
         case 11: //ax, unit:mm/s2
-            return -aaReal.y;
-          break;
-        case 22: //ay
             return -aaReal.x;
           break;
+        case 22: //ay
+            return -aaReal.y;
+          break;
         case 33: //az
-            return -aaReal.z;
+            return aaReal.z;
           break;
         case 111: //gx
-            return -gyro.y;
-          break;
-        case 122: //gy
             return -gyro.x;
           break;
+        case 122: //gy
+            return -gyro.y;
+          break;
         case 133: //gz
-            return -gyro.z;
+            return gyro.z;
           break;
         case 55: // ax, unit:mg
-            return int(1000*gravity.y);
+            return int(-1000*gravity.x);
           break;
         case 66: // ay, unit:mg
-            return int(1000*gravity.x);
+            return int(-1000*gravity.y);
           break;
         case 77: // az, unit:mg
             return int(1000*gravity.z);
@@ -1782,6 +1782,36 @@ int16_t mpu6050read(uint8_t d){
 
   }
 
+}`;
+
+        gen.definitions_['mpu6050shaked'] = `
+boolean imuShaked(){
+  boolean ishaked = false;
+  uint8_t fifoBuffer[64]; // FIFO storage buffer
+  Quaternion q;           // [w, x, y, z]         quaternion container
+  VectorInt16 aa;         // [x, y, z]            accel sensor measurements
+  VectorInt16 gyro;       // [x, y, z]            gyro sensor measurements
+  VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
+  VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
+  VectorFloat gravity;    // [x, y, z]            gravity vector
+  float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+
+  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+    mpu.dmpGetAccel(&aa, fifoBuffer);
+    mpu.dmpGetGyro(&gyro, fifoBuffer);
+    mpu.dmpGetGravity(&gravity, &q);
+    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+  }
+
+  if (abs(gravity.x)>0.5) {
+    if (abs(gravity.y)>0.5 || abs(gravity.z)>0.5) ishaked = true;
+  } else if (abs(gravity.y)>0.5) {
+    if (abs(gravity.z)>0.5) ishaked = true;
+  }
+  
+  return ishaked;
 }`;
 
         gen.setupCodes_['mpu6050'] = `
@@ -1841,7 +1871,7 @@ int16_t mpu6050read(uint8_t d){
         Serial.println(mpu.getZeroMotionDetectionThreshold());
         Serial.print("0 duration:	");
         Serial.println(mpu.getZeroMotionDetectionDuration());
-    
+
         Serial.print(F("Int Enable?	"));
         Serial.println(mpu.getIntEnabled(),BIN);
         Serial.print(F("IntFF enable?	"));
@@ -1875,10 +1905,10 @@ int16_t mpu6050read(uint8_t d){
                 return [`abs(mpu6050read(2)+90)<5`, gen.ORDER_ATOMIC];
               break;
             case '3': //left
-                return [`abs(mpu6050read(3)-90)<5`, gen.ORDER_ATOMIC];
+                return [`abs(mpu6050read(3)+90)<5`, gen.ORDER_ATOMIC];
               break;
             case '4': //right
-                return [`abs(mpu6050read(3)+90)<5`, gen.ORDER_ATOMIC];
+                return [`abs(mpu6050read(3)-90)<5`, gen.ORDER_ATOMIC];
               break;
             case '5': //face up
                 return [`abs(mpu6050read(66)-1000)<10`, gen.ORDER_ATOMIC];
@@ -1893,40 +1923,40 @@ int16_t mpu6050read(uint8_t d){
               return [`mpu6050read(1)<-5`, gen.ORDER_ATOMIC];
                 break;
             case '13': //前俯
-              return [`mpu6050read(2)>5`, gen.ORDER_ATOMIC];
-                break;
-            case '14': //後仰
               return [`mpu6050read(2)<-5`, gen.ORDER_ATOMIC];
                 break;
-            case '15': //左傾
-              return [`mpu6050read(3)>5`, gen.ORDER_ATOMIC];
+            case '14': //後仰
+              return [`mpu6050read(2)>5`, gen.ORDER_ATOMIC];
                 break;
-            case '16': //右傾
+            case '15': //左傾
               return [`mpu6050read(3)<-5`, gen.ORDER_ATOMIC];
                 break;
+            case '16': //右傾
+              return [`mpu6050read(3)>5`, gen.ORDER_ATOMIC];
+                break;
             case '21': //往前
-                return [`mpu.getXNegMotionDetected()`, gen.ORDER_ATOMIC];
-              break;
-            case '22': //往後
-                return [`mpu.getXPosMotionDetected()`, gen.ORDER_ATOMIC];
-              break;
-            case '23': //往左
                 return [`mpu.getYNegMotionDetected()`, gen.ORDER_ATOMIC];
               break;
-            case '24': //往右
+            case '22': //往後
                 return [`mpu.getYPosMotionDetected()`, gen.ORDER_ATOMIC];
               break;
+            case '23': //往左
+                return [`mpu.getXPosMotionDetected()`, gen.ORDER_ATOMIC];
+              break;
+            case '24': //往右
+                return [`mpu.getXNegMotionDetected()`, gen.ORDER_ATOMIC];
+              break;
             case '25': //往上
-                return [`mpu.getZNegMotionDetected()`, gen.ORDER_ATOMIC];
+                return [`mpu.getZPosMotionDetected()`, gen.ORDER_ATOMIC];
               break;
             case '26': //往下
-                return [`mpu.getZPosMotionDetected()`, gen.ORDER_ATOMIC];
+                return [`mpu.getZNegMotionDetected()`, gen.ORDER_ATOMIC];
               break;
             case 'freefall': //free fall
                 return [`mpu.getIntFreefallStatus()`, gen.ORDER_ATOMIC];
               break;
             case 'shake': //shake
-                return [`shaked()`, gen.ORDER_ATOMIC];
+                return [`imuShaked()`, gen.ORDER_ATOMIC];
               break;
             case 'still': //靜止
                 return [`mpu.getZeroMotionDetected()`, gen.ORDER_ATOMIC];
@@ -2066,7 +2096,7 @@ int16_t mpu6050read(uint8_t d){
   VectorFloat gravity;    // [x, y, z]            gravity vector
   float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
-  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet 
+  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet
     mpu.dmpGetQuaternion(&q, fifoBuffer);
     mpu.dmpGetAccel(&aa, fifoBuffer);
     mpu.dmpGetGyro(&gyro, fifoBuffer);
@@ -2074,7 +2104,7 @@ int16_t mpu6050read(uint8_t d){
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
     mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
     mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-    
+
     #ifdef DEBUG
         Serial.print("ypr\t");
         Serial.print(ypr[0] * 180/M_PI);
@@ -2122,31 +2152,31 @@ int16_t mpu6050read(uint8_t d){
             return int(ypr[2] * -180/M_PI);
           break;
         case 3: //roll
-            return int(ypr[1] * 180/M_PI);
+            return int(ypr[1] * -180/M_PI);
           break;
         case 11: //ax, unit:mm/s2
-            return -aaReal.y;
-          break;
-        case 22: //ay
             return -aaReal.x;
           break;
+        case 22: //ay
+            return -aaReal.y;
+          break;
         case 33: //az
-            return -aaReal.z;
+            return aaReal.z;
           break;
         case 111: //gx
-            return -gyro.y;
-          break;
-        case 122: //gy
             return -gyro.x;
           break;
+        case 122: //gy
+            return -gyro.y;
+          break;
         case 133: //gz
-            return -gyro.z;
+            return gyro.z;
           break;
         case 55: // ax, unit:mg
-            return int(1000*gravity.y);
+            return int(-1000*gravity.x);
           break;
         case 66: // ay, unit:mg
-            return int(1000*gravity.x);
+            return int(-1000*gravity.y);
           break;
         case 77: // az, unit:mg
             return int(1000*gravity.z);
@@ -2216,7 +2246,7 @@ int16_t mpu6050read(uint8_t d){
         Serial.println(mpu.getZeroMotionDetectionThreshold());
         Serial.print("0 duration:	");
         Serial.println(mpu.getZeroMotionDetectionDuration());
-    
+
         Serial.print(F("Int Enable?	"));
         Serial.println(mpu.getIntEnabled(),BIN);
         Serial.print(F("IntFF enable?	"));
@@ -2864,10 +2894,10 @@ while (${sertype}.available()) {
         va = va.substr(1,va.length-2);
         gen.includes_['stdint'] = `#include <stdint.h>`;
         //gen.definitions_['var'] = `${typo} ${va};`;
-        
+
         return gen.line(`${typo} ${va} = ${value}`);
     }
-    
+
     var_valueGen (gen, block){
         let va = gen.valueToCode(block, 'VAR');
         va = va.substr(1,va.length-2);
