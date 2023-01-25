@@ -680,6 +680,15 @@ class cBrain {
                 }
             },
             {
+                opcode: 'resetYaw',
+                blockType: BlockType.COMMAND,
+                text: 'reset Yaw angle',
+                func: 'resetyaw',
+                gen: {
+                     arduino: this.resetyawGen
+                }
+            },
+            {
                 opcode: 'imuYPR',
                 blockType: BlockType.REPORTER,
                 text: 'IMU [IMU] reading(°)',
@@ -696,13 +705,52 @@ class cBrain {
                 }
             },
             {
-                opcode: 'resetYaw',
-                blockType: BlockType.COMMAND,
-                text: 'reset Yaw angle',
-                func: 'resetyaw',
-                gen: {
-                     arduino: this.resetyawGen
-                }
+              opcode: 'imuG',
+              blockType: BlockType.REPORTER,
+              text: 'IMU [IMU] reading(mG)',
+              arguments: {
+                  IMU: {
+                      type: ArgumentType.STRING,
+                      defaultValue: 'Gx',
+                      menu: 'accG'
+                  }
+              },
+              func: 'imuRead',
+              gen: {
+                  arduino: this.imuReadGen
+              }
+            },
+            {
+              opcode: 'imuAcc',
+              blockType: BlockType.REPORTER,
+              text: 'IMU [IMU] reading(mm/s²)',
+              arguments: {
+                  IMU: {
+                      type: ArgumentType.STRING,
+                      defaultValue: 'ax',
+                      menu: 'acc'
+                  }
+              },
+              func: 'imuRead',
+              gen: {
+                  arduino: this.imuReadGen
+              }
+            },
+            {
+              opcode: 'imuAV',
+              blockType: BlockType.REPORTER,
+              text: 'IMU [IMU] reading(°/s)',
+              arguments: {
+                  IMU: {
+                      type: ArgumentType.STRING,
+                      defaultValue: 'gx',
+                      menu: 'av'
+                  }
+              },
+              func: 'imuRead',
+              gen: {
+                  arduino: this.imuReadGen
+              }
             },
               '---',
               {
@@ -803,38 +851,6 @@ class cBrain {
                   func: 'noop',
                   blockType: BlockType.DIVLABEL,
                   text: 'more..'
-              },
-              {
-                opcode: 'imuAcc',
-                blockType: BlockType.REPORTER,
-                text: 'IMU [IMU] reading(mm/s²)',
-                arguments: {
-                    IMU: {
-                        type: ArgumentType.STRING,
-                        defaultValue: 'ax',
-                        menu: 'acc'
-                    }
-                },
-                func: 'imuRead',
-                gen: {
-                    arduino: this.imuReadGen
-                }
-              },
-              {
-                opcode: 'imuAV',
-                blockType: BlockType.REPORTER,
-                text: 'IMU [IMU] reading(°/s)',
-                arguments: {
-                    IMU: {
-                        type: ArgumentType.STRING,
-                        defaultValue: 'gx',
-                        menu: 'av'
-                    }
-                },
-                func: 'imuRead',
-                gen: {
-                    arduino: this.imuReadGen
-                }
               },
               {
                 opcode: 'v',
@@ -1164,6 +1180,7 @@ class cBrain {
                 StrTypo: ['HEX', 'BIN', 'DEC'],
                 Typo: ['byte', 'char', 'int', 'long', 'word', 'float'],
                 ypr: ['yaw','pitch','roll'],
+                accG:['Gx','Gy','Gz'],
                 acc:['ax','ay','az'],
                 av:['gx','gy','gz'],
                 m1:['freefall','shake','still'],
@@ -1233,15 +1250,17 @@ class cBrain {
                     'var': '變數[VAR]設為[VALUE], 資料型態為[TYPO]',
                     'var_value': '變數[VAR]',
                     'imuYPR': '[IMU]角度(°)',
+                    'imuG': '反作用力的[IMU]G值(mG)',
                     'imuAcc': '[IMU]的加速度(mm/s²)',
                     'imuAV': '[IMU]的角速度(°/s)',
                     'ypr': {'yaw':'偏航','pitch':'俯仰','roll':'翻滾'},
+                    'accG': {'Gx':'x軸','Gy':'y軸','Gz':'z軸'},
                     'acc': {'ax':'x軸','ay':'y軸','az':'z軸'},
                     'av': {'gx':'x軸','gy':'y軸','gz':'z軸'},
                     'm1': {'freefall':'自由掉落','shake':'搖晃','still':'靜止'},
                     'Gesture':'[GESTURE]朝上?',
                     'Gesture1':'姿態是[GESTURE]?',
-                    'Motion':'運動狀態是[GESTURE]?',
+                    'Motion':'運動方向是[GESTURE]?',
                     'Motion1':'狀態是[GESTURE]?',
                     'resetYaw':'將偏航角歸零',
                 },
@@ -1266,15 +1285,17 @@ class cBrain {
                     'var': '变数[VAR]设为[VALUE], 资料型态为[TYPO]',
                     'var_value': '变数[VAR]',
                     'imuYPR': '[IMU]角度(°)',
+                    'imuG': '反作用力的[IMU]G值(mG)',
                     'imuAcc': '[IMU]的加速度(mm/s²)',
                     'imuAV': '[IMU]的角速度(°/s)',
                     'ypr': {'yaw':'航向','pitch':'俯仰','roll':'橫滚'},
+                    'accG': {'Gx':'x轴','Gy':'y轴','Gz':'z轴'},
                     'acc': {'ax':'x轴','ay':'y轴','az':'z轴'},
                     'av': {'gx':'x轴','gy':'y轴','gz':'z轴'},
                     'm1': {'freefall':'自由掉落','shake':'摇晃','still':'静止'},
                     'Gesture':'[GESTURE]朝上?',
                     'Gesture1':'姿态是[GESTURE]?',
-                    'Motion':'运动状态是[GESTURE]?',
+                    'Motion':'运动方向是[GESTURE]?',
                     'Motion1':'状态是[GESTURE]?',
                     'resetYaw':'将航向角归零',
                 },
@@ -1572,7 +1593,7 @@ class cBrain {
 #endif
 
 MPU6050 mpu;
-
+int16_t yaw_bias=0;
 //#define DEBUG
 `;
 
@@ -1588,9 +1609,121 @@ void mpufailed(){
     }
 }
 `;
-      gen.setupCodes_['mpu6050'] = `
-  //uint8_t devStatus;
+        gen.definitions_['mpu6050read'] = `
+int16_t mpu6050read(uint8_t d, boolean bias=true){
+  uint8_t fifoBuffer[64]; // FIFO storage buffer
+  Quaternion q;           // [w, x, y, z]         quaternion container
+  VectorInt16 aa;         // [x, y, z]            accel sensor measurements
+  VectorInt16 gyro;       // [x, y, z]            gyro sensor measurements
+  VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
+  VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
+  VectorFloat gravity;    // [x, y, z]            gravity vector
+  float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
+  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+    mpu.dmpGetAccel(&aa, fifoBuffer);
+    mpu.dmpGetGyro(&gyro, fifoBuffer);
+    mpu.dmpGetGravity(&gravity, &q);
+    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+    mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+
+    #ifdef DEBUG
+      Serial.print("ypr\t");
+      Serial.print(ypr[0] * 180/M_PI);
+      Serial.print("\t");
+      Serial.print(ypr[1] * 180/M_PI);
+      Serial.print("\t");
+      Serial.println(ypr[2] * 180/M_PI);
+      Serial.print("acc\t");
+      Serial.print(aa.x);
+      Serial.print("\t");
+      Serial.print(aa.y);
+      Serial.print("\t");
+      Serial.println(aa.z);
+      Serial.print("gyro\t");
+      Serial.print(gyro.x);
+      Serial.print("\t");
+      Serial.print(gyro.y);
+      Serial.print("\t");
+      Serial.println(gyro.z);
+      Serial.print("areal\t");
+      Serial.print(aaReal.x);
+      Serial.print("\t");
+      Serial.print(aaReal.y);
+      Serial.print("\t");
+      Serial.println(aaReal.z);
+      Serial.print("arealW\t");
+      Serial.print(aaWorld.x);
+      Serial.print("\t");
+      Serial.print(aaWorld.y);
+      Serial.print("\t");
+      Serial.println(aaWorld.z);
+      Serial.print("gravity\t");
+      Serial.print(gravity.x);
+      Serial.print("\t");
+      Serial.print(gravity.y);
+      Serial.print("\t");
+      Serial.println(gravity.z);
+    #endif
+
+    switch (d) { // imu x-y-z軸與主機不同
+      case 1: //yaw
+          if (bias) { return (int(ypr[0] * -180/M_PI)-yaw_bias);}
+          else { return int(ypr[0] * -180/M_PI);}
+        break;
+      case 2: //pitch
+          return int(ypr[2] * -180/M_PI);
+        break;
+      case 3: //roll
+          return int(ypr[1] * 180/M_PI);
+        break;
+      case 11: //ax, unit:mm/s2
+          return -aaReal.x;
+        break;
+      case 22: //ay
+          return -aaReal.y;
+        break;
+      case 33: //az
+          return aaReal.z;
+        break;
+      case 111: //gx
+          return -gyro.x;
+        break;
+      case 122: //gy
+          return -gyro.y;
+        break;
+      case 133: //gz
+          return gyro.z;
+        break;
+      case 55: // Gx, unit:mG, 方向:反作用力
+          return int(-1000*gravity.x);
+        break;
+      case 66: // Gy
+          return int(-1000*gravity.y);
+        break;
+      case 77: // Gz
+          return int(1000*gravity.z);
+        break;
+      case 255: // shaked? 1G=8192 for mpu6050
+          if (abs(aaReal.x)>4000) {
+            if (abs(aaReal.y)>4000 || abs(aaReal.z)>4000) return 1;
+          } else if (abs(aaReal.y)>4000) {
+            if (abs(aaReal.z)>4000) return 1;
+          } else {
+            return 0;
+          }
+        break;
+      default:
+        return;
+    }
+
+  }
+
+}`;
+
+        gen.setupCodes_['mpu6050'] = `
   // join I2C bus (I2Cdev library doesn't do this automatically)
   #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
       Wire.begin();
@@ -1618,7 +1751,6 @@ void mpufailed(){
       mpu.CalibrateGyro(6);
       #ifdef DEBUG
         mpu.PrintActiveOffsets();
-        Serial.println(F("Enabling DMP..."));
       #endif
       mpu.setDMPEnabled(true);
       #ifdef DEBUG
@@ -1632,6 +1764,23 @@ void mpufailed(){
       mpu.setMotionDetectionDuration(20);
       mpu.setZeroMotionDetectionThreshold(4);
       mpu.setZeroMotionDetectionDuration(1);
+      #ifdef DEBUG
+        Serial.print(F("FF Threshold:	"));
+        Serial.println(mpu.getFreefallDetectionThreshold());
+        Serial.print(F("FF duration:	"));
+        Serial.println(mpu.getFreefallDetectionDuration());
+        Serial.print(F("motion Threshold:	"));
+        Serial.println(mpu.getMotionDetectionThreshold());
+        Serial.print(F("motion duration:	"));
+        Serial.println(mpu.getMotionDetectionDuration());
+        Serial.print(F("0 Threshold:	"));
+        Serial.println(mpu.getZeroMotionDetectionThreshold());
+        Serial.print(F("0 duration:	"));
+        Serial.println(mpu.getZeroMotionDetectionDuration());
+
+        Serial.print(F("Int Enable?	"));
+        Serial.println(mpu.getIntEnabled(),BIN);
+      #endif
     } else {
       mpufailed();
       // ERROR!
@@ -1646,6 +1795,8 @@ void mpufailed(){
     }
   }
 `;
+
+        return gen.line(`yaw_bias = mpu6050read(1,false)`);
     }
 
     isGesture (args){
@@ -1664,7 +1815,7 @@ void mpufailed(){
 #endif
 
 MPU6050 mpu;
-
+int16_t yaw_bias=0;
 //#define DEBUG
 `;
 
@@ -1681,7 +1832,7 @@ void mpufailed(){
 }
 `;
         gen.definitions_['mpu6050read'] = `
-int16_t mpu6050read(uint8_t d){
+int16_t mpu6050read(uint8_t d, boolean bias=true){
   uint8_t fifoBuffer[64]; // FIFO storage buffer
   Quaternion q;           // [w, x, y, z]         quaternion container
   VectorInt16 aa;         // [x, y, z]            accel sensor measurements
@@ -1741,13 +1892,14 @@ int16_t mpu6050read(uint8_t d){
 
     switch (d) { // imu x-y-z軸與主機不同
         case 1: //yaw
-            return int(ypr[0] * 180/M_PI);
+            if (bias) { return (int(ypr[0] * -180/M_PI)-yaw_bias);}
+            else { return int(ypr[0] * -180/M_PI);}
           break;
         case 2: //pitch
             return int(ypr[2] * -180/M_PI);
           break;
         case 3: //roll
-            return int(ypr[1] * -180/M_PI);
+            return int(ypr[1] * 180/M_PI);
           break;
         case 11: //ax, unit:mm/s2
             return -aaReal.x;
@@ -1767,14 +1919,23 @@ int16_t mpu6050read(uint8_t d){
         case 133: //gz
             return gyro.z;
           break;
-        case 55: // ax, unit:mg
+        case 55: // Gx, unit:mG, 方向:反作用力
             return int(-1000*gravity.x);
           break;
-        case 66: // ay, unit:mg
+        case 66: // Gy
             return int(-1000*gravity.y);
           break;
-        case 77: // az, unit:mg
+        case 77: // Gz
             return int(1000*gravity.z);
+          break;
+        case 255: // shaked? 1G=8192 for mpu6050
+            if (abs(aaReal.x)>4000) {
+              if (abs(aaReal.y)>4000 || abs(aaReal.z)>4000) return 1;
+            } else if (abs(aaReal.y)>4000) {
+              if (abs(aaReal.z)>4000) return 1;
+            } else {
+              return 0;
+            }
           break;
         default:
             return;
@@ -1784,39 +1945,7 @@ int16_t mpu6050read(uint8_t d){
 
 }`;
 
-        gen.definitions_['mpu6050shaked'] = `
-boolean imuShaked(){
-  boolean ishaked = false;
-  uint8_t fifoBuffer[64]; // FIFO storage buffer
-  Quaternion q;           // [w, x, y, z]         quaternion container
-  VectorInt16 aa;         // [x, y, z]            accel sensor measurements
-  VectorInt16 gyro;       // [x, y, z]            gyro sensor measurements
-  VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
-  VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
-  VectorFloat gravity;    // [x, y, z]            gravity vector
-  float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
-
-  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetAccel(&aa, fifoBuffer);
-    mpu.dmpGetGyro(&gyro, fifoBuffer);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-  }
-
-  if (abs(gravity.x)>0.5) {
-    if (abs(gravity.y)>0.5 || abs(gravity.z)>0.5) ishaked = true;
-  } else if (abs(gravity.y)>0.5) {
-    if (abs(gravity.z)>0.5) ishaked = true;
-  }
-  
-  return ishaked;
-}`;
-
         gen.setupCodes_['mpu6050'] = `
-  //uint8_t devStatus;
-
   // join I2C bus (I2Cdev library doesn't do this automatically)
   #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
       Wire.begin();
@@ -1844,7 +1973,6 @@ boolean imuShaked(){
       mpu.CalibrateGyro(6);
       #ifdef DEBUG
         mpu.PrintActiveOffsets();
-        Serial.println(F("Enabling DMP..."));
       #endif
       mpu.setDMPEnabled(true);
       #ifdef DEBUG
@@ -1859,27 +1987,21 @@ boolean imuShaked(){
       mpu.setZeroMotionDetectionThreshold(4);
       mpu.setZeroMotionDetectionDuration(1);
       #ifdef DEBUG
-        Serial.print("FF Threshold:	");
+        Serial.print(F("FF Threshold:	"));
         Serial.println(mpu.getFreefallDetectionThreshold());
-        Serial.print("FF duration:	");
+        Serial.print(F("FF duration:	"));
         Serial.println(mpu.getFreefallDetectionDuration());
-        Serial.print("motion Threshold:	");
+        Serial.print(F("motion Threshold:	"));
         Serial.println(mpu.getMotionDetectionThreshold());
-        Serial.print("motion duration:	");
+        Serial.print(F("motion duration:	"));
         Serial.println(mpu.getMotionDetectionDuration());
-        Serial.print("0 Threshold:	");
+        Serial.print(F("0 Threshold:	"));
         Serial.println(mpu.getZeroMotionDetectionThreshold());
-        Serial.print("0 duration:	");
+        Serial.print(F("0 duration:	"));
         Serial.println(mpu.getZeroMotionDetectionDuration());
 
         Serial.print(F("Int Enable?	"));
         Serial.println(mpu.getIntEnabled(),BIN);
-        Serial.print(F("IntFF enable?	"));
-        Serial.println(mpu.getIntFreefallEnabled());
-        Serial.print(F("IntMotion enable?	"));
-        Serial.println(mpu.getIntMotionEnabled());
-        Serial.print(F("0motionInt enable?	"));
-        Serial.println(mpu.getIntZeroMotionEnabled());
       #endif
     } else {
       mpufailed();
@@ -1895,31 +2017,32 @@ boolean imuShaked(){
     }
   }
 `;
+
         const x = gen.valueToCode(block, 'GESTURE');
         //console.log('x=',typeof x, x);
         switch (x) {
             case '1': //up
-                return [`abs(mpu6050read(2)-90)<5`, gen.ORDER_ATOMIC];
+                return [`abs(mpu6050read(66)-1000)<100`, gen.ORDER_ATOMIC];
               break;
             case '2': //down
-                return [`abs(mpu6050read(2)+90)<5`, gen.ORDER_ATOMIC];
+                return [`abs(mpu6050read(66)+1000)<100`, gen.ORDER_ATOMIC];
               break;
             case '3': //left
-                return [`abs(mpu6050read(3)+90)<5`, gen.ORDER_ATOMIC];
+                return [`abs(mpu6050read(55)-1000)<100`, gen.ORDER_ATOMIC];
               break;
             case '4': //right
-                return [`abs(mpu6050read(3)-90)<5`, gen.ORDER_ATOMIC];
+                return [`abs(mpu6050read(55)+1000)<100`, gen.ORDER_ATOMIC];
               break;
             case '5': //face up
-                return [`abs(mpu6050read(66)-1000)<10`, gen.ORDER_ATOMIC];
+                return [`abs(mpu6050read(77)-1000)<100`, gen.ORDER_ATOMIC];
               break;
             case '6': //face down
-                return [`abs(mpu6050read(66)+1000)<10`, gen.ORDER_ATOMIC];
+                return [`abs(mpu6050read(77)+1000)<100`, gen.ORDER_ATOMIC];
               break;
-            case '11': //逆旋
+            case '11': //逆時針旋
               return [`mpu6050read(1)>5`, gen.ORDER_ATOMIC];
                 break;
-            case '12': //順旋
+            case '12': //順時針旋
               return [`mpu6050read(1)<-5`, gen.ORDER_ATOMIC];
                 break;
             case '13': //前俯
@@ -1956,7 +2079,7 @@ boolean imuShaked(){
                 return [`mpu.getIntFreefallStatus()`, gen.ORDER_ATOMIC];
               break;
             case 'shake': //shake
-                return [`imuShaked()`, gen.ORDER_ATOMIC];
+                return [`mpu6050read(255)`, gen.ORDER_ATOMIC];
               break;
             case 'still': //靜止
                 return [`mpu.getZeroMotionDetected()`, gen.ORDER_ATOMIC];
@@ -2025,7 +2148,7 @@ boolean imuShaked(){
     imuReadGen(gen, block){
       const x = gen.valueToCode(block, 'IMU');
       //console.log('x=',typeof x, x);
-      let d = 255;
+      let d = 0; // uint8_t 0-255
       switch (x) {
         case 'yaw':
             d = 1;
@@ -2054,8 +2177,17 @@ boolean imuShaked(){
         case 'gz':
             d = 133;
           break;
+        case 'Gx':
+            d = 55;
+          break;
+        case 'Gy':
+            d= 66;
+          break;
+        case 'Gz':
+            d = 77;
+          break;
         default:
-            d = 255;
+            d = 0;
       }
 
       gen.includes_['mpu6050'] = `
@@ -2069,7 +2201,7 @@ boolean imuShaked(){
 #endif
 
 MPU6050 mpu;
-
+int16_t yaw_bias=0;
 //#define DEBUG
 `;
 
@@ -2086,7 +2218,7 @@ void mpufailed(){
 }
 `;
       gen.definitions_['mpu6050read'] = `
-int16_t mpu6050read(uint8_t d){
+int16_t mpu6050read(uint8_t d, boolean bias=true){
   uint8_t fifoBuffer[64]; // FIFO storage buffer
   Quaternion q;           // [w, x, y, z]         quaternion container
   VectorInt16 aa;         // [x, y, z]            accel sensor measurements
@@ -2146,13 +2278,14 @@ int16_t mpu6050read(uint8_t d){
 
     switch (d) { // imu x-y-z軸與主機不同
         case 1: //yaw
-            return int(ypr[0] * 180/M_PI);
+            if (bias) { return (int(ypr[0] * -180/M_PI)-yaw_bias);}
+            else { return int(ypr[0] * -180/M_PI);}
           break;
         case 2: //pitch
             return int(ypr[2] * -180/M_PI);
           break;
         case 3: //roll
-            return int(ypr[1] * -180/M_PI);
+            return int(ypr[1] * 180/M_PI);
           break;
         case 11: //ax, unit:mm/s2
             return -aaReal.x;
@@ -2172,14 +2305,23 @@ int16_t mpu6050read(uint8_t d){
         case 133: //gz
             return gyro.z;
           break;
-        case 55: // ax, unit:mg
+        case 55: // Gx, unit:mG, 方向:反作用力
             return int(-1000*gravity.x);
           break;
-        case 66: // ay, unit:mg
+        case 66: // Gy
             return int(-1000*gravity.y);
           break;
-        case 77: // az, unit:mg
+        case 77: // Gz
             return int(1000*gravity.z);
+          break;
+        case 255: // shaked? 1G=8192 in MPU6050
+            if (abs(aaReal.x)>4000) {
+              if (abs(aaReal.y)>4000 || abs(aaReal.z)>4000) return 1;
+            } else if (abs(aaReal.y)>4000) {
+              if (abs(aaReal.z)>4000) return 1;
+            } else {
+              return 0;
+            }
           break;
         default:
             return;
@@ -2190,8 +2332,6 @@ int16_t mpu6050read(uint8_t d){
 }`;
 
         gen.setupCodes_['mpu6050'] = `
-  //uint8_t devStatus;
-
   // join I2C bus (I2Cdev library doesn't do this automatically)
   #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
       Wire.begin();
@@ -2219,7 +2359,6 @@ int16_t mpu6050read(uint8_t d){
       mpu.CalibrateGyro(6);
       #ifdef DEBUG
         mpu.PrintActiveOffsets();
-        Serial.println(F("Enabling DMP..."));
       #endif
       mpu.setDMPEnabled(true);
       #ifdef DEBUG
@@ -2234,27 +2373,21 @@ int16_t mpu6050read(uint8_t d){
       mpu.setZeroMotionDetectionThreshold(4);
       mpu.setZeroMotionDetectionDuration(1);
       #ifdef DEBUG
-        Serial.print("FF Threshold:	");
+        Serial.print(F("FF Threshold:	"));
         Serial.println(mpu.getFreefallDetectionThreshold());
-        Serial.print("FF duration:	");
+        Serial.print(F("FF duration:	"));
         Serial.println(mpu.getFreefallDetectionDuration());
-        Serial.print("motion Threshold:	");
+        Serial.print(F("motion Threshold:	"));
         Serial.println(mpu.getMotionDetectionThreshold());
-        Serial.print("motion duration:	");
+        Serial.print(F("motion duration:	"));
         Serial.println(mpu.getMotionDetectionDuration());
-        Serial.print("0 Threshold:	");
+        Serial.print(F("0 Threshold:	"));
         Serial.println(mpu.getZeroMotionDetectionThreshold());
-        Serial.print("0 duration:	");
+        Serial.print(F("0 duration:	"));
         Serial.println(mpu.getZeroMotionDetectionDuration());
 
         Serial.print(F("Int Enable?	"));
         Serial.println(mpu.getIntEnabled(),BIN);
-        Serial.print(F("IntFF enable?	"));
-        Serial.println(mpu.getIntFreefallEnabled());
-        Serial.print(F("IntMotion enable?	"));
-        Serial.println(mpu.getIntMotionEnabled());
-        Serial.print(F("0motionInt enable?	"));
-        Serial.println(mpu.getIntZeroMotionEnabled());
       #endif
     } else {
       mpufailed();
