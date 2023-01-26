@@ -1800,7 +1800,81 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
     }
 
     isGesture (args){
-        return;
+      if (!this.imu){
+          this.imu = new five.IMU({
+              controller: "MPU6050",
+              board: j5board,
+          });
+      }
+
+      //console.log('args.GESTURE=',typeof args.GESTURE, args.GESTURE);
+      switch (args.GESTURE) { // imu x-y-z軸與主機不同
+          case '1': //up
+              return (Math.abs(this.imu.accelerometer.y+1)<0.1);
+            break;
+          case '2': //down
+              return (Math.abs(this.imu.accelerometer.y-1)<0.1);
+            break;
+          case '3': //left
+              return (Math.abs(this.imu.accelerometer.x+1)<0.1);
+            break;
+          case '4': //right
+              return (Math.abs(this.imu.accelerometer.x-1)<0.1);
+            break;
+          case '5': //face up
+              return (Math.abs(this.imu.accelerometer.z-1)<0.1);
+            break;
+          case '6': //face down
+              return (Math.abs(this.imu.accelerometer.z+1)<0.1);
+            break;
+          case '11': //逆時針旋
+            return (15*this.imu.gyro.yaw.angle>5);
+              break;
+          case '12': //順時針旋
+            return (15*this.imu.gyro.yaw.angle<-5);
+              break;
+          case '13': //前俯
+            return (-1*this.imu.accelerometer.roll<-5);
+              break;
+          case '14': //後仰
+            return (-1*this.imu.accelerometer.roll>5);
+              break;
+          case '15': //左傾
+            return this.imu.accelerometer.pitch<-5;
+              break;
+          case '16': //右傾
+            return this.imu.accelerometer.pitch>5;
+              break;
+          case '21': //往前
+              return;
+            break;
+          case '22': //往後
+              return;
+            break;
+          case '23': //往左
+              return;
+            break;
+          case '24': //往右
+              return;
+            break;
+          case '25': //往上
+              return;
+            break;
+          case '26': //往下
+              return;
+            break;
+          case 'freefall': //free fall
+              return;
+            break;
+          case 'shake': //shake
+              return;
+            break;
+          case 'still': //靜止
+              return;
+            break;
+          default:
+              return;
+      }
     }
 
     isGestureGen (gen, block){
@@ -2091,58 +2165,54 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
     }
 
     imuRead (args){
-        if (!this.MPU6050){
-            this.MPU6050 = new five.IMU({
+        if (!this.imu){
+            this.imu = new five.IMU({
                 controller: "MPU6050",
                 board: j5board,
             });
-            const MPU6050Data = {
-                celsius: null,
-                fahrenheit: null,
-                kelvin: null,
-                ax: null,
-                ay: null,
-                az: null,
-                pitch: null,
-                roll: null,
-                acceleration: null,
-                inclination: null,
-                orientation: null,
-                gx: null,
-                gy: null,
-                gz: null,
-                gpitch: null,
-                groll: null,
-                yaw: null,
-                rate: null,
-                isCalibrated: null,
-            }
-            this.MPU6050Data = MPU6050Data;
         }
-        this.MPU6050.on('change', ()=>{
-        //this.MPU6050.on('data', ()=>{
-                this.MPU6050Data.celsius = this.MPU6050.thermometer.celsius;
-                this.MPU6050Data.fahrenheit = this.MPU6050.thermometer.fahrenheit;
-                this.MPU6050Data.kelvin = this.MPU6050.thermometer.kelvin;
-                this.MPU6050Data.ax = this.MPU6050.accelerometer.x;
-                this.MPU6050Data.ay = this.MPU6050.accelerometer.y;
-                this.MPU6050Data.az = this.MPU6050.accelerometer.z;
-                this.MPU6050Data.pitch = this.MPU6050.accelerometer.pitch;
-                this.MPU6050Data.roll = this.MPU6050.accelerometer.roll;
-                this.MPU6050Data.acceleration = this.MPU6050.accelerometer.acceleration;
-                this.MPU6050Data.inclination = this.MPU6050.accelerometer.inclination;
-                this.MPU6050Data.orientation = this.MPU6050.accelerometer.orientation;
-                this.MPU6050Data.gx = this.MPU6050.gyro.x;
-                this.MPU6050Data.gy = this.MPU6050.gyro.y;
-                this.MPU6050Data.gz = this.MPU6050.gyro.z;
-                this.MPU6050Data.gpitch = this.MPU6050.gyro.pitch;
-                this.MPU6050Data.groll = this.MPU6050.gyro.roll;
-                this.MPU6050Data.yaw = this.MPU6050.gyro.yaw;
-                this.MPU6050Data.rate = this.MPU6050.gyro.rate;
-                this.MPU6050Data.isCalibrated = this.MPU6050.gyro.isCalibrated;
-        });
-        console.log('mpuData:',this.MPU6050Data);
-        return this.MPU6050Data[args.IMU];
+        //console.log('imuAllData:',this.imu);
+        //console.log('args.IMU=',typeof args.IMU, args.IMU);
+        switch (args.IMU) {  // imu x-y-z軸與主機不同
+          case 'yaw':
+              return 15*this.imu.gyro.yaw.angle;
+            break;
+          case 'pitch':
+              return -1*this.imu.accelerometer.roll;
+            break;
+          case 'roll':
+              return this.imu.accelerometer.pitch;
+            break;
+          case 'ax':
+              return;
+            break;
+          case 'ay':
+              return;
+            break;
+          case 'az':
+              return;
+            break;
+          case 'gx':
+              return -1*this.imu.gyro.rate.x;
+            break;
+          case 'gy':
+              return -1*this.imu.gyro.rate.y;
+            break;
+          case 'gz':
+              return this.imu.gyro.rate.z;
+            break;
+          case 'Gx':
+              return -1000*this.imu.accelerometer.x;
+            break;
+          case 'Gy':
+              return -1000*this.imu.accelerometer.y;
+            break;
+          case 'Gz':
+              return 1000*this.imu.accelerometer.z;
+            break;
+          default:
+            return;
+        }
     }
 
     imuReadGen(gen, block){
