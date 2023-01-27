@@ -707,7 +707,7 @@ class cBrain {
             {
               opcode: 'imuG',
               blockType: BlockType.REPORTER,
-              text: 'IMU [IMU] reading(mG)',
+              text: 'IMU [IMU] reading(mg)',
               arguments: {
                   IMU: {
                       type: ArgumentType.STRING,
@@ -851,6 +851,22 @@ class cBrain {
                   func: 'noop',
                   blockType: BlockType.DIVLABEL,
                   text: 'more..'
+              },
+              {
+                opcode: 'coreTemp',
+                blockType: BlockType.REPORTER,
+                text: 'core temperature (°[IMU])',
+                arguments: {
+                    IMU: {
+                        type: ArgumentType.STRING,
+                        menu: 'tu',
+                        defaultValue: 'C',
+                    },
+                },
+                func: 'imuRead',
+                gen: {
+                    arduino: this.imuReadGen
+                }
               },
               {
                 opcode: 'v',
@@ -1180,10 +1196,11 @@ class cBrain {
                 StrTypo: ['HEX', 'BIN', 'DEC'],
                 Typo: ['byte', 'char', 'int', 'long', 'word', 'float'],
                 ypr: ['yaw','pitch','roll'],
-                accG:['Gx','Gy','Gz'],
-                acc:['ax','ay','az'],
-                av:['gx','gy','gz'],
-                m1:['freefall','shake','still'],
+                accG: ['Gx','Gy','Gz'],
+                acc: ['ax','ay','az'],
+                av: ['gx','gy','gz'],
+                tu: ['C','F'],
+                m1: ['freefall','shake','still'],
                 '#gestureList': [
                     {src: 'static/extension-assets/Robot4FUN-cBrain-assets/up.png',
                         value: '1', width: 95, height: 95, alt: ''}, //
@@ -1250,7 +1267,7 @@ class cBrain {
                     'var': '變數[VAR]設為[VALUE], 資料型態為[TYPO]',
                     'var_value': '變數[VAR]',
                     'imuYPR': '[IMU]角度(°)',
-                    'imuG': '反作用力的[IMU]G值(mG)',
+                    'imuG': '反作用力的[IMU]G值(mg)',
                     'imuAcc': '[IMU]的加速度(mm/s²)',
                     'imuAV': '[IMU]的角速度(°/s)',
                     'ypr': {'yaw':'偏航','pitch':'俯仰','roll':'翻滾'},
@@ -1263,6 +1280,7 @@ class cBrain {
                     'Motion':'運動方向是[GESTURE]?',
                     'Motion1':'狀態是[GESTURE]?',
                     'resetYaw':'將偏航角歸零',
+                    'coreTemp': '內部溫度(°[IMU])',
                 },
                 'zh-cn': { // 簡體中文
                     //'cBrain': '鸡车脑',
@@ -1285,7 +1303,7 @@ class cBrain {
                     'var': '变数[VAR]设为[VALUE], 资料型态为[TYPO]',
                     'var_value': '变数[VAR]',
                     'imuYPR': '[IMU]角度(°)',
-                    'imuG': '反作用力的[IMU]G值(mG)',
+                    'imuG': '反作用力的[IMU]G值(mg)',
                     'imuAcc': '[IMU]的加速度(mm/s²)',
                     'imuAV': '[IMU]的角速度(°/s)',
                     'ypr': {'yaw':'航向','pitch':'俯仰','roll':'橫滚'},
@@ -1298,6 +1316,7 @@ class cBrain {
                     'Motion':'运动方向是[GESTURE]?',
                     'Motion1':'状态是[GESTURE]?',
                     'resetYaw':'将航向角归零',
+                    'coreTemp': '內部溫度(°[IMU])',
                 },
             }
 
@@ -1578,7 +1597,15 @@ class cBrain {
     }
 
     resetyaw (args){
-        return;
+      if (!this.imu){
+          this.imu = new five.IMU({
+              controller: "MPU6050",
+              board: j5board,
+          });
+          this.imu.yaw_bias=0;
+      }
+
+      this.imu.yaw_bias = 15*this.imu.gyro.yaw.angle;
     }
 
     resetyawGen(gen, block){
@@ -1805,6 +1832,7 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
               controller: "MPU6050",
               board: j5board,
           });
+          this.imu.yaw_bias=0;
       }
 
       //console.log('args.GESTURE=',typeof args.GESTURE, args.GESTURE);
@@ -1828,7 +1856,7 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
               return (Math.abs(this.imu.accelerometer.z+1)<0.1);
             break;
           case '11': //逆時針旋
-            return (15*this.imu.gyro.yaw.angle>5);
+            return ((15*this.imu.gyro.yaw.angle-this.imu.yaw_bias)>5);
               break;
           case '12': //順時針旋
             return (15*this.imu.gyro.yaw.angle<-5);
@@ -2170,12 +2198,13 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
                 controller: "MPU6050",
                 board: j5board,
             });
+            this.imu.yaw_bias = 0;
         }
         //console.log('imuAllData:',this.imu);
         //console.log('args.IMU=',typeof args.IMU, args.IMU);
         switch (args.IMU) {  // imu x-y-z軸與主機不同
           case 'yaw':
-              return 15*this.imu.gyro.yaw.angle;
+              return (15*this.imu.gyro.yaw.angle-this.imu.yaw_bias);
             break;
           case 'pitch':
               return -1*this.imu.accelerometer.roll;
@@ -2210,56 +2239,18 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
           case 'Gz':
               return 1000*this.imu.accelerometer.z;
             break;
+          case 'C':
+              return this.imu.thermometer.celsius;
+            break;
+          case 'F':
+              return this.imu.thermometer.fahrenheit;
+            break;
           default:
             return;
         }
     }
 
     imuReadGen(gen, block){
-      const x = gen.valueToCode(block, 'IMU');
-      //console.log('x=',typeof x, x);
-      let d = 0; // uint8_t 0-255
-      switch (x) {
-        case 'yaw':
-            d = 1;
-          break;
-        case 'pitch':
-            d = 2;
-          break;
-        case 'roll':
-            d = 3;
-          break;
-        case 'ax':
-            d = 11;
-          break;
-        case 'ay':
-            d = 22;
-          break;
-        case 'az':
-            d = 33;
-          break;
-        case 'gx':
-            d = 111;
-          break;
-        case 'gy':
-            d= 122;
-          break;
-        case 'gz':
-            d = 133;
-          break;
-        case 'Gx':
-            d = 55;
-          break;
-        case 'Gy':
-            d= 66;
-          break;
-        case 'Gz':
-            d = 77;
-          break;
-        default:
-            d = 0;
-      }
-
       gen.includes_['mpu6050'] = `
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
@@ -2401,7 +2392,7 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
 
 }`;
 
-        gen.setupCodes_['mpu6050'] = `
+      gen.setupCodes_['mpu6050'] = `
   // join I2C bus (I2Cdev library doesn't do this automatically)
   #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
       Wire.begin();
@@ -2473,6 +2464,57 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
     }
   }
 `;
+
+      const x = gen.valueToCode(block, 'IMU');
+      //console.log('x=',typeof x, x);
+      let d = 0; // uint8_t 0-255
+      switch (x) {
+        case 'yaw':
+            d = 1;
+          break;
+        case 'pitch':
+            d = 2;
+          break;
+        case 'roll':
+            d = 3;
+          break;
+        case 'ax':
+            d = 11;
+          break;
+        case 'ay':
+            d = 22;
+          break;
+        case 'az':
+            d = 33;
+          break;
+        case 'gx':
+            d = 111;
+          break;
+        case 'gy':
+            d= 122;
+          break;
+        case 'gz':
+            d = 133;
+          break;
+        case 'Gx':
+            d = 55;
+          break;
+        case 'Gy':
+            d= 66;
+          break;
+        case 'Gz':
+            d = 77;
+          break;
+        case 'C':
+            return [`((float)mpu.getTemperature()/340 + 36.53)`, gen.ORDER_ATOMIC];
+          break;
+        case 'F':
+            return [`(((float)mpu.getTemperature()/340 + 36.53)*1.8 + 32.0)`, gen.ORDER_ATOMIC];
+          break;
+        default:
+            d = 0;
+      }
+
       return [`mpu6050read(${d})`, gen.ORDER_ATOMIC];
     }
 
