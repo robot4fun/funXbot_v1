@@ -1922,8 +1922,8 @@ class cBrain {
               let shakeCnt = 0;
               let preT = Date.now();
               while ((Date.now()-preT)<1500){
-                if ( Math.abs(this.imu.accelerometer.x)>1.5 || Math.abs(this.imu.accelerometer.y)>1.5
-                  || Math.abs(this.imu.accelerometer.z)>1.5 ) ++shakeCnt;
+                if ( Math.abs(this.imu.accelerometer.x)>1.3 || Math.abs(this.imu.accelerometer.y)>1.3
+                  || Math.abs(this.imu.accelerometer.z)>1.3 ) ++shakeCnt;
                 await timeout(50);
               }
               console.log ('dT=',(Date.now()-preT));
