@@ -1277,7 +1277,7 @@ class cBrain {
                     'm1': {'freefall':'自由掉落','shake':'搖晃','still':'靜止'},
                     'Gesture':'[GESTURE]朝上?',
                     'Gesture1':'姿態是[GESTURE]?',
-                    'Motion':'運動方向是[GESTURE]?',
+                    'Motion':'揮動方向是[GESTURE]?',
                     'Motion1':'狀態是[GESTURE]?',
                     'resetYaw':'將偏航角歸零',
                     'coreTemp': '內部溫度(°[IMU])',
@@ -1313,7 +1313,7 @@ class cBrain {
                     'm1': {'freefall':'自由掉落','shake':'摇晃','still':'静止'},
                     'Gesture':'[GESTURE]朝上?',
                     'Gesture1':'姿态是[GESTURE]?',
-                    'Motion':'运动方向是[GESTURE]?',
+                    'Motion':'挥动方向是[GESTURE]?',
                     'Motion1':'状态是[GESTURE]?',
                     'resetYaw':'将航向角归零',
                     'coreTemp': '內部溫度(°[IMU])',
@@ -1724,7 +1724,7 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
       case 133: //gz
           return gyro.z;
         break;
-      case 55: // Gx, unit:mG, 方向:反作用力
+      case 55: // Gx, unit:mg, 方向:反作用力
           return int(-1000*gravity.x);
         break;
       case 66: // Gy
@@ -1735,11 +1735,11 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
         break;
       case 255: // shaked? 1G=8192 for mpu6050
           if (abs(aaReal.x)>4000) {
-            if (abs(aaReal.y)>4000 || abs(aaReal.z)>4000) return 1;
+            if (abs(aaReal.y)>4000 || abs(aaReal.z)>4000) return true;
           } else if (abs(aaReal.y)>4000) {
-            if (abs(aaReal.z)>4000) return 1;
+            if (abs(aaReal.z)>4000) return true;
           } else {
-            return 0;
+            return false;
           }
         break;
       default:
@@ -1826,7 +1826,7 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
         return gen.line(`yaw_bias = mpu6050read(1,false)`);
     }
 
-    isGesture (args){
+    async isGesture (args){
       if (!this.imu){
           this.imu = new five.IMU({
               controller: "MPU6050",
@@ -1838,64 +1838,76 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
       //console.log('args.GESTURE=',typeof args.GESTURE, args.GESTURE);
       switch (args.GESTURE) { // imu x-y-z軸與主機不同
           case '1': //up
-              return (Math.abs(this.imu.accelerometer.y+1)<0.1);
+              return (Math.abs(this.imu.accelerometer.y+1)<0.13);
             break;
           case '2': //down
-              return (Math.abs(this.imu.accelerometer.y-1)<0.1);
+              return (Math.abs(this.imu.accelerometer.y-1)<0.13);
             break;
           case '3': //left
-              return (Math.abs(this.imu.accelerometer.x+1)<0.1);
+              return (Math.abs(this.imu.accelerometer.x+1)<0.13);
             break;
           case '4': //right
-              return (Math.abs(this.imu.accelerometer.x-1)<0.1);
+              return (Math.abs(this.imu.accelerometer.x-1)<0.13);
             break;
           case '5': //face up
-              return (Math.abs(this.imu.accelerometer.z-1)<0.1);
+              return (Math.abs(this.imu.accelerometer.z-1)<0.13);
             break;
           case '6': //face down
-              return (Math.abs(this.imu.accelerometer.z+1)<0.1);
+              return (Math.abs(this.imu.accelerometer.z+1)<0.13);
             break;
           case '11': //逆時針旋
-            return ((15*this.imu.gyro.yaw.angle-this.imu.yaw_bias)>5);
-              break;
+              return ((15*this.imu.gyro.yaw.angle-this.imu.yaw_bias)>5);
+            break;
           case '12': //順時針旋
-            return (15*this.imu.gyro.yaw.angle<-5);
-              break;
+              return ((15*this.imu.gyro.yaw.angle-this.imu.yaw_bias)<-5);
+            break;
           case '13': //前俯
-            return (-1*this.imu.accelerometer.roll<-5);
-              break;
+              return (-1*this.imu.accelerometer.roll<-5);
+            break;
           case '14': //後仰
-            return (-1*this.imu.accelerometer.roll>5);
-              break;
+              return (-1*this.imu.accelerometer.roll>5);
+            break;
           case '15': //左傾
-            return this.imu.accelerometer.pitch<-5;
-              break;
+              return this.imu.accelerometer.pitch<-5;
+            break;
           case '16': //右傾
-            return this.imu.accelerometer.pitch>5;
-              break;
+              return this.imu.accelerometer.pitch>5;
+            break;
           case '21': //往前
-              return;
+              return this.imu.accelerometer.y<-1.3;
             break;
           case '22': //往後
-              return;
+              return this.imu.accelerometer.y>1.3;
             break;
           case '23': //往左
-              return;
+              return this.imu.accelerometer.x>1.3;
             break;
           case '24': //往右
-              return;
+              return this.imu.accelerometer.x<-1.3;
             break;
           case '25': //往上
-              return;
+              return this.imu.accelerometer.z>1.3;
             break;
           case '26': //往下
-              return;
+              return this.imu.accelerometer.z<-1.3;
             break;
           case 'freefall': //free fall
               return;
             break;
           case 'shake': //shake
-              return;
+            {
+              let shakeCnt = 0;
+              let preT = Date.now();
+              while ((Date.now()-preT)<1500){
+                if ( Math.abs(this.imu.accelerometer.x)>1.5 || Math.abs(this.imu.accelerometer.y)>1.5
+                  || Math.abs(this.imu.accelerometer.z)>1.5 ) ++shakeCnt;
+                await timeout(50);
+              }
+              console.log ('dT=',(Date.now()-preT));
+              console.log ('shakeCnt=', shakeCnt);
+              if (shakeCnt>4) { return true;
+              } else {return false;}
+            }
             break;
           case 'still': //靜止
               return;
@@ -2032,19 +2044,38 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
           break;
         case 255: // shaked? 1G=8192 for mpu6050
             if (abs(aaReal.x)>4000) {
-              if (abs(aaReal.y)>4000 || abs(aaReal.z)>4000) return 1;
+              if (abs(aaReal.y)>4000 || abs(aaReal.z)>4000) return true;
             } else if (abs(aaReal.y)>4000) {
-              if (abs(aaReal.z)>4000) return 1;
+              if (abs(aaReal.z)>4000) return true;
             } else {
-              return 0;
+              return false;
             }
           break;
         default:
-            return;
+          return;
       }
 
   }
 
+}`;
+        gen.definitions_['mpu6050shaked'] = `
+bool IMUshaked(){
+    uint8_t shakeCnt=0;
+    uint32_t preT=millis();
+
+    while((millis()-preT)<1500){ 
+      if (abs(mpu6050read(11))>4000 || abs(mpu6050read(22))>4000 || abs(mpu6050read(33))>4000) shakeCnt++;
+      // ~0.5G, 1G=8192 in mpu6050
+      delay(50);
+    }
+  #ifdef DEBUG
+    Serial.print("dT=");
+    Serial.println((millis()-preT));
+    Serial.print("shakeCnt=");
+    Serial.println(shakeCnt);
+  #endif
+    if (shakeCnt>4) {return true;
+    } else {return false;}
 }`;
 
         gen.setupCodes_['mpu6050'] = `
@@ -2181,7 +2212,8 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
                 return [`mpu.getIntFreefallStatus()`, gen.ORDER_ATOMIC];
               break;
             case 'shake': //shake
-                return [`mpu6050read(255)`, gen.ORDER_ATOMIC];
+                //return [`mpu6050read(255)`, gen.ORDER_ATOMIC];
+                return [`IMUshaked()`, gen.ORDER_ATOMIC];
               break;
             case 'still': //靜止
                 return [`mpu.getZeroMotionDetected()`, gen.ORDER_ATOMIC];
@@ -2377,15 +2409,15 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
           break;
         case 255: // shaked? 1G=8192 in MPU6050
             if (abs(aaReal.x)>4000) {
-              if (abs(aaReal.y)>4000 || abs(aaReal.z)>4000) return 1;
+              if (abs(aaReal.y)>4000 || abs(aaReal.z)>4000) return true;
             } else if (abs(aaReal.y)>4000) {
-              if (abs(aaReal.z)>4000) return 1;
+              if (abs(aaReal.z)>4000) return true;
             } else {
-              return 0;
+              return false;
             }
           break;
         default:
-            return;
+          return;
       }
 
   }
