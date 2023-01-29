@@ -1857,6 +1857,27 @@ class cBrain {
           });
           this.imu.yaw_bias=0;
       }
+      if (!this.imu.set){
+        board.i2cConfig();
+        let _dhpf = await new Promise(resolve => {
+          board.i2cReadOnce(0x68, 0x1C, 1, reply => {
+            //console.log('reg 1C:', reply);
+            resolve(reply);
+          });
+        });
+        //console.log('DHPF reg:', _dhpf);
+        _dhpf = _dhpf & 0b11111000;
+        _dhpf = _dhpf | 0b00000001;
+        //console.log('set DHPF to', _dhpf);
+        board.i2cWrite(0x68, 0x1C, _dhpf); // Setting DHPF bandwidth to 5Hz
+        board.i2cWrite(0x68, 0x1D, 17); //setFreefallDetectionThreshold
+        board.i2cWrite(0x68, 0x1E, 2); //setFreefallDetectionDuration
+        board.i2cWrite(0x68, 0x1F, 2); //setMotionDetectionThreshold
+        board.i2cWrite(0x68, 0x20, 20); //setMotionDetectionDuration
+        board.i2cWrite(0x68, 0x21, 4); //setZeroMotionDetectionThreshold
+        board.i2cWrite(0x68, 0x22, 1); //setZeroMotionDetectionDuration
+        this.imu.set = true;
+      }
 
       //console.log('args.GESTURE=',typeof args.GESTURE, args.GESTURE);
       switch (args.GESTURE) { // imu x-y-z軸與主機不同
@@ -1915,7 +1936,17 @@ class cBrain {
               return this.imu.accelerometer.z<-1.3;
             break;
           case 'freefall': //free fall
-              return;
+            {
+              let ffbit = await new Promise(resolve => {
+                board.i2cReadOnce(0x68, 0x3A, 1, reply => {
+                  console.log('INT_STATUS register:', reply);
+                  resolve(reply);
+                });
+              });
+              console.log('FF bit:', ffbit&0b10000000);
+              if ((ffbit & 0b10000000) === 0b10000000) {return true;
+              } else {return false;}
+            }
             break;
           case 'shake': //shake
             {
@@ -1933,10 +1964,20 @@ class cBrain {
             }
             break;
           case 'still': //靜止
-              return;
+            {
+              let zerobit = await new Promise(resolve => {
+                board.i2cReadOnce(0x68, 0x61, 1, reply => {
+                  console.log('MotionStatus:', reply);
+                  resolve(reply);
+                });
+              });
+              console.log('zero bit:', zerobit & 0b00000001);
+              if ((zerobit & 0b00000001) === 0b00000001) {return true;
+              } else {return false;}
+            }
             break;
           default:
-              return;
+            return;
       }
     }
 
