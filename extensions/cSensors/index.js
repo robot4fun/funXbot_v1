@@ -196,11 +196,11 @@ class cSensorsExtension {
                 {
                     opcode: 'ultrasonic',
                     blockType: BlockType.REPORTER,
-                    text: 'ultrasonic sensor distance reading at port [PIN] (cm)',
+                    text: 'ultrasonic sensor distance reading at port [PIN] (mm)',
                     arguments: {
                         PIN: {
                             type: ArgumentType.STRING,
-                            defaultValue: '3',
+                            defaultValue: '1',
                             menu: 'dPort'
                         }
                     },
@@ -1001,7 +1001,7 @@ class cSensorsExtension {
                   'rir': '接口[PIN]的反射式紅外線感應器被觸發？',
                   'tilt': '接口[PIN]的傾斜開關被觸發？',
                   'analogKeypad': '接口[PIN]的鍵盤 按下按鈕[BUT]?',
-                  'ultrasonic': '接口[PIN]的超音波感應器距離讀值 (公分)',
+                  'ultrasonic': '接口[PIN]的超音波感應器距離讀值 (公厘)',
                   'colorSensor': '接口 3 的顏色感應器顏色讀值 (hex)',
                   'colorMatch': '[SENCOL]是[COLOR]?',
                   'hex2rgb':'[SENCOL] (hex顏色) 的 [RGB]量',
@@ -1049,7 +1049,7 @@ class cSensorsExtension {
                   'rir': '端口[PIN]的反射式红外传感器被触发？ ',
                   'tilt': '端口[PIN]的倾斜传感器被触发？',
                   'analogKeypad': '端口[PIN]的键盘 按下按钮[BUT]?',
-                  'ultrasonic': '端口[PIN]的超声音传感器距离读数 (厘米)',
+                  'ultrasonic': '端口[PIN]的超声音传感器距离读数 (毫米)',
                   'colorSensor': '端口 3 的颜色传感器颜色读数 (hex)',
                   'colorMatch': '[SENCOL]是[COLOR]?',
                   'hex2rgb':'[SENCOL] (hex颜色) 的 [RGB]量',
@@ -1870,17 +1870,17 @@ uint16_t qtrValues[qtrCount];
                 pulseOut: 10,//5,
             }, ms => {
                 ms = ms || 0;
-                var cm = ms / 29.1 / 2;
-                resolve(cm.toFixed(1));
+                let mm = ms / 29.1 / 2 *10;
+                resolve(mm.toFixed(0)); // mm
             });
         });
     }
 
     ultrasonicGen (gen, block){
         gen.definitions_['ultrasonic'] = `
-int ultrasonicSensor(int trigPin, int echoPin){
+uint16_t ultrasonicSensor(uint8_t trigPin, uint8_t echoPin){
   float distance;
-  unsigned int duration;
+  uint16_t duration;
 
   pinMode(trigPin, OUTPUT);
   digitalWrite(trigPin, LOW);
@@ -1890,15 +1890,15 @@ int ultrasonicSensor(int trigPin, int echoPin){
   digitalWrite(trigPin, LOW);
   pinMode(echoPin, INPUT);
   duration = pulseIn(echoPin, HIGH);
-  distance = (float)duration / 58.2;
+  distance = (float)duration / 58.2 *10.0; // mm
   // un-comm this for nekomimi ultrasonic
   /*
   if(distance > 6){
     distance *= 1.28;
   }
   */
-  if(distance == 0){
-    distance = 999;
+  if(distance <= 0){
+    distance = 9999;
   }
   return int(distance);
 }`;

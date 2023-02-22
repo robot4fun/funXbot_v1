@@ -906,7 +906,7 @@ class cBrain {
                 arguments: {
                     GESTURE: {
                         type: ArgumentType.STRING,
-                        defaultValue: 'still',
+                        defaultValue: 'shake',
                         menu: 'm1'
                     },
                 },
