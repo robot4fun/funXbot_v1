@@ -440,14 +440,16 @@ class cActuatorsExtension{
       console.log(`now servo status:`, board.servo);//for debug
       */
       if (board.pins[pin].mode != board.MODES.SERVO){
-        board.servoConfig(pin, 544, 2500);
+        //board.servoConfig(pin, 544, 2500);
+        board.servoConfig(pin, 500, 2500);
       }
       let speed = parseInt(args.SPEED,10);
       let sp2pulse;
       if (speed < 0) {
         if (speed < -255) speed = -255;
         //board.servo[pin].ccw(parseFloat(-speed/255).toFixed(2));
-        sp2pulse = five.Fn.constrain(five.Fn.map(-speed,255,0,544,1500),544,1500);
+        //sp2pulse = five.Fn.constrain(five.Fn.map(-speed,255,0,544,1500),544,1500);
+        sp2pulse = five.Fn.constrain(five.Fn.map(-speed,255,0,500,1500),500,1500);
       } else if (speed > 0) {
         if (speed > 255) speed = 255;
         //board.servo[pin].cw(parseFloat(speed/255).toFixed(2));
@@ -474,14 +476,14 @@ class cActuatorsExtension{
         gen.definitions_['servo360'] = `
 uint16_t sp2pulse(int16_t speed){
   if (speed < 0) {
-    return constrain(map(speed,-255,0,544,1500),544,1500);
+    return constrain(map(speed,-255,0,500,1500),500,1500);
   } else if (speed > 0) {
     return constrain(map(speed,255,0,2500,1500),1500,2500);
   } else if (speed == 0) {
     return 1500;
   }
 }`;
-        gen.setupCodes_['servo_'+pin] = `servo_${pin}.attach(${pin},544,2500)`;
+        gen.setupCodes_['servo_'+pin] = `servo_${pin}.attach(${pin},500,2500)`;
         //const dir = gen.valueToCode(block, 'DIR');
         const sp = gen.valueToCode(block, 'SPEED');
         /*
@@ -614,7 +616,8 @@ uint16_t sp2pulse(int16_t speed){
       const p2 = board.pin2firmata(board._port[pin-1][2]);
 
       gen.includes_['mx1508'] = `#include "MX1508.h"\n`;
-      gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2},SLOW_DECAY,2);`;
+      gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2});`;
+      //gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2},SLOW_DECAY,2);`;
       return `motor${pin}.stopMotor()`;
       //return `motorBridge(${p1}, ${p2}, 0)`;
   }
