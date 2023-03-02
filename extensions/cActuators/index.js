@@ -531,28 +531,28 @@ uint16_t sp2pulse(int16_t speed){
       const in1 = board.pin2firmata(board._port[pin-1][1]);
       const in2 = board.pin2firmata(board._port[pin-1][2]);
       const sp = parseInt(args.SPEED,10);
-      board.pinMode(in1, board.MODES.PWM);
-      board.pinMode(in2, board.MODES.PWM);
-      if (sp>=0){
+      //board.pinMode(in1, board.MODES.PWM);
+      //board.pinMode(in2, board.MODES.PWM);
+      if (sp>0){
           if(sp>255) sp=255;
-          //board.pinMode(in1, board.MODES.PWM);
-          //board.pinMode(in2, board.MODES.OUTPUT);
+          board.pinMode(in1, board.MODES.PWM);
+          board.pinMode(in2, board.MODES.OUTPUT);
           board.analogWrite(in1, sp);
-          //board.digitalWrite(in2, board.LOW);
-          board.analogWrite(in2, 1);
+          board.digitalWrite(in2, board.LOW);
+          //board.analogWrite(in2, 1);
       } else if (sp<0){
           if(sp<-255) sp=-255;
-          //board.pinMode(in1, board.MODES.OUTPUT);
-          //board.pinMode(in2, board.MODES.PWM);
-          //board.digitalWrite(in1, board.LOW);
-          board.analogWrite(in1, -1);
+          board.pinMode(in1, board.MODES.OUTPUT);
+          board.pinMode(in2, board.MODES.PWM);
+          board.digitalWrite(in1, board.LOW);
+          //board.analogWrite(in1, -1);
           board.analogWrite(in2, -sp);
-      /*} else {
+      } else {
           board.pinMode(in1, board.MODES.OUTPUT);
           board.pinMode(in2, board.MODES.OUTPUT);
           board.digitalWrite(in1, board.LOW);
           board.digitalWrite(in2, board.LOW);
-    */}
+      }
     }
 
     motorHGen (gen, block){
