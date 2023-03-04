@@ -1901,7 +1901,8 @@ uint16_t ultrasonicSensor(uint8_t trigPin, uint8_t echoPin){
     distance = 9999;
   }
   return int(distance);
-}`;
+}
+`;
         const trig = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][1]);
         const echo = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][2]);
         return [`ultrasonicSensor(${trig}, ${echo})`, gen.ORDER_ATOMIC];
@@ -2000,7 +2001,7 @@ void cal_TCS34725(uint8_t add){
     EEPROM.put(add, c);
     delay(10);
   }
-  
+
 }`;
 
       gen.setupCodes_['tcs34725'] = `
@@ -2019,7 +2020,7 @@ void cal_TCS34725(uint8_t add){
           onoff = false;
         } else {
           onoff = true;
-        } 
+        }
 
         if (!this.i2cTCS){
           this.i2cTCS = new TCS34725({
@@ -2029,10 +2030,10 @@ void cal_TCS34725(uint8_t add){
             gain: 0x03, // TCS34725_GAIN_60X  // for indoor
           });
         };
-        
+
         if (await this.i2cTCS.init()) this.i2cTCS.setInterrupt(onoff);
     }
-  
+
     tcs34725ledGen (gen, block){
         let onoff = gen.valueToCode(block, 'ONOFF');
         if (onoff == 'ON') {
@@ -2063,7 +2064,7 @@ Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, T
         if (this.i2cTCS._tcs34725IntegrationTime != args.IT) this.i2cTCS.setIntegrationTime(args.IT);
         console.log('it=', this.i2cTCS._tcs34725IntegrationTime);
     }
-  
+
     tcs34725itGen (gen, block){
         const it = gen.valueToCode(block, 'IT');
 
@@ -2089,7 +2090,7 @@ Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, T
         if (this.i2cTCS._tcs34725Gain != args.GAIN) this.i2cTCS.setGain(args.GAIN);
         console.log('gain=', this.i2cTCS._tcs34725Gain);
     }
-  
+
     tcs34725gainGen (gen, block){
         const gain = gen.valueToCode(block, 'GAIN');
 
@@ -2141,7 +2142,7 @@ Adafruit_TCS34725 tcs34725 = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_154MS, T
       //gen.definitions_['tcs34725'] = `tcs34725 tcs34725;`;
       //gen.includes_['tcs34725'] = `#include "TCS34725AutoGain.h"`;
       //gen.definitions_['tcs34725'] = `TCS34725 tcs34725;`;
-      
+
       gen.definitions_['tcs34725read'] = `
 uint32_t scanColor(){
   float i, cf, R, G, B;
@@ -2184,10 +2185,10 @@ uint32_t scanColor(){
   R=tcs34725.color().r;
   G=tcs34725.color().g;
   B=tcs34725.color().b;*/
-  
+
   //Serial.println("RGB: " + String(R) + ", " + String(G) + ", " + String(B) );
   //Serial.println();
-  
+
   //tcs34725.setInterrupt(true);  // turn off LED
   //Serial.println("rgbc: " + String(r) + ", " + String(g) + ", " + String(b) + ", " + String(c));
 
@@ -2272,11 +2273,11 @@ uint32_t scanColor(){
         gen.definitions_['hex2rgb'] = `
 uint8_t hex2rgb(uint32_t hex, uint8_t rgb){
     uint8_t se_rgb[3];
-    
+
     se_rgb[0] = byte(hex >> 16);       //red
     se_rgb[1] = byte(hex >> 8 & 0xFF); //green
     se_rgb[2] = byte(hex & 0xFF);      //blue
-    
+
     return se_rgb[rgb];
 }`
 
@@ -2424,7 +2425,7 @@ uint8_t colorMatch(uint8_t *rgb){
         //await timeout((256 - this.i2cTCS._tcs34725IntegrationTime) * 12 / 5 + 1);  // takes time to read
         //const lux = await this.i2cTCS.getLux();
         //console.log('lux1=',lux);
-        await timeout(2*(256 - this.i2cTCS._tcs34725IntegrationTime) * 12 / 5 + 1);  // takes time to read 
+        await timeout(2*(256 - this.i2cTCS._tcs34725IntegrationTime) * 12 / 5 + 1);  // takes time to read
         const lux2 = await this.i2cTCS.getLux2();
         console.log('lux2=',lux2);
         //this.i2cTCS.setInterrupt(true);  // turn off LED
@@ -2459,20 +2460,20 @@ uint16_t lux(boolean l){
   uint16_t r, g, b, c, lx;
   float atime_ms, ir, r_comp, g_comp, b_comp, cpl;
   uint8_t Gain_temp;
-  tcs34725Gain_t gain = tcs34725.getGain(); 
+  tcs34725Gain_t gain = tcs34725.getGain();
   uint8_t it = tcs34725.getIntegrationTime();
 
   switch (gain) {
-    case TCS34725_GAIN_1X: 
+    case TCS34725_GAIN_1X:
         Gain_temp = 1;
         break;
-    case TCS34725_GAIN_4X: 
+    case TCS34725_GAIN_4X:
         Gain_temp = 4;
         break;
-    case TCS34725_GAIN_16X: 
+    case TCS34725_GAIN_16X:
         Gain_temp = 16;
         break;
-    case TCS34725_GAIN_60X: 
+    case TCS34725_GAIN_60X:
         Gain_temp = 60;
         break;
   }
