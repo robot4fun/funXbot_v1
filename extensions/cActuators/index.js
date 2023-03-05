@@ -530,28 +530,43 @@ uint16_t sp2pulse(int16_t speed){
       const pin = parseInt(args.PIN);
       const in1 = board.pin2firmata(board._port[pin-1][1]);
       const in2 = board.pin2firmata(board._port[pin-1][2]);
-      const sp = parseInt(args.SPEED,10);
-      //board.pinMode(in1, board.MODES.PWM);
-      //board.pinMode(in2, board.MODES.PWM);
+      let sp = parseInt(args.SPEED,10);
+      /*
       if (sp>0){
           if(sp>255) sp=255;
+          sp=five.Fn.map(speed,0,255,255,0);
           board.pinMode(in1, board.MODES.PWM);
           board.pinMode(in2, board.MODES.OUTPUT);
           board.analogWrite(in1, sp);
           board.digitalWrite(in2, board.LOW);
-          //board.analogWrite(in2, 1);
       } else if (sp<0){
           if(sp<-255) sp=-255;
           board.pinMode(in1, board.MODES.OUTPUT);
           board.pinMode(in2, board.MODES.PWM);
           board.digitalWrite(in1, board.LOW);
-          //board.analogWrite(in1, -1);
           board.analogWrite(in2, -sp);
       } else {
           board.pinMode(in1, board.MODES.OUTPUT);
           board.pinMode(in2, board.MODES.OUTPUT);
           board.digitalWrite(in1, board.LOW);
           board.digitalWrite(in2, board.LOW);
+      }
+      */
+      //mx1508 slow decay mode 
+      board.pinMode(in1, board.MODES.PWM);
+      board.pinMode(in2, board.MODES.PWM);
+
+      if (sp>=0){
+        if(sp>255) sp=255;
+        sp=five.Fn.map(sp,0,255,255,0);
+        board.analogWrite(in1, 255);
+        board.analogWrite(in2, sp);
+      } else if (sp<0){
+        sp=-1*sp;
+        if(sp>255) sp=255;
+        sp=five.Fn.map(sp,0,255,255,0);
+        board.analogWrite(in1, sp);
+        board.analogWrite(in2, 255);
       }
     }
 
@@ -577,8 +592,8 @@ uint16_t sp2pulse(int16_t speed){
         const p2 = board.pin2firmata(board._port[pin-1][2]);
         const speed = gen.valueToCode(block, 'SPEED');
         gen.includes_['mx1508'] = `#include "MX1508.h"\n`;
-        gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2});`;//default: FAST_DECAY
-        //gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2},SLOW_DECAY,2);`;
+        //gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2});`;//default: FAST_DECAY
+        gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2},SLOW_DECAY,2);`;
         return `motor${pin}.motorGo(${speed})`;
         //return `motorBridge(${p1}, ${p2}, ${speed})`;
     }
@@ -616,8 +631,8 @@ uint16_t sp2pulse(int16_t speed){
       const p2 = board.pin2firmata(board._port[pin-1][2]);
 
       gen.includes_['mx1508'] = `#include "MX1508.h"\n`;
-      gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2});`;
-      //gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2},SLOW_DECAY,2);`;
+      //gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2});`;
+      gen.definitions_['mx1508_'+pin] = `MX1508 motor${pin}(${p1},${p2},SLOW_DECAY,2);`;
       return `motor${pin}.stopMotor()`;
       //return `motorBridge(${p1}, ${p2}, 0)`;
   }
