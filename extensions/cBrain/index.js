@@ -1197,7 +1197,7 @@ class cBrain {
             {
                 opcode: 'var',
                 blockType: BlockType.COMMAND,
-                text: 'variable [VAR] = [VALUE] ([TYPO])',
+                text: 'variable [VAR] = [VALUE] ([TYPO], [SCOPE])',
                 arguments: {
                     VAR: {
                         type: ArgumentType.STRING,
@@ -1209,8 +1209,13 @@ class cBrain {
                     },
                     TYPO: {
                         type: ArgumentType.STRING,
-                        defaultValue: 'long',
-                        menu: 'Typo'
+                        defaultValue: 'float',
+                        menu: 'Typo1'
+                    },
+                    SCOPE: {
+                      type: ArgumentType.STRING,
+                      defaultValue: 'local',
+                      menu: 'Scope'
                     }
                 },
                 func: 'noop',
@@ -1289,8 +1294,8 @@ class cBrain {
                         },
                         TYPO: {
                             type: ArgumentType.STRING,
-                            defaultValue: 'char',
-                            menu: 'Typo'
+                            defaultValue: 'float',
+                            menu: 'Typo2'
                         }
                     },
                     func: 'noop',
@@ -1430,7 +1435,9 @@ class cBrain {
                 Sounds: this._buildMenu(this.SOUNDS_INFO),
                 //Sounds: [],
                 StrTypo: ['HEX', 'BIN', 'DEC'],
-                Typo: ['byte', 'char', 'int', 'long', 'word', 'float'],
+                Scope: ['local','global'],
+                Typo1: ['bool', 'int8_t', 'uint8_t', 'int16_t', 'uint16_t', 'int32_t', 'uint32_t', 'float'],
+                Typo2: ['char', 'byte', 'int', 'word', 'long', 'float'],
                 ypr: ['yaw','pitch','roll'],
                 accG: ['Gx','Gy','Gz'],
                 acc: ['ax','ay','az'],
@@ -1499,8 +1506,9 @@ class cBrain {
                     'v': '電源電壓 (mV)',
                     'stringtypo': '將[TEXT]以[TYPO]進制展示',
                     'StrTypo': {'HEX':'十六','BIN':'二','DEC':'十'},
+                    'Scope': {'local':'區域','global':'全域'},
                     'typecast': '轉換[VALUE]的資料型態為[TYPO]',
-                    'var': '變數[VAR]設為[VALUE], 資料型態為[TYPO]',
+                    'var': '變數[VAR]設為[VALUE], 資料型態為[TYPO], 範圍:[SCOPE]',
                     'var_value': '變數[VAR]',
                     'imuYPR': '[IMU]角度(°)',
                     'imuG': '反作用力的[IMU]G值(mg)',
@@ -1535,8 +1543,9 @@ class cBrain {
                     'v': '电源电压 (mV)',
                     'stringtypo': '将[TEXT]以[TYPO]进制展示',
                     'StrTypo': {'HEX':'十六','BIN':'二','DEC':'十'},
+                    'Scope': {'local':'局部','global':'全局'},
                     'typecast': '转换[VALUE]的资料型态为[TYPO]',
-                    'var': '变数[VAR]设为[VALUE], 资料型态为[TYPO]',
+                    'var': '变数[VAR]设为[VALUE], 资料型态为[TYPO], 作用域为[SCOPE]',
                     'var_value': '变数[VAR]',
                     'imuYPR': '[IMU]角度(°)',
                     'imuG': '反作用力的[IMU]G值(mg)',
@@ -2787,9 +2796,12 @@ while (${sertype}.available()) {
         let va = gen.valueToCode(block, 'VAR');
         const value = gen.valueToCode(block, 'VALUE');
         const typo = gen.valueToCode(block, 'TYPO');
+        const _scope = gen.valueToCode(block, 'SCOPE');
         va = va.substr(1,va.length-2);
         gen.includes_['stdint'] = `#include <stdint.h>`;
-        //gen.definitions_['var'] = `${typo} ${va};`;
+        if (_scope == 'global'){
+            gen.definitions_['var'] = `${typo} ${va};`;
+        }
 
         return gen.line(`${typo} ${va} = ${value}`);
     }
