@@ -210,6 +210,11 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
           return;
       }
 
+  } else { 
+    #ifdef DEBUG
+        Serial.println("no valid data is available");
+    #endif
+    return;
   }
 
 }`;

@@ -1800,7 +1800,7 @@ class Firmata extends Emitter {
   pingRead(options, callback) {
 
     if (!this.pins[options.trigPin].supportedModes.includes(PING_READ)) {
-      throw new Error("Please upload PingFirmata to the board");
+      throw new Error("Please upload cBrainFirmata.hex to the board");
     }
 
     const {
