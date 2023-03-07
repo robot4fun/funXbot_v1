@@ -1897,8 +1897,8 @@ uint16_t ultrasonicSensor(uint8_t trigPin, uint8_t echoPin){
     distance *= 1.28;
   }
   */
-  if(distance <= 0){ // timeout
-    distance = 9999;
+  if(distance <= 0.0){ // timeout
+    distance = 9999.9;
   }
   return int(distance);
 }
