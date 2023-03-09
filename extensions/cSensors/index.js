@@ -1889,7 +1889,7 @@ uint16_t ultrasonicSensor(uint8_t trigPin, uint8_t echoPin){
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
   pinMode(echoPin, INPUT);
-  duration = pulseIn(echoPin, HIGH);
+  duration = pulseIn(echoPin, HIGH, 30000);
   distance = (float)duration / 58.2 *10.0; // mm
   // un-comm this for nekomimi ultrasonic
   /*
@@ -2314,15 +2314,15 @@ uint8_t hex2rgb(uint32_t hex, uint8_t rgb){
       let d, minV = 999999;
       for (let i = 0; i < this.cSample.length; i++) {
         d = Math.sqrt(Math.pow((se_rgb[0] - this.cSample[i][0]), 2) +
-                 Math.pow((se_rgb[1] - this.cSample[i][1]), 2) +
-                 Math.pow((se_rgb[2] - this.cSample[i][2]), 2));
+                      Math.pow((se_rgb[1] - this.cSample[i][1]), 2) +
+                      Math.pow((se_rgb[2] - this.cSample[i][2]), 2));
 
-    		if (d < minV){	// new best
-    			minV = d;
-          sampleID = i;
-    		}
-    		if (d == 0)		// perfect match, no need to search more
-    			break;
+        if (d < minV){	// new best
+            minV = d;
+            sampleID = i;
+        }
+        if (d == 0)		// perfect match, no need to search more
+            break;
       }
       console.log('sampleID=',sampleID);
 
@@ -2343,29 +2343,29 @@ uint8_t hex2rgb(uint32_t hex, uint8_t rgb){
         gen.includes_['colormatchHEX'] = `#include "ColorSample.h"`;
         gen.definitions_['colorMatchHEX'] = `
 uint8_t ColorMatchHEX(uint32_t se_color){
-  uint8_t		se_rgb[3];
+  uint8_t   se_rgb[3];
   uint8_t   sampleID = 0xFF;
-	uint32_t	d;
-	uint32_t	minV = 999999;
+  uint32_t  d;
+  uint32_t  minV = 999999;
 
   se_rgb[0] = byte(se_color >> 16);       //red
   se_rgb[1] = byte(se_color >> 8 & 0xFF); //green
   se_rgb[2] = byte(se_color & 0xFF);      //blue
 
-	for (uint8_t i=0; i<(sizeof(ct)/sizeof(ct[0])); i++){
+  for (uint8_t i=0; i<(sizeof(ct)/sizeof(ct[0])); i++){
     // Root mean square distance between the color and colors in the table.
     d = sqrt(pow(se_rgb[0] - ct[i][0], 2) +
               pow(se_rgb[1] - ct[i][1], 2) +
               pow(se_rgb[2] - ct[i][2], 2));
-		if (d < minV){	// new best
-			minV = d;
-			sampleID = i;
-		}
-		if (d == 0)		// perfect match, no need to search more
-			break;
-	}
+    if (d < minV){	// new best
+        minV = d;
+        sampleID = i;
+    }
+    if (d == 0)		// perfect match, no need to search more
+        break;
+  }
 
-	return(sampleID);
+  return(sampleID);
 }`;
 
        return [`ColorMatchHEX(${se_color}) == ${color_no}`, gen.ORDER_ATOMIC];
