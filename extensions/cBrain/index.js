@@ -1082,6 +1082,44 @@ class cBrain {
                     arduino: this.serReadStringGen
                 }
               },
+              {
+                opcode: 'substring',
+                blockType: BlockType.REPORTER,
+                text: '[TEXT].substring [FROM] [TO]',
+                arguments: {
+                    TEXT: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'funXbot'
+                    },
+                    FROM: {
+                      type: ArgumentType.NUMBER,
+                      defaultValue: 1
+                    },
+                    TO: {
+                      type: ArgumentType.NUMBER,
+                      defaultValue: 3
+                    }
+                },
+                func: 'noop',
+                gen: {
+                    arduino: this.subStringGen
+                }
+              },
+              {
+                opcode: 'text2number',
+                blockType: BlockType.REPORTER,
+                text: 'transfer text [TEXT] to number',
+                arguments: {
+                    TEXT: {
+                        type: ArgumentType.STRING,
+                        defaultValue: '-123'
+                    }
+                },
+                func: 'noop',
+                gen: {
+                    arduino: this.text2numberGen
+                }
+              },
               '---',
               {
                 opcode: 'serialavailable4write',
@@ -1183,6 +1221,93 @@ class cBrain {
                   text: 'more..'
               },
               {
+                opcode: 'var',
+                blockType: BlockType.COMMAND,
+                text: 'variable [VAR] = [VALUE] ([TYPO], [SCOPE])',
+                arguments: {
+                    VAR: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'c'
+                    },
+                    VALUE: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 0
+                    },
+                    TYPO: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'bool',
+                        menu: 'Typo1'
+                    },
+                    SCOPE: {
+                      type: ArgumentType.STRING,
+                      defaultValue: 'local',
+                      menu: 'Scope'
+                    }
+                },
+                func: 'noop',
+                gen: {
+                    arduino: this.varGen
+                }
+              },
+            /*{
+                opcode: 'var_data',
+                blockType: BlockType.COMMAND,
+                text: 'variable [TYPO] = [VALUE]',
+                arguments: {
+                    VALUE: {
+                        type: ArgumentType.NUMBER,
+                        defaultValue: 0
+                    },
+                    TYPO: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'a',
+                    }
+                },
+                func: 'noop',
+                gen: {
+                    arduino: this.var_dataGen
+                }
+              },*/
+              {
+                opcode: 'var_value',
+                blockType: BlockType.REPORTER,
+                text: 'variable [VAR]',
+                arguments: {
+                    VAR: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'c',
+                    }
+                },
+                func: 'noop',
+                gen: {
+                    arduino: this.var_valueGen
+                }
+              },
+              {
+                    opcode: 'typecast',
+                    blockType: BlockType.REPORTER,
+                    text: formatMessage({
+                        id: 'arduino.typecast',
+                        default: 'Cast [VALUE] to [TYPO]'
+                    }),
+                    arguments: {
+                        VALUE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '123'
+                        },
+                        TYPO: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'float',
+                            menu: 'Typo2'
+                        }
+                    },
+                    func: 'noop',
+                    gen: {
+                        arduino: this.typecastGen
+                    }
+              },
+              '---',
+              {
                 opcode: 'coreTemp',
                 blockType: BlockType.REPORTER,
                 text: 'core temperature (°[IMU])',
@@ -1249,93 +1374,7 @@ class cBrain {
               },
               '---',
               */
-            {
-                opcode: 'var',
-                blockType: BlockType.COMMAND,
-                text: 'variable [VAR] = [VALUE] ([TYPO], [SCOPE])',
-                arguments: {
-                    VAR: {
-                        type: ArgumentType.STRING,
-                        defaultValue: 'c'
-                    },
-                    VALUE: {
-                        type: ArgumentType.STRING,
-                        defaultValue: 0
-                    },
-                    TYPO: {
-                        type: ArgumentType.STRING,
-                        defaultValue: 'float',
-                        menu: 'Typo1'
-                    },
-                    SCOPE: {
-                      type: ArgumentType.STRING,
-                      defaultValue: 'local',
-                      menu: 'Scope'
-                    }
-                },
-                func: 'noop',
-                gen: {
-                    arduino: this.varGen
-                }
-            },
-            /*{
-                opcode: 'var_data',
-                blockType: BlockType.COMMAND,
-                text: 'variable [TYPO] = [VALUE]',
-                arguments: {
-                    VALUE: {
-                        type: ArgumentType.NUMBER,
-                        defaultValue: 0
-                    },
-                    TYPO: {
-                        type: ArgumentType.STRING,
-                        defaultValue: 'a',
-                    }
-                },
-                func: 'noop',
-                gen: {
-                    arduino: this.var_dataGen
-                }
-            },*/
-            {
-                opcode: 'var_value',
-                blockType: BlockType.REPORTER,
-                text: 'variable [VAR]',
-                arguments: {
-                    VAR: {
-                        type: ArgumentType.STRING,
-                        defaultValue: 'c',
-                    }
-                },
-                func: 'noop',
-                gen: {
-                    arduino: this.var_valueGen
-                }
-            },
 
-                {
-                    opcode: 'typecast',
-                    blockType: BlockType.REPORTER,
-                    text: formatMessage({
-                        id: 'arduino.typecast',
-                        default: 'Cast [VALUE] to [TYPO]'
-                    }),
-                    arguments: {
-                        VALUE: {
-                            type: ArgumentType.STRING,
-                            defaultValue: '123'
-                        },
-                        TYPO: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'float',
-                            menu: 'Typo2'
-                        }
-                    },
-                    func: 'noop',
-                    gen: {
-                        arduino: this.typecastGen
-                    }
-                },
                 '---',
                 /*{
                     opcode: 'wireBegin',
@@ -1569,10 +1608,12 @@ class cBrain {
                     'serialread': '串流進來的首個字節',
                     'serialreadstring': '從串流讀到的字串 ([TERMINATOR]前 )',
                     'serialavailable4write': '發訊暫存區的空位',
-                    'serialwrite': '串流傳送[VALUE](0-255)',
-                    'serialprint': '串流傳送文字[TEXT]',
-                    'println': '串流傳送文字[TEXT]並換行',
-                    'printvalue': '串流傳送[TEXT]=[VALUE], 並換行',
+                    'serialwrite': '串流發送[VALUE](0-255)',
+                    'serialprint': '串流發送文字[TEXT]',
+                    'println': '串流發送文字[TEXT]並換行',
+                    'printvalue': '串流發送[TEXT]=[VALUE], 並換行',
+                    'text2number': '轉換文字[TEXT]為數字',
+                    'substring': '擷取字串[TEXT]的第[FROM]到[TO]字',
                 },
                 'zh-cn': { // 簡體中文
                     //'cBrain': '鸡车脑',
@@ -1621,6 +1662,8 @@ class cBrain {
                     'serialprint': '串口传送字串[TEXT]',
                     'println': '串口传送字串[TEXT][TEXT]并换行',
                     'printvalue': '串口传送[TEXT]=[VALUE], 并换行',
+                    'text2number': '转换字串[TEXT]为数字',
+                    'substring': '撷取字串[TEXT]的第[FROM]到[TO]字',
                 },
             }
 
@@ -2914,6 +2957,19 @@ while (${sertype}.available()) {
         va = va.substr(1,va.length-2);
         const code = `${va}`;
         return [code, 0];
+    }
+
+    text2numberGen (gen, block){
+        const te = gen.valueToCode(block, 'TEXT');
+        return [`${te}.toInt()`, 0];
+    }
+
+    subStringGen (gen, block){
+      const te = gen.valueToCode(block, 'TEXT');
+      const fr = gen.valueToCode(block, 'FROM');
+      const to = gen.valueToCode(block, 'TO');
+
+      return [`String(${te}).substring(${fr-1}, ${to-1})`, 0];
     }
     
     async reset() { // todo: how to reset j5?
