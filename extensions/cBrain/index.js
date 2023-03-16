@@ -562,58 +562,6 @@ class cBrain {
                     },
                     func: 'noop'
                 },
-                {
-                    opcode: 'serialavailable',
-                    blockType: BlockType.BOOLEAN,
-                    text: formatMessage({
-                        id: 'arduino.serialavailable',
-                        default: '[SERIAL] Available'
-                    }),
-                    arguments: {
-                        SERIAL: {
-                            type: ArgumentType.STRING,
-                            menu: 'serialtype',
-                            defaultValue: 'Serial'
-                        }
-                    },
-                    func: 'noop',
-                    gen: {
-                        arduino: this.serAvailable
-                    }
-                },
-                {
-                    opcode: 'serialread',
-                    blockType: BlockType.REPORTER,
-                    text: formatMessage({
-                        id: 'arduino.serialread',
-                        default: '[SERIAL] Read'
-                    }),
-                    arguments: {
-                        SERIAL: {
-                            type: ArgumentType.STRING,
-                            menu: 'serialtype',
-                            defaultValue: 'Serial'
-                        }
-                    },
-                    func: 'noop'
-                },
-                {
-                    opcode: 'serialbegin',
-                    blockType: BlockType.COMMAND,
-
-                    text: formatMessage({
-                        id: 'arduino.serialbegin',
-                        default: 'Serial Begin [BAUD]'
-                    }),
-                    arguments: {
-                        BAUD: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 115200
-                        }
-                    },
-                    func: 'noop',
-                    sepafter: 36
-                },
 
                 {
                     opcode: 'softwareserial',
@@ -759,29 +707,7 @@ class cBrain {
                     sepafter: 36
                 },
 */
-                /*
-                {
-                    opcode: 'whenButtonPressed',
-                    text: formatMessage({
-                        id: 'ev3.whenButtonPressed',
-                        default: 'when button [PORT] pressed',
-                        description: 'when a button connected to a port is pressed'
-                    }),
-                    blockType: BlockType.HAT,
-                    arguments: {
-                      PORT: {
-                        type: ArgumentType.STRING,
-                        menu: 'buttonPort',
-                        defaultValue: this.sensors.button
-                      }
-                    },
-                    func: 'whenButtonPressed',
-                    gen: {
-                      arduino: this.whenButtonPressedGen
-                    }
-                },
-                */
-                {
+              {
                   opcode: 'buttonPressed',
                   text: 'button pressed?',
                     //description: 'is the on-board button pressed?'
@@ -790,7 +716,7 @@ class cBrain {
                   gen: {
                       arduino: this.buttonPressedGen
                   }
-                },
+              },
               {
                   opcode: 'getSound',
                   text: 'surrounding volume (0~1023)',
@@ -920,6 +846,7 @@ class cBrain {
                     arduino: this.isGestureGen
                 }
             },
+            '---',
             {
                 opcode: 'resetYaw',
                 blockType: BlockType.COMMAND,
@@ -1091,6 +1018,168 @@ class cBrain {
               {
                   func: 'noop',
                   blockType: BlockType.DIVLABEL,
+                  text: 'Serial..'
+              },
+              {
+                opcode: 'serialbegin',
+                blockType: BlockType.COMMAND,
+                text: 'Serial Begin',
+                func: 'noop',
+                gen: {
+                    arduino: this.serBeginGen
+                }
+              },
+              {
+                opcode: 'serialend',
+                blockType: BlockType.COMMAND,
+                text: 'Serial End',
+                func: 'noop',
+                gen: {
+                    arduino: this.serEndGen
+                }
+              },
+              {
+                opcode: 'serialif',
+                blockType: BlockType.BOOLEAN,
+                text: 'Serial openned?',
+                func: 'noop',
+                gen: {
+                    arduino: this.serIfGen
+                }
+              },
+              '---',
+              {
+                opcode: 'serialavailable',
+                blockType: BlockType.REPORTER,
+                text: 'Serial Available',
+                func: 'noop',
+                gen: {
+                    arduino: this.serAvailableGen
+                }
+              },
+              {
+                opcode: 'serialread',
+                blockType: BlockType.REPORTER,
+                text: 'Serial Read',
+                func: 'noop',
+                gen: {
+                    arduino: this.serReadGen
+                }
+              },
+              {
+                opcode: 'serialreadstring',
+                blockType: BlockType.REPORTER,
+                text: 'Serial Read String Until [TERMINATOR]',
+                arguments: {
+                    TERMINATOR: {
+                        type: ArgumentType.STRING,
+                        //menu: 'terminator',
+                        defaultValue: '#'
+                    }
+                },
+                func: 'noop',
+                gen: {
+                    arduino: this.serReadStringGen
+                }
+              },
+              '---',
+              {
+                opcode: 'serialavailable4write',
+                blockType: BlockType.REPORTER,
+                text: 'Serial Available for Write',
+                func: 'noop',
+                gen: {
+                    arduino: this.serAvailable4WriteGen
+                }
+              },
+              {
+                opcode: 'serialwrite',
+                blockType: BlockType.COMMAND,
+                text: 'Serial Write [VALUE] (0-255)',
+                arguments: {
+                      VALUE: {
+                          type: ArgumentType.SLIDERANALOGWR,
+                          defaultValue: 0
+                      }
+                },
+                func: 'noop',
+                gen: {
+                    arduino: this.serWriteGen
+                }
+              },
+              {
+                opcode: 'serialprint',
+                blockType: BlockType.COMMAND,
+                text: 'Serial Print [TEXT]',
+                arguments: {
+                  TEXT: {
+                      type: ArgumentType.STRING,
+                      defaultValue: 'Hello World'
+                  }
+                },
+                func: 'noop',
+                gen: {
+                    arduino: this.serPrintGen
+                }
+              },
+              {
+                  opcode: 'println',
+                  blockType: BlockType.COMMAND,
+                  text: 'Serial Print Line [TEXT]',
+                  arguments: {
+                      TEXT: {
+                          type: ArgumentType.STRING,
+                          defaultValue: 'Hello World'
+                      }
+                  },
+                  func: 'noop',
+                  gen: {
+                      arduino: this.printlnGen
+                  }
+              },
+              {
+                  opcode: 'printvalue',
+                  blockType: BlockType.COMMAND,
+                  text: 'Serial Print [TEXT] = [VALUE]',
+                  arguments: {
+                      TEXT: {
+                          type: ArgumentType.STRING,
+                          defaultValue: 'Distance'
+                      },
+                      VALUE: {
+                          type: ArgumentType.STRING,
+                          defaultValue: '123'
+                      }
+                  },
+                  func: 'noop',
+                  gen: {
+                      arduino: this.printvalueGen
+                  }
+              },
+              {
+                opcode: 'stringtypo',
+                blockType: BlockType.REPORTER,
+                text: 'String[TEXT],[TYPO]',
+                arguments: {
+                    TEXT: {
+                        type: ArgumentType.STRING,
+                        defaultValue: '123'
+                    },
+                    TYPO: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'HEX',
+                        menu: 'StrTypo'
+                    }
+                },
+                func: 'noop',
+                gen: {
+                    arduino: this.stringtypoGen
+                }
+              },
+              '---',
+              {
+                  func: 'noop',
+                  blockType: BlockType.DIVLABEL,
                   text: 'more..'
               },
               {
@@ -1139,46 +1228,7 @@ class cBrain {
                       arduino: this.resetGen
                   }
               },
-              {
-                  opcode: 'println',
-                  blockType: BlockType.COMMAND,
-                  text: formatMessage({
-                      id: 'arduino.println',
-                      default: 'Serial Print [TEXT]'
-                  }),
-                  arguments: {
-                      TEXT: {
-                          type: ArgumentType.STRING,
-                          defaultValue: 'Hello World'
-                      }
-                  },
-                  func: 'noop',
-                  gen: {
-                      arduino: this.printlnGen
-                  }
-              },
-              {
-                  opcode: 'printvalue',
-                  blockType: BlockType.COMMAND,
-                  text: formatMessage({
-                      id: 'arduino.printvalue',
-                      default: 'Serial Print [TEXT] = [VALUE]'
-                  }),
-                  arguments: {
-                      TEXT: {
-                          type: ArgumentType.STRING,
-                          defaultValue: 'Distance'
-                      },
-                      VALUE: {
-                          type: ArgumentType.STRING,
-                          defaultValue: '123'
-                      }
-                  },
-                  func: 'noop',
-                  gen: {
-                      arduino: this.printvalueGen
-                  }
-              },
+
               /*
               {
                   opcode: 's4xparse',
@@ -1262,29 +1312,7 @@ class cBrain {
                     arduino: this.var_valueGen
                 }
             },
-                {
-                    opcode: 'stringtypo',
-                    blockType: BlockType.REPORTER,
-                    text: formatMessage({
-                        id: 'arduino.stringtypo',
-                        default: 'String[TEXT],[TYPO]'
-                    }),
-                    arguments: {
-                        TEXT: {
-                            type: ArgumentType.STRING,
-                            defaultValue: '123'
-                        },
-                        TYPO: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'HEX',
-                            menu: 'StrTypo'
-                        }
-                    },
-                    func: 'noop',
-                    gen: {
-                        arduino: this.stringtypoGen
-                    }
-                },
+
                 {
                     opcode: 'typecast',
                     blockType: BlockType.REPORTER,
@@ -1439,10 +1467,14 @@ class cBrain {
                 ],
                 Sounds: this._buildMenu(this.SOUNDS_INFO),
                 //Sounds: [],
+                terminator: [{text: '#', value: '#'},
+                              {text: 'Enter', value: 13},
+                              {text: 'Tab', value: 9},
+                              {text: 'Space', value: ' '}],
                 StrTypo: ['HEX', 'BIN', 'DEC'],
                 Scope: ['local','global'],
-                Typo1: ['bool', 'int8_t', 'uint8_t', 'int16_t', 'uint16_t', 'int32_t', 'uint32_t', 'float'],
-                Typo2: ['char', 'byte', 'int', 'word', 'long', 'float'],
+                Typo1: ['bool', 'int8_t', 'uint8_t', 'int16_t', 'uint16_t', 'int32_t', 'uint32_t', 'float', 'String'],
+                Typo2: ['char', 'byte', 'int', 'word', 'long', 'float', 'String'],
                 ypr: ['yaw','pitch','roll'],
                 accG: ['Gx','Gy','Gz'],
                 acc: ['ax','ay','az'],
@@ -1530,6 +1562,17 @@ class cBrain {
                     'Motion1':'狀態是[GESTURE]?',
                     'resetYaw':'將偏航角歸零',
                     'coreTemp': '內部溫度(°[IMU])',
+                    'serialbegin': '開啟串流通訊',
+                    'serialend': '關閉串流通訊',
+                    'serialif': '串流通訊已開啟?',
+                    'serialavailable': '收訊暫存區的字節數',
+                    'serialread': '串流進來的首個字節',
+                    'serialreadstring': '從串流讀到的字串 ([TERMINATOR]前 )',
+                    'serialavailable4write': '發訊暫存區的空位',
+                    'serialwrite': '串流傳送[VALUE](0-255)',
+                    'serialprint': '串流傳送文字[TEXT]',
+                    'println': '串流傳送文字[TEXT]並換行',
+                    'printvalue': '串流傳送[TEXT]=[VALUE], 並換行',
                 },
                 'zh-cn': { // 簡體中文
                     //'cBrain': '鸡车脑',
@@ -1567,6 +1610,17 @@ class cBrain {
                     'Motion1':'状态是[GESTURE]?',
                     'resetYaw':'将航向角归零',
                     'coreTemp': '內部溫度(°[IMU])',
+                    'serialbegin': '开启串口通信',
+                    'serialend': '关闭串口通信',
+                    'serialif': '串口通信已开启?',
+                    'serialavailable': '收信暂存区的字节数',
+                    'serialread': '串口接收到的首个字节',
+                    'serialreadstring': '从串口读到的字串 ([TERMINATOR]前 )',
+                    'serialavailable4write': '发信暂存区的空位',
+                    'serialwrite': '串口传送[VALUE](0-255)',
+                    'serialprint': '串口传送字串[TEXT]',
+                    'println': '串口传送字串[TEXT][TEXT]并换行',
+                    'printvalue': '串口传送[TEXT]=[VALUE], 并换行',
                 },
             }
 
@@ -1775,6 +1829,7 @@ class cBrain {
             })
         });
     }    */
+
     buttonPressed (args){
         const pin = Sensors.button;
         if (board.pins[pin].mode != board.MODES.INPUT ){
@@ -2675,14 +2730,56 @@ void receiveSing(int pin, int song){
         return gen.line(`receiveSing(${pin}, ${sound})`);
     }
 
+    serBeginGen (gen, block){
+      return gen.line(`Serial.begin(115200)`);
+    }
+
+    serEndGen (gen, block){
+      return gen.line(`Serial.end()`);
+    }
+
+    serIfGen (gen, block){
+      return [`Serial`, 0];
+    }
+
+    serAvailableGen (gen, block){
+      //const sertype = gen.valueToCode(block, 'SERIAL');
+      //const code = `${sertype}.available()`;
+      const code = `Serial.available()`;
+      return [code, 0];
+    }
+  
+    serReadGen (gen, block){
+      return [`Serial.read()`, 0];
+    }
+
+    serReadStringGen (gen, block){
+      const ter = gen.valueToCode(block, 'TERMINATOR');
+      return [`Serial.readStringUntil(${ter})`, 0];
+    }
+
+    serAvailable4WriteGen (gen, block){
+      return [`Serial.availableForWrite()`, 0];
+    }
+
+    serWriteGen (gen, block){
+      const v = gen.valueToCode(block, 'VALUE');
+      return gen.line(`Serial.write((uint8_t)${v})`);
+    }
+
+    serPrintGen (gen, block){
+      const s = gen.valueToCode(block, 'TEXT');
+      return gen.line(`Serial.print(${s})`);
+    }
+
     printlnGen (gen, block){
-        gen.setupCodes_['println'] = `Serial.begin(115200)`;
+        //gen.setupCodes_['println'] = `Serial.begin(115200)`;
         const s = gen.valueToCode(block, 'TEXT');
         return gen.line(`Serial.println(${s})`);
     }
 
     printvalueGen (gen, block){
-        gen.setupCodes_['println'] = `Serial.begin(115200)`;
+        //gen.setupCodes_['println'] = `Serial.begin(115200)`;
         const s = gen.valueToCode(block, 'TEXT');
         const v = gen.valueToCode(block, 'VALUE');
         return gen.line(`Serial.println(String(${s}) + String("=") + String(${v}))`);
@@ -2806,9 +2903,10 @@ while (${sertype}.available()) {
         gen.includes_['stdint'] = `#include <stdint.h>`;
         if (_scope == 'global'){
             gen.definitions_['var'] = `${typo} ${va};`;
+            return gen.line(`${va} = ${value}`);
+        } else {
+            return gen.line(`${typo} ${va} = ${value}`);
         }
-
-        return gen.line(`${typo} ${va} = ${value}`);
     }
 
     var_valueGen (gen, block){
@@ -2817,13 +2915,7 @@ while (${sertype}.available()) {
         const code = `${va}`;
         return [code, 0];
     }
-    /*
-    serAvailable (gen, block){
-        const sertype = gen.valueToCode(block, 'SERIAL');
-        const code = `${sertype}.available()`;
-        return [code, 0];
-    }
-    */
+    
     async reset() { // todo: how to reset j5?
       //console.log('isConnected?',this.isConnected());
       if(this.isConnected()) {
