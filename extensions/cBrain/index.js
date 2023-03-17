@@ -1297,7 +1297,7 @@ class cBrain {
                         },
                         TYPO: {
                             type: ArgumentType.STRING,
-                            defaultValue: 'float',
+                            defaultValue: 'TEXT',
                             menu: 'Typo2'
                         }
                     },
@@ -1513,7 +1513,7 @@ class cBrain {
                 StrTypo: ['HEX', 'BIN', 'DEC'],
                 Scope: ['local','global'],
                 Typo1: ['bool', 'int8_t', 'uint8_t', 'int16_t', 'uint16_t', 'int32_t', 'uint32_t', 'float', 'String'],
-                Typo2: ['char', 'byte', 'int', 'word', 'long', 'float', 'String'],
+                Typo2: ['char', 'byte', 'int', 'word', 'long', 'float', 'String', 'TEXT'],
                 ypr: ['yaw','pitch','roll'],
                 accG: ['Gx','Gy','Gz'],
                 acc: ['ax','ay','az'],
@@ -1583,6 +1583,7 @@ class cBrain {
                     'stringtypo': '將[TEXT]以[TYPO]進制展示',
                     'StrTypo': {'HEX':'十六','BIN':'二','DEC':'十'},
                     'Scope': {'local':'區域','global':'全域'},
+                    'Typo2': {'TEXT': '字符'},
                     'typecast': '轉換[VALUE]的資料型態為[TYPO]',
                     'var': '變數[VAR]設為[VALUE], 資料型態為[TYPO], 範圍:[SCOPE]',
                     'var_value': '變數[VAR]',
@@ -1633,6 +1634,7 @@ class cBrain {
                     'stringtypo': '将[TEXT]以[TYPO]进制展示',
                     'StrTypo': {'HEX':'十六','BIN':'二','DEC':'十'},
                     'Scope': {'local':'局部','global':'全局'},
+                    'Typo2': {'TEXT': '字符'},
                     'typecast': '转换[VALUE]的资料型态为[TYPO]',
                     'var': '变数[VAR]设为[VALUE], 资料型态为[TYPO], 作用域为[SCOPE]',
                     'var_value': '变数[VAR]',
@@ -2797,8 +2799,9 @@ void receiveSing(int pin, int song){
     }
 
     serReadStringGen (gen, block){
-      const ter = gen.valueToCode(block, 'TERMINATOR');
-      return [`Serial.readStringUntil(${ter})`, 0];
+      let ter = gen.valueToCode(block, 'TERMINATOR');
+      ter = ter.substr(1,ter.length-2);
+      return [`Serial.readStringUntil('${ter}')`, 0];
     }
 
     serAvailable4WriteGen (gen, block){
@@ -2933,8 +2936,11 @@ while (${sertype}.available()) {
     typecastGen (gen, block){
         const value = gen.valueToCode(block, 'VALUE');
         const typo = gen.valueToCode(block, 'TYPO');
-        const code = `${typo}(${value})`;
-        return [code, 0];
+        if (typo == 'TEXT') {
+          return [`'${value}'`, 0];
+        } else {
+          return [`${typo}(${value})`, 0];
+        }
     }
 
     varGen (gen, block){
@@ -2961,7 +2967,7 @@ while (${sertype}.available()) {
 
     text2numberGen (gen, block){
         const te = gen.valueToCode(block, 'TEXT');
-        return [`${te}.toInt()`, 0];
+        return [`String(${te}).toInt()`, 0];
     }
 
     subStringGen (gen, block){
