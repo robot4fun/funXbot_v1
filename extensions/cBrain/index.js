@@ -73,6 +73,7 @@ const wireCommon = gen => {
 }
 */
 const mpuCommon = gen => {
+        gen.includes_['stdint'] = `#include <stdint.h>`;
         gen.includes_['mpu6050'] = `
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
@@ -1083,6 +1084,21 @@ class cBrain {
                 }
               },
               {
+                opcode: 'stringlength',
+                blockType: BlockType.REPORTER,
+                text: 'String [TEXT] length',
+                arguments: {
+                    TEXT: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 'funXbot'
+                    }
+                },
+                func: 'noop',
+                gen: {
+                    arduino: this.strLengthGen
+                }
+              },
+              {
                 opcode: 'substring',
                 blockType: BlockType.REPORTER,
                 text: '[TEXT].substring [FROM] [TO]',
@@ -1617,6 +1633,7 @@ class cBrain {
                     'printvalue': '串流發送[TEXT]=[VALUE], 並換行',
                     'text2number': '轉換字串[TEXT]為數字',
                     'substring': '擷取字串[TEXT]的第[FROM]到[TO]字',
+                    'stringlength': '字串[TEXT]長度',
                 },
                 'zh-cn': { // 簡體中文
                     //'cBrain': '鸡车脑',
@@ -1670,6 +1687,7 @@ class cBrain {
                     'printvalue': '串口传送[TEXT]=[VALUE], 并回车',
                     'text2number': '转换字符串[TEXT]为数字',
                     'substring': '撷取字符串[TEXT]的第[FROM]到[TO]字',
+                    'stringlength': '字符串[TEXT]长度',
                 },
             }
 
@@ -2814,7 +2832,7 @@ void receiveSing(int pin, int song){
 
     serWriteGen (gen, block){
       const v = gen.valueToCode(block, 'VALUE');
-      return gen.line(`Serial.write((uint8_t)${v})`);
+      return gen.line(`Serial.write(byte(${v}))`);
     }
 
     serPrintGen (gen, block){
@@ -2974,12 +2992,17 @@ while (${sertype}.available()) {
         return [`String(${te}).toInt()`, 0];
     }
 
+    strLengthGen (gen, block){
+      const te = gen.valueToCode(block, 'TEXT');
+      return [`String(${te}).length()`, 0];
+    }
+
     subStringGen (gen, block){
       const te = gen.valueToCode(block, 'TEXT');
       const fr = gen.valueToCode(block, 'FROM');
       const to = gen.valueToCode(block, 'TO');
 
-      return [`String(${te}).substring(${fr-1}, ${to-1})`, 0];
+      return [`String(${te}).substring(${fr}-1, ${to}-1)`, 0];
     }
     
     async reset() { // todo: how to reset j5?
