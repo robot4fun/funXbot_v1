@@ -3002,7 +3002,7 @@ while (${sertype}.available()) {
       const fr = gen.valueToCode(block, 'FROM');
       const to = gen.valueToCode(block, 'TO');
 
-      return [`String(${te}).substring(${fr}-1, ${to}-1)`, 0];
+      return [`String(${te}).substring(${fr}-1, ${to})`, 0];
     }
     
     async reset() { // todo: how to reset j5?
