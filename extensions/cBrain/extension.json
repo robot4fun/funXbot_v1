@@ -1,5 +1,5 @@
 {
-    "name": "funXbot V1",
+    "name": "funXbot v1",
     "type": "arduino",
     "extensions": ["cBrain", "cSensors", "cDisplays", "cActuators"],
     "cmd": "arduino:avr:uno",

@@ -12,25 +12,25 @@ const PIXEL_COMMAND = 0x51;
 const PIXEL_RESET = 0x06;
 
 async function timeout(ms) {
-  await new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+    await new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
 };
 
-function cutHex(h) {return (h.charAt(0)=="#") ? h.substring(1,7):h};
-function hexToR(h) {return parseInt((cutHex(h)).substring(0,2),16)};
-function hexToG(h) {return parseInt((cutHex(h)).substring(2,4),16)};
-function hexToB(h) {return parseInt((cutHex(h)).substring(4,6),16)};
+function cutHex(h) { return (h.charAt(0) == "#") ? h.substring(1, 7) : h };
+function hexToR(h) { return parseInt((cutHex(h)).substring(0, 2), 16) };
+function hexToG(h) { return parseInt((cutHex(h)).substring(2, 4), 16) };
+function hexToB(h) { return parseInt((cutHex(h)).substring(4, 6), 16) };
 
-class cDisplaysExtension{
-    constructor(runtime){
+class cDisplaysExtension {
+    constructor(runtime) {
         this.runtime = runtime;
         this.strips = {};
         this.digitube = {};
         this.matrix = {};
     }
 
-    getInfo (){
+    getInfo() {
         return {
             id: 'cDisplays',
             name: formatMessage({
@@ -49,15 +49,15 @@ class cDisplaysExtension{
                     blockType: BlockType.COMMAND,
                     text: '4 digits tube  port[PIN]  display[NUM]',
                     arguments: {
-                      PIN: {
-                          type: ArgumentType.STRING,
-                          menu: 'dPort',
-                          defaultValue: '5'
-                      },
-                      NUM: {
-                          type: ArgumentType.NUMBER,
-                          defaultValue: 1234
-                      }
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            menu: 'dPort',
+                            defaultValue: '5'
+                        },
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1234
+                        }
                     },
                     func: 'tm1637num',
                     gen: {
@@ -69,11 +69,11 @@ class cDisplaysExtension{
                     blockType: BlockType.COMMAND,
                     text: '4 digits tube off  port[PIN]',
                     arguments: {
-                      PIN: {
-                          type: ArgumentType.STRING,
-                          menu: 'dPort',
-                          defaultValue: '5'
-                      },
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            menu: 'dPort',
+                            defaultValue: '5'
+                        },
                     },
                     func: 'tm1637off',
                     gen: {
@@ -124,19 +124,19 @@ class cDisplaysExtension{
                     blockType: BlockType.COMMAND,
                     text: 'led matrix at port [PIN] to display pattern [MAT]',
                     arguments: {
-                      PIN: {
-                          type: ArgumentType.STRING,
-                          menu: 'dPort3',
-                          defaultValue: '5'
-                      },
-                      MAT: {
-                          type: ArgumentType.LEDMATRIX,
-                          defaultValue: '7c3e8241824183c18241824182417c3e'
-                      },
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            menu: 'dPort3',
+                            defaultValue: '5'
+                        },
+                        MAT: {
+                            type: ArgumentType.LEDMATRIX,
+                            defaultValue: '7c3e8241824183c18241824182417c3e'
+                        },
                     },
                     func: 'max72xxPatt',
                     gen: {
-                           arduino: this.max72xxPattGen
+                        arduino: this.max72xxPattGen
                     }
                 },
                 {
@@ -144,20 +144,20 @@ class cDisplaysExtension{
                     blockType: BlockType.COMMAND,
                     text: 'led matrix at port [PIN] to display mood [MAT]',
                     arguments: {
-                      PIN: {
-                          type: ArgumentType.STRING,
-                          menu: 'dPort3',
-                          defaultValue: '5'
-                      },
-                      MAT: {
-                          type: ArgumentType.STRING,
-                          menu: '#face8x16list',
-                          defaultValue: '0'
-                      },
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            menu: 'dPort3',
+                            defaultValue: '5'
+                        },
+                        MAT: {
+                            type: ArgumentType.STRING,
+                            menu: '#face8x16list',
+                            defaultValue: '0'
+                        },
                     },
                     func: 'max72xxPatt',
                     gen: {
-                         arduino: this.max72xxPattGen
+                        arduino: this.max72xxPattGen
                     }
                 },
                 {
@@ -165,25 +165,25 @@ class cDisplaysExtension{
                     blockType: BlockType.COMMAND,
                     text: 'led matrix at port [PIN] to display icon [MAT] on [LR] side',
                     arguments: {
-                      PIN: {
-                          type: ArgumentType.STRING,
-                          menu: 'dPort3',
-                          defaultValue: '5'
-                      },
-                      MAT: {
-                          type: ArgumentType.STRING,
-                          menu: '#icon8list',
-                          defaultValue: '0'
-                      },
-                      LR: {
-                          type: ArgumentType.STRING,
-                          menu: 'lr',
-                          defaultValue: 'left'
-                      },
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            menu: 'dPort3',
+                            defaultValue: '5'
+                        },
+                        MAT: {
+                            type: ArgumentType.STRING,
+                            menu: '#icon8list',
+                            defaultValue: '0'
+                        },
+                        LR: {
+                            type: ArgumentType.STRING,
+                            menu: 'lr',
+                            defaultValue: 'left'
+                        },
                     },
                     func: 'max72xxIcon',
                     gen: {
-                         arduino: this.max72xxIconGen
+                        arduino: this.max72xxIconGen
                     }
                 },
                 {
@@ -191,15 +191,15 @@ class cDisplaysExtension{
                     blockType: BlockType.COMMAND,
                     text: 'led matrix at port [PIN] to display text [TEXT]',
                     arguments: {
-                      PIN: {
-                          type: ArgumentType.STRING,
-                          menu: 'dPort3',
-                          defaultValue: '5'
-                      },
-                      TEXT: {
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            menu: 'dPort3',
+                            defaultValue: '5'
+                        },
+                        TEXT: {
                             type: ArgumentType.STRING,
                             defaultValue: 'Hello!  '
-                      }
+                        }
                     },
                     func: 'max72xxText',
                     gen: {
@@ -211,132 +211,132 @@ class cDisplaysExtension{
                     blockType: BlockType.COMMAND,
                     text: 'clear led matrix at port [PIN]',
                     arguments: {
-                      PIN: {
-                          type: ArgumentType.STRING,
-                          menu: 'dPort3',
-                          defaultValue: '5'
-                      }
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            menu: 'dPort3',
+                            defaultValue: '5'
+                        }
                     },
                     func: 'max72xxClear',
                     gen: {
-                         arduino: this.max72xxClearGen
+                        arduino: this.max72xxClearGen
                     }
                 },
                 '---',
-/*
-                {
-                    opcode: 'i2cledmatrix',
-                    blockType: BlockType.COMMAND,
-
-                    text: "Matrix [MAT]",
-                    arguments: {
-                        MAT: {
-                            type: ArgumentType.LEDMATRIX,
-                            defaultValue: '00000000024000000000042003c00000'
-                        }
-                    },
-                    func: 'i2cledmatrix'
-                },
-                '---',
-*/
-/*
-                {
-                    opcode: 'lcdsetup',
-                    blockType: BlockType.COMMAND,
-
-                    text: formatMessage({
-                        id: 'display.lcdsetup',
-                        default: 'LCD Setup Addr [ADDR]'
-                    }),
-                    arguments: {
-                        ADDR: {
-                            type: ArgumentType.STRING,
-                            defaultValue: '0x3F'
-                        }
-                    },
-                    func: 'lcdsetup',
-                    gen: {
-                        arduino: this.lcdSetupGen
-                    }
-                },
-
-                {
-                    opcode: 'lcdprint',
-                    blockType: BlockType.COMMAND,
-
-                    text: formatMessage({
-                        id: 'display.lcdprint',
-                        default: 'LCD Print [LINE]'
-                    }),
-                    arguments: {
-                        LINE: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'Hello World'
-                        }
-                    },
-                    func: 'lcdprint',
-                    gen: {
-                        arduino: this.lcdprintGen
-                    }
-                },
-                {
-                    opcode: 'lcdbl',
-                    blockType: BlockType.COMMAND,
-
-                    text: formatMessage({
-                        id: 'display.lcdbl',
-                        default: 'LCD Backlight [BL]'
-                    }),
-                    arguments: {
-                        BL: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'HIGH',
-                            menu: 'onoff'
-                        }
-                    },
-                    func: 'lcdbl',
-                    gen: {
-                        arduino: this.lcdblGen
-                    }
-                },
-                {
-                    opcode: 'lcdcursor',
-                    blockType: BlockType.COMMAND,
-
-                    text: formatMessage({
-                        id: 'display.lcdcursor',
-                        default: 'LCD Cursor Col[COL] Row[ROW]'
-                    }),
-                    arguments: {
-                        COL: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 0
-                        },
-                        ROW: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 1
-                        }
-                    },
-                    func: 'lcdcursor',
-                    gen: {
-                        arduino: this.lcdcursorGen
-                    }
-                },
-                {
-                    opcode: 'lcdclear',
-                    blockType: BlockType.COMMAND,
-
-                    text: formatMessage({
-                        id: 'display.lcdclear',
-                        default: 'LCD Clear'
-                    }),
-                    func: 'lcdclear',
-                    gen: {
-                        arduino: this.lcdclearGen
-                    }
-                },
-                '---',
-*/
+                /*
+                                {
+                                    opcode: 'i2cledmatrix',
+                                    blockType: BlockType.COMMAND,
+                
+                                    text: "Matrix [MAT]",
+                                    arguments: {
+                                        MAT: {
+                                            type: ArgumentType.LEDMATRIX,
+                                            defaultValue: '00000000024000000000042003c00000'
+                                        }
+                                    },
+                                    func: 'i2cledmatrix'
+                                },
+                                '---',
+                */
+                /*
+                                {
+                                    opcode: 'lcdsetup',
+                                    blockType: BlockType.COMMAND,
+                
+                                    text: formatMessage({
+                                        id: 'display.lcdsetup',
+                                        default: 'LCD Setup Addr [ADDR]'
+                                    }),
+                                    arguments: {
+                                        ADDR: {
+                                            type: ArgumentType.STRING,
+                                            defaultValue: '0x3F'
+                                        }
+                                    },
+                                    func: 'lcdsetup',
+                                    gen: {
+                                        arduino: this.lcdSetupGen
+                                    }
+                                },
+                
+                                {
+                                    opcode: 'lcdprint',
+                                    blockType: BlockType.COMMAND,
+                
+                                    text: formatMessage({
+                                        id: 'display.lcdprint',
+                                        default: 'LCD Print [LINE]'
+                                    }),
+                                    arguments: {
+                                        LINE: {
+                                            type: ArgumentType.STRING,
+                                            defaultValue: 'Hello World'
+                                        }
+                                    },
+                                    func: 'lcdprint',
+                                    gen: {
+                                        arduino: this.lcdprintGen
+                                    }
+                                },
+                                {
+                                    opcode: 'lcdbl',
+                                    blockType: BlockType.COMMAND,
+                
+                                    text: formatMessage({
+                                        id: 'display.lcdbl',
+                                        default: 'LCD Backlight [BL]'
+                                    }),
+                                    arguments: {
+                                        BL: {
+                                            type: ArgumentType.STRING,
+                                            defaultValue: 'HIGH',
+                                            menu: 'onoff'
+                                        }
+                                    },
+                                    func: 'lcdbl',
+                                    gen: {
+                                        arduino: this.lcdblGen
+                                    }
+                                },
+                                {
+                                    opcode: 'lcdcursor',
+                                    blockType: BlockType.COMMAND,
+                
+                                    text: formatMessage({
+                                        id: 'display.lcdcursor',
+                                        default: 'LCD Cursor Col[COL] Row[ROW]'
+                                    }),
+                                    arguments: {
+                                        COL: {
+                                            type: ArgumentType.NUMBER,
+                                            defaultValue: 0
+                                        },
+                                        ROW: {
+                                            type: ArgumentType.NUMBER,
+                                            defaultValue: 1
+                                        }
+                                    },
+                                    func: 'lcdcursor',
+                                    gen: {
+                                        arduino: this.lcdcursorGen
+                                    }
+                                },
+                                {
+                                    opcode: 'lcdclear',
+                                    blockType: BlockType.COMMAND,
+                
+                                    text: formatMessage({
+                                        id: 'display.lcdclear',
+                                        default: 'LCD Clear'
+                                    }),
+                                    func: 'lcdclear',
+                                    gen: {
+                                        arduino: this.lcdclearGen
+                                    }
+                                },
+                                '---',
+                */
                 {
                     opcode: 'rgbshow',
                     blockType: BlockType.COMMAND,
@@ -361,7 +361,7 @@ class cDisplaysExtension{
                     opcode: 'rgbset',
                     blockType: BlockType.COMMAND,
                     text: 'RGB strip at port [PIN] has [NUMPIXELS] pixels. color of pixel [PIX] is [COLOR]',
-                        //'RGB strip at port [PIN] has [NUMPIXELS] pixels. brightness: [BRIGHT]. color of pixel [PIX] is [COLOR]'
+                    //'RGB strip at port [PIN] has [NUMPIXELS] pixels. brightness: [BRIGHT]. color of pixel [PIX] is [COLOR]'
                     arguments: {
                         PIN: {
                             type: ArgumentType.STRING,
@@ -432,13 +432,13 @@ class cDisplaysExtension{
                     text: 'red:[R], green:[G], blue:[B](0~255) to hex',
                     blockType: BlockType.REPORTER,
                     arguments: {
-                      R: {type: ArgumentType.SLIDERANALOGWR},
-                      G: {type: ArgumentType.SLIDERANALOGWR},
-                      B: {type: ArgumentType.SLIDERANALOGWR},
+                        R: { type: ArgumentType.SLIDERANALOGWR },
+                        G: { type: ArgumentType.SLIDERANALOGWR },
+                        B: { type: ArgumentType.SLIDERANALOGWR },
                     },
                     func: 'rgb2hex',
                     gen: {
-                      arduino: this.rgb2hexGen
+                        arduino: this.rgb2hexGen
                     }
                 },
                 {
@@ -577,216 +577,368 @@ class cDisplaysExtension{
                 '---',
             ],
             menus: {
-              dPort: ['1','2','3','5','6','7','8'],
-              dPort3: ['5','6','7'/*,'8'*/],
-              lr: ['left', 'right'],
-              '#face8x16list': [
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f0_8x16.png',
-                value: '00', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f1_8x16.png',
-                value: '01', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f2_8x16.png',
-                value: '02', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f3_8x16.png',
-                value: '03', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f4_8x16.png',
-                value: '04', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f5_8x16.png',
-                value: '05', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f6_8x16.png',
-                value: '06', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f7_8x16.png',
-                value: '07', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f8_8x16.png',
-                value: '08', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f9_8x16.png',
-                value: '09', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f10_8x16.png',
-                value: '10', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f11_8x16.png',
-                value: '11', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f12_8x16.png',
-                value: '12', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f13_8x16.png',
-                value: '13', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f14_8x16.png',
-                value: '14', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f15_8x16.png',
-                value: '15', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f16_8x16.png',
-                value: '16', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f17_8x16.png',
-                value: '17', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f18_8x16.png',
-                value: '18', width: 73, height: 38,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/f19_8x16.png',
-                value: '19', width: 73, height: 38,},
-              ],
-              '#icon8list': [
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/heart8.png',
-                    value: '00', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/smile8.png',
-                    value: '01', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/face8.png',
-                    value: '02', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/sad8.png',
-                    value: '03', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/up8.png',
-                    value: '04', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/down8.png',
-                    value: '05', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/left8.png',
-                    value: '06', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/right8.png',
-                    value: '07', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/o8.png',
-                    value: '08', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/x8.png',
-                    value: '09', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/flower8.png',
-                    value: '10', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/jan8.png',
-                    value: '11', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/jun8.png',
-                    value: '12', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/ji8.png',
-                    value: '13', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/big8.png',
-                    value: '14', width: 93, height: 93,},
-                {src: 'static/extension-assets/Robot4FUN-cBrain-assets/small8.png',
-                    value: '15', width: 93, height: 93,},
-              ],
-              '#icon5list': [
-                      {src: 'static/extension-assets/microbit/happy.png',
-                          value: '1', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/sad.png',
-                          value: '2', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/angry.png',
-                          value: '3', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/surprised.png',
-                          value: '4', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/confused.png',
-                          value: '5', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/asleep.png',
-                          value: '6', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/ghost.png',
-                          value: '7', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/butterfly.png',
-                          value: '8', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/cow.png',
-                          value: '9', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/rabbit.png',
-                          value: '10', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/duck.png',
-                          value: '11', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/giraffe.png',
-                          value: '12', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/chessboard.png',
-                          value: '13', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/heart.png',
-                          value: '14', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/diamond.png',
-                          value: '15', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/quarternote.png',
-                          value: '16', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/eigthnote.png',
-                          value: '17', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/pitchfork.png',
-                          value: '18', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/fabulous.png',
-                          value: '19', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/house.png',
-                          value: '20', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/square.png',
-                          value: '21', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/triangle.png',
-                          value: '22', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/lefttriangle.png',
-                          value: '23', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/meh.png',
-                          value: '24', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/yes.png',
-                          value: '25', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/no.png',
-                          value: '26', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/tshirt.png',
-                          value: '27', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/umbrella.png',
-                          value: '28', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/rollerskate.png',
-                          value: '29', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/scissors.png',
-                          value: '30', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/silly.png',
-                          value: '31', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/skull.png',
-                          value: '32', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/smalldiamond.png',
-                          value: '33', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/smallheart.png',
-                          value: '34', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/smallsquare.png',
-                          value: '35', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/snake.png',
-                          value: '36', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/stickfigure.png',
-                          value: '37', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/sword.png',
-                          value: '38', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/target.png',
-                          value: '39', width: 93, height: 93,},
-                      {src: 'static/extension-assets/microbit/tortoise.png',
-                          value: '40', width: 93, height: 93,},
-                  ],
+                dPort: ['1', '2', '3', '5', '6', '7', '8'],
+                dPort3: ['5', '6', '7'/*,'8'*/],
+                lr: ['left', 'right'],
+                '#face8x16list': [
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f0_8x16.png',
+                        value: '00', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f1_8x16.png',
+                        value: '01', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f2_8x16.png',
+                        value: '02', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f3_8x16.png',
+                        value: '03', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f4_8x16.png',
+                        value: '04', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f5_8x16.png',
+                        value: '05', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f6_8x16.png',
+                        value: '06', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f7_8x16.png',
+                        value: '07', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f8_8x16.png',
+                        value: '08', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f9_8x16.png',
+                        value: '09', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f10_8x16.png',
+                        value: '10', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f11_8x16.png',
+                        value: '11', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f12_8x16.png',
+                        value: '12', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f13_8x16.png',
+                        value: '13', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f14_8x16.png',
+                        value: '14', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f15_8x16.png',
+                        value: '15', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f16_8x16.png',
+                        value: '16', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f17_8x16.png',
+                        value: '17', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f18_8x16.png',
+                        value: '18', width: 73, height: 38,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/f19_8x16.png',
+                        value: '19', width: 73, height: 38,
+                    },
+                ],
+                '#icon8list': [
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/heart8.png',
+                        value: '00', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/smile8.png',
+                        value: '01', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/face8.png',
+                        value: '02', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/sad8.png',
+                        value: '03', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/up8.png',
+                        value: '04', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/down8.png',
+                        value: '05', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/left8.png',
+                        value: '06', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/right8.png',
+                        value: '07', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/o8.png',
+                        value: '08', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/x8.png',
+                        value: '09', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/flower8.png',
+                        value: '10', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/jan8.png',
+                        value: '11', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/jun8.png',
+                        value: '12', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/ji8.png',
+                        value: '13', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/big8.png',
+                        value: '14', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/Robot4FUN-cBrain-assets/small8.png',
+                        value: '15', width: 93, height: 93,
+                    },
+                ],
+                '#icon5list': [
+                    {
+                        src: 'static/extension-assets/microbit/happy.png',
+                        value: '1', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/sad.png',
+                        value: '2', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/angry.png',
+                        value: '3', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/surprised.png',
+                        value: '4', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/confused.png',
+                        value: '5', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/asleep.png',
+                        value: '6', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/ghost.png',
+                        value: '7', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/butterfly.png',
+                        value: '8', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/cow.png',
+                        value: '9', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/rabbit.png',
+                        value: '10', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/duck.png',
+                        value: '11', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/giraffe.png',
+                        value: '12', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/chessboard.png',
+                        value: '13', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/heart.png',
+                        value: '14', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/diamond.png',
+                        value: '15', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/quarternote.png',
+                        value: '16', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/eigthnote.png',
+                        value: '17', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/pitchfork.png',
+                        value: '18', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/fabulous.png',
+                        value: '19', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/house.png',
+                        value: '20', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/square.png',
+                        value: '21', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/triangle.png',
+                        value: '22', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/lefttriangle.png',
+                        value: '23', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/meh.png',
+                        value: '24', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/yes.png',
+                        value: '25', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/no.png',
+                        value: '26', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/tshirt.png',
+                        value: '27', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/umbrella.png',
+                        value: '28', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/rollerskate.png',
+                        value: '29', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/scissors.png',
+                        value: '30', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/silly.png',
+                        value: '31', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/skull.png',
+                        value: '32', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/smalldiamond.png',
+                        value: '33', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/smallheart.png',
+                        value: '34', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/smallsquare.png',
+                        value: '35', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/snake.png',
+                        value: '36', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/stickfigure.png',
+                        value: '37', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/sword.png',
+                        value: '38', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/target.png',
+                        value: '39', width: 93, height: 93,
+                    },
+                    {
+                        src: 'static/extension-assets/microbit/tortoise.png',
+                        value: '40', width: 93, height: 93,
+                    },
+                ],
             },
 
             translation_map: {
                 'zh-tw': {
-                  'lr': {'left':'左邊', 'right':'右邊'},
-                  'digitubenumber': '接口[PIN]的數字顯示板顯示[NUM](0~9999)',
-                  'digitubeoff': '關閉接口[PIN]的數字顯示板',
-                  'matrixPattern': '接口[PIN]的LED面板顯示[MAT]',
-                  'matrixFace': '接口[PIN]的LED面板顯示表情[MAT]',
-                  'matrixIcon': '接口[PIN]的LED面板[LR]顯示圖示[MAT]',
-                  'matrixText': '接口[PIN]的LED面板顯示英數[TEXT]',
-                  'matrixClear': '清除接口[PIN]的LED面板',
-                  'cMatrixShow': '接口[PIN]的彩色面板開始燈光秀!',
-                  'cMatrixPattern': '接口[PIN]的彩色面板以[COLOR]色顯示[MAT]',
-                  'cMatrixIcon': '接口[PIN]的彩色面板以[COLOR]色顯示圖示[MAT]',
-                  'cMatrixText': '接口[PIN]的彩色面板以[COLOR]色顯示英數[TEXT]',
-                  'cMatrixClear': '清除接口[PIN]的彩色面板',
-                  'rgbset': '接口[PIN]的彩色燈環共[NUMPIXELS]燈. 第[PIX]燈的顏色設為[COLOR]',
-                  //'rgbset': '接口[PIN]的彩色燈條共[NUMPIXELS]燈. 亮度設為[BRIGHT]. 第[PIX]燈的顏色設為[COLOR]',
-                  'rgbrefresh': '接口[PIN]的彩燈顯示更新',
-                  'rgbclear': '清除接口[PIN]的彩燈設定',
-                  'rgboff': '關閉接口[PIN]的所有彩燈',
-                  'rgbshow': '接口[PIN]的彩色燈環共[NUMPIXELS]燈. 開始燈光秀!',
-                  'rgb2hex': '紅色量:[R], 綠色量:[G], 藍色量:[B](0~255) 轉換至hex值',
-                  'rgbreset': '重置所有彩燈設定',
+                    'lr': { 'left': '左邊', 'right': '右邊' },
+                    'digitubenumber': '接口[PIN]的數字顯示板顯示[NUM](0~9999)',
+                    'digitubeoff': '關閉接口[PIN]的數字顯示板',
+                    'matrixPattern': '接口[PIN]的LED面板顯示[MAT]',
+                    'matrixFace': '接口[PIN]的LED面板顯示表情[MAT]',
+                    'matrixIcon': '接口[PIN]的LED面板[LR]顯示圖示[MAT]',
+                    'matrixText': '接口[PIN]的LED面板顯示英數[TEXT]',
+                    'matrixClear': '清除接口[PIN]的LED面板',
+                    'cMatrixShow': '接口[PIN]的彩色面板開始燈光秀!',
+                    'cMatrixPattern': '接口[PIN]的彩色面板以[COLOR]色顯示[MAT]',
+                    'cMatrixIcon': '接口[PIN]的彩色面板以[COLOR]色顯示圖示[MAT]',
+                    'cMatrixText': '接口[PIN]的彩色面板以[COLOR]色顯示英數[TEXT]',
+                    'cMatrixClear': '清除接口[PIN]的彩色面板',
+                    'rgbset': '接口[PIN]的彩色燈環共[NUMPIXELS]燈. 第[PIX]燈的顏色設為[COLOR]',
+                    //'rgbset': '接口[PIN]的彩色燈條共[NUMPIXELS]燈. 亮度設為[BRIGHT]. 第[PIX]燈的顏色設為[COLOR]',
+                    'rgbrefresh': '接口[PIN]的彩燈顯示更新',
+                    'rgbclear': '清除接口[PIN]的彩燈設定',
+                    'rgboff': '關閉接口[PIN]的所有彩燈',
+                    'rgbshow': '接口[PIN]的彩色燈環共[NUMPIXELS]燈. 開始燈光秀!',
+                    'rgb2hex': '紅色量:[R], 綠色量:[G], 藍色量:[B](0~255) 轉換至hex值',
+                    'rgbreset': '重置所有彩燈設定',
                 },
                 'zh-cn': {
-                  'lr': {'left':'左边', 'right':'右边'},
-                  'digitubenumber': '端口[PIN]的数码管显示[NUM](0~9999)',
-                  'digitubeoff': '端口[PIN]的数码管关闭',
-                  'matrixPattern': '端口[PIN]的LED显示板显示[MAT]',
-                  'matrixFace': '端口[PIN]的LED显示板显示表情[MAT]',
-                  'matrixIcon': '端口[PIN]的LED显示板[LR]显示图示[MAT]',
-                  'matrixText': '端口[PIN]的LED显示板显示英数[TEXT]',
-                  'matrixClear': '清除端口[PIN]的LED显示板',
-                  //'rgbset': '端口[PIN]的彩色灯条共[NUMPIXELS]灯. 亮度设为[BRIGHT]. 第[PIX]灯的颜色设为[COLOR]',
-                  'rgbset': '端口[PIN]的彩色灯环共[NUMPIXELS]灯. 第[PIX]灯的颜色设为[COLOR]',
-                  'rgbrefresh': '端口[PIN]的彩灯显示刷新',
-                  'rgbclear': '清除端口[PIN]的彩灯设定',
-                  'rgboff': '熄灭端口[PIN]的所有彩灯',
-                  'rgbshow': '端口[PIN]的彩色灯环共[NUMPIXELS]灯. 开始灯光秀!',
-                  'rgb2hex': '红色量:[R], 绿色量:[G], 蓝色量:[B](0~255) 转换至hex值',
-                  'rgbreset': '重置所有灯条设定',
+                    'lr': { 'left': '左边', 'right': '右边' },
+                    'digitubenumber': '端口[PIN]的数码管显示[NUM](0~9999)',
+                    'digitubeoff': '端口[PIN]的数码管关闭',
+                    'matrixPattern': '端口[PIN]的LED显示板显示[MAT]',
+                    'matrixFace': '端口[PIN]的LED显示板显示表情[MAT]',
+                    'matrixIcon': '端口[PIN]的LED显示板[LR]显示图示[MAT]',
+                    'matrixText': '端口[PIN]的LED显示板显示英数[TEXT]',
+                    'matrixClear': '清除端口[PIN]的LED显示板',
+                    //'rgbset': '端口[PIN]的彩色灯条共[NUMPIXELS]灯. 亮度设为[BRIGHT]. 第[PIX]灯的颜色设为[COLOR]',
+                    'rgbset': '端口[PIN]的彩色灯环共[NUMPIXELS]灯. 第[PIX]灯的颜色设为[COLOR]',
+                    'rgbrefresh': '端口[PIN]的彩灯显示刷新',
+                    'rgbclear': '清除端口[PIN]的彩灯设定',
+                    'rgboff': '熄灭端口[PIN]的所有彩灯',
+                    'rgbshow': '端口[PIN]的彩色灯环共[NUMPIXELS]灯. 开始灯光秀!',
+                    'rgb2hex': '红色量:[R], 绿色量:[G], 蓝色量:[B](0~255) 转换至hex值',
+                    'rgbreset': '重置所有灯条设定',
                 }
             }
         };
     }
 
-    noop (){
+    noop() {
         return Promise.reject(formatMessage({
             id: 'kblock.notify.nosupportonlinemode',
             defaultMessage: 'Not support in online mode'
@@ -938,29 +1090,29 @@ class cDisplaysExtension{
         gen.definitions_['rgb_'+pin] = `Adafruit_NeoPixel neopix_${pin}(${num}, ${pin});`;
         return `neopix_${pin}.begin();`;
     }*/
-    ws2812maxPattern(args){
-      const pin = board.pin2firmata(args.PIN);
-      //const pat = args.MAX;
+    ws2812maxPattern(args) {
+        const pin = board.pin2firmata(args.PIN);
+        //const pat = args.MAX;
 
-      console.log("MATRIX data is",args.MAT);
-      console.log("COLOR data is",args.COLOR);
+        console.log("MATRIX data is", args.MAT);
+        console.log("COLOR data is", args.COLOR);
     }
 
-    ws2812maxPatternGen (gen, block){
-      const pin = board.pin2firmata(gen.valueToCode(block, 'PIN'));
-      const pat = gen.valueToCode(block, 'MAT');
-      console.log("pat is",pat);//竟然是空的??
-      const color = cutHex(gen.valueToCode(block, 'COLOR'));
-      console.log("COLOR data is",color);
-      //const color = gen.hexToRgb(gen.valueToCode(block, 'COLOR'));
-      gen.includes_['rgbmatrix'] = `#include "Adafruit_NeoMatrix.h"`;
-      gen.definitions_['rgbmatrix_'+pin] = `
+    ws2812maxPatternGen(gen, block) {
+        const pin = board.pin2firmata(gen.valueToCode(block, 'PIN'));
+        const pat = gen.valueToCode(block, 'MAT');
+        console.log("pat is", pat);//竟然是空的??
+        const color = cutHex(gen.valueToCode(block, 'COLOR'));
+        console.log("COLOR data is", color);
+        //const color = gen.hexToRgb(gen.valueToCode(block, 'COLOR'));
+        gen.includes_['rgbmatrix'] = `#include "Adafruit_NeoMatrix.h"`;
+        gen.definitions_['rgbmatrix_' + pin] = `
 Adafruit_NeoMatrix RGBmatrix${pin} = Adafruit_NeoMatrix(5, 5, ${pin},
   NEO_MATRIX_TOP     + NEO_MATRIX_LEFT +
   NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
   NEO_GRB            + NEO_KHZ800);
 `;
-      gen.setupCodes_['begin_'+pin] = `RGBmatrix${pin}.begin();
+        gen.setupCodes_['begin_' + pin] = `RGBmatrix${pin}.begin();
 //RGBmatrix${pin}.setFont(&Arimo_Bold5pt7b);
 //RGBmatrix${pin}.setTextWrap(false);
 //RGBmatrix${pin}.setTextSize(1);
@@ -969,27 +1121,27 @@ RGBmatrix${pin}.setBrightness(40);
 //RGBmatrix${pin}.setTextColor(colors[0]);
 `;
 
-      return gen.line(`RGBmatrix${pin}.drawBitmap(0,0,${pat},5,5,${color})`) +
-        gen.line(`RGBmatrix${pin}.show()`);
+        return gen.line(`RGBmatrix${pin}.drawBitmap(0,0,${pat},5,5,${color})`) +
+            gen.line(`RGBmatrix${pin}.show()`);
     }
 
-    ws2812maxIcon(args){
-      const pin = board.pin2firmata(args.PIN);
-      //const pat = args.MAX;
+    ws2812maxIcon(args) {
+        const pin = board.pin2firmata(args.PIN);
+        //const pat = args.MAX;
 
-      console.log("MATRIX data is",args.MAT);
-      console.log("COLOR data is",args.COLOR);
+        console.log("MATRIX data is", args.MAT);
+        console.log("COLOR data is", args.COLOR);
     }
 
-    ws2812maxTextGen(gen,block){
-      const pin = board.pin2firmata(gen.valueToCode(block, 'PIN'));
-      const text = gen.valueToCode(block, 'TEXT');
-      const color = gen.hexToRgb(gen.valueToCode(block, 'COLOR'));
-      gen.includes_['rgbmatrix'] = `#include <Adafruit_NeoPixel.h>
+    ws2812maxTextGen(gen, block) {
+        const pin = board.pin2firmata(gen.valueToCode(block, 'PIN'));
+        const text = gen.valueToCode(block, 'TEXT');
+        const color = gen.hexToRgb(gen.valueToCode(block, 'COLOR'));
+        gen.includes_['rgbmatrix'] = `#include <Adafruit_NeoPixel.h>
 #include <Adafruit_GFX.h>
 #include "Adafruit_NeoMatrix.h"
 #include "arimo-bold5pt7b.h"`;
-      gen.definitions_['rgbmatrix_'+pin] = `
+        gen.definitions_['rgbmatrix_' + pin] = `
 Adafruit_NeoMatrix RGBmatrix${pin} = Adafruit_NeoMatrix(5, 5, ${pin},
   NEO_MATRIX_TOP     + NEO_MATRIX_LEFT +
   NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
@@ -1013,7 +1165,7 @@ void display_scrollText_${pin}(char *s, uint16_t ms){
       delay(ms);
   }
 }`;
-      gen.setupCodes_['begin_'+pin] = `RGBmatrix${pin}.begin();
+        gen.setupCodes_['begin_' + pin] = `RGBmatrix${pin}.begin();
   //RGBmatrix${pin}.setFont(&Arimo_Bold5pt7b);
   RGBmatrix${pin}.setTextWrap(false);
   RGBmatrix${pin}.setTextSize(1);
@@ -1023,114 +1175,114 @@ void display_scrollText_${pin}(char *s, uint16_t ms){
   //RGBmatrix${pin}.setTextColor(colors[0]);
 `;
 
-      return gen.line(`display_scrollText_${pin}(${text},150)`);
+        return gen.line(`display_scrollText_${pin}(${text},150)`);
     }
 
-    async ws2812show(args){
-      //const pin = board.pin2firmata(args.PIN);
-      const pin = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
-      const num = parseInt(args.NUMPIXELS, 10);
-      if (num <= 0) {
-        vm.emit('showAlert', {msg: 'Wrong pixel number defined'});
-        return;
-      }
-      //if (this.strips[pin]) console.log("befor call new,  this.strip=", this.strips[pin]);
-      if (!this.strips[pin] || this.strips[pin].pin != pin){
-        this.strips[pin] = new ws2812.Strip({
-          pin: pin,
-          length: num,
-          //board: j5board,
-          firmata: board,
-          controller: "FIRMATA",
-          skip_firmware_check: true,
-          gamma: 2.8, // set to a gamma that works nicely for WS2812
-        });
-        //console.log("after call new Strip, this.strip=", this.strips[pin]);
-      }
+    async ws2812show(args) {
+        //const pin = board.pin2firmata(args.PIN);
+        const pin = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
+        const num = parseInt(args.NUMPIXELS, 10);
+        if (num <= 0) {
+            vm.emit('showAlert', { msg: 'Wrong pixel number defined' });
+            return;
+        }
+        //if (this.strips[pin]) console.log("befor call new,  this.strip=", this.strips[pin]);
+        if (!this.strips[pin] || this.strips[pin].pin != pin) {
+            this.strips[pin] = new ws2812.Strip({
+                pin: pin,
+                length: num,
+                //board: j5board,
+                firmata: board,
+                controller: "FIRMATA",
+                skip_firmware_check: true,
+                gamma: 2.8, // set to a gamma that works nicely for WS2812
+            });
+            //console.log("after call new Strip, this.strip=", this.strips[pin]);
+        }
 
-      //console.log("Strip ready, it's SHOW-TIME!!");
-      this.strips[pin].off();
-      let showColor = '';
-      for (let j = 0; j < this.strips[pin].length; j++) {
-        showColor = colorWheel( ( (j+10)*256 / this.strips[pin].length ) & 255 );
+        //console.log("Strip ready, it's SHOW-TIME!!");
+        this.strips[pin].off();
+        let showColor = '';
+        for (let j = 0; j < this.strips[pin].length; j++) {
+            showColor = colorWheel(((j + 10) * 256 / this.strips[pin].length) & 255);
+            for (let i = 0; i < this.strips[pin].length; i++) {
+                this.strips[pin].pixel(i).color(showColor);
+                this.strips[pin].show();
+                await timeout(100);
+            }
+        }
+
         for (let i = 0; i < this.strips[pin].length; i++) {
-          this.strips[pin].pixel(i).color(showColor);
-          this.strips[pin].show();
-          await timeout(100);
+            showColor = colorWheel(((i + 10) * 256 / this.strips[pin].length) & 255);
+            this.strips[pin].color(showColor);
+            this.strips[pin].show();
+            await timeout(500);
         }
-      }
 
-      for (let i = 0; i < this.strips[pin].length; i++) {
-        showColor = colorWheel( ( (i+10)*256 / this.strips[pin].length ) & 255 );
-        this.strips[pin].color(showColor);
-        this.strips[pin].show();
-        await timeout(500);
-      }
-
-      for(let i = 0; i < this.strips[pin].length; i++) {
-        showColor = colorWheel( ( (i+10)*256 / this.strips[pin].length ) & 255 );
-        this.strips[pin].pixel(i).color(showColor);
-      }
-      this.strips[pin].show();
-      await timeout(1000);
-      for (let i = 0; i < this.strips[pin].length*10; i++) {
-        this.strips[pin].shift(1, ws2812.FORWARD, true);
-        this.strips[pin].show();
-        await timeout(100);
-      }
-
-      //console.log( 'dynamicRainbow' );
-      this.strips[pin].off();
-      let cwi = 0; // colour wheel index (current position on colour wheel)
-      for (let j=0; j<256*2; j++) {
-          if (++cwi > 255) cwi = 0;
-          for(let i = 0; i < this.strips[pin].length; i++) {
-              showColor = colorWheel( ( cwi+i ) & 255 );
-              this.strips[pin].pixel(i).color(showColor);
-          }
-          this.strips[pin].show();
-          await timeout(10);
-      }
-      this.strips[pin].off();
-
-      // Input a value 0 to 255 to get a color value.
-      // The colors are a transition r - g - b - back to r.
-      function colorWheel( WheelPos ){
-        let r=0,g=0,b=0;
-        WheelPos = 255 - WheelPos;
-
-        if ( WheelPos < 85 ) {
-            r = 255 - WheelPos * 3;
-            g = 0;
-            b = WheelPos * 3;
-        } else if (WheelPos < 170) {
-            WheelPos -= 85;
-            r = 0;
-            g = WheelPos * 3;
-            b = 255 - WheelPos * 3;
-        } else {
-            WheelPos -= 170;
-            r = WheelPos * 3;
-            g = 255 - WheelPos * 3;
-            b = 0;
+        for (let i = 0; i < this.strips[pin].length; i++) {
+            showColor = colorWheel(((i + 10) * 256 / this.strips[pin].length) & 255);
+            this.strips[pin].pixel(i).color(showColor);
         }
-        // returns a string with the rgb value to be used as the parameter
-        return "rgb(" + r +"," + g + "," + b + ")";
-      }
+        this.strips[pin].show();
+        await timeout(1000);
+        for (let i = 0; i < this.strips[pin].length * 10; i++) {
+            this.strips[pin].shift(1, ws2812.FORWARD, true);
+            this.strips[pin].show();
+            await timeout(100);
+        }
+
+        //console.log( 'dynamicRainbow' );
+        this.strips[pin].off();
+        let cwi = 0; // colour wheel index (current position on colour wheel)
+        for (let j = 0; j < 256 * 2; j++) {
+            if (++cwi > 255) cwi = 0;
+            for (let i = 0; i < this.strips[pin].length; i++) {
+                showColor = colorWheel((cwi + i) & 255);
+                this.strips[pin].pixel(i).color(showColor);
+            }
+            this.strips[pin].show();
+            await timeout(10);
+        }
+        this.strips[pin].off();
+
+        // Input a value 0 to 255 to get a color value.
+        // The colors are a transition r - g - b - back to r.
+        function colorWheel(WheelPos) {
+            let r = 0, g = 0, b = 0;
+            WheelPos = 255 - WheelPos;
+
+            if (WheelPos < 85) {
+                r = 255 - WheelPos * 3;
+                g = 0;
+                b = WheelPos * 3;
+            } else if (WheelPos < 170) {
+                WheelPos -= 85;
+                r = 0;
+                g = WheelPos * 3;
+                b = 255 - WheelPos * 3;
+            } else {
+                WheelPos -= 170;
+                r = WheelPos * 3;
+                g = 255 - WheelPos * 3;
+                b = 0;
+            }
+            // returns a string with the rgb value to be used as the parameter
+            return "rgb(" + r + "," + g + "," + b + ")";
+        }
 
     }
 
-    ws2812showGen (gen, block){
+    ws2812showGen(gen, block) {
         gen.includes_['rgb'] = '#include <Adafruit_NeoPixel.h>';
         //const pin = board.pin2firmata(gen.valueToCode(block, 'PIN'));
-        const pin = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][2]);
+        const pin = board.pin2firmata(board._port[gen.valueToCode(block, 'PIN') - 1][2]);
         const num = gen.valueToCode(block, 'NUMPIXELS');
-        gen.definitions_['rgb_'+pin] = `Adafruit_NeoPixel neopix_${pin}(${num}, ${pin});`;
-        gen.setupCodes_['begin_'+pin] = `neopix_${pin}.begin();
+        gen.definitions_['rgb_' + pin] = `Adafruit_NeoPixel neopix_${pin}(${num}, ${pin});`;
+        gen.setupCodes_['begin_' + pin] = `neopix_${pin}.begin();
   neopix_${pin}.show();   // Initialize all pixels to 'off'`;
-        gen.setupCodes_['brightness_'+pin] = `neopix_${pin}.setBrightness(50);`;
+        gen.setupCodes_['brightness_' + pin] = `neopix_${pin}.setBrightness(50);`;
 
-        gen.definitions_['show'+pin] = `
+        gen.definitions_['show' + pin] = `
 void colorWipe${pin}(uint32_t color, int wait) {
     for(int i=0; i<neopix_${pin}.numPixels(); i++) {    // For each pixel in strip...
         neopix_${pin}.setPixelColor(i, color);          //  Set pixel's color (in RAM)
@@ -1200,50 +1352,50 @@ void theaterChaseRainbow${pin}(int wait) {
         return code;
     }
 
-    ws2812set(args){
-      //const pin = board.pin2firmata(args.PIN);
-      const pin = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
-      const num = parseInt(args.NUMPIXELS, 10);
-      if (num <= 0) {
-        vm.emit('showAlert', {msg: 'Wrong pixel number defined'});
-        return;
-      }
-      //if (this.strips[pin]) console.log("befor call new,  this.strip=", this.strips[pin]);
-      if (!this.strips[pin] || this.strips[pin].pin != pin){
-        this.strips[pin] = new ws2812.Strip({
-          //strips: [ {pin: pin, length: num}, ],
-          pin: pin,
-          length: num,
-          //board: j5board,
-          firmata: board,
-          controller: "FIRMATA",
-          skip_firmware_check: true,
-          gamma: 2.8, // set to a gamma that works nicely for WS2812
-        });
-        //console.log("after call new Strip, this.strip=", this.strips[pin]);
-      }
-      let pix = parseInt(args.PIX, 10);
-      if ( pix > num ) pix = num;
-      if ( pix <= 0 ) pix = 1;
+    ws2812set(args) {
+        //const pin = board.pin2firmata(args.PIN);
+        const pin = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
+        const num = parseInt(args.NUMPIXELS, 10);
+        if (num <= 0) {
+            vm.emit('showAlert', { msg: 'Wrong pixel number defined' });
+            return;
+        }
+        //if (this.strips[pin]) console.log("befor call new,  this.strip=", this.strips[pin]);
+        if (!this.strips[pin] || this.strips[pin].pin != pin) {
+            this.strips[pin] = new ws2812.Strip({
+                //strips: [ {pin: pin, length: num}, ],
+                pin: pin,
+                length: num,
+                //board: j5board,
+                firmata: board,
+                controller: "FIRMATA",
+                skip_firmware_check: true,
+                gamma: 2.8, // set to a gamma that works nicely for WS2812
+            });
+            //console.log("after call new Strip, this.strip=", this.strips[pin]);
+        }
+        let pix = parseInt(args.PIX, 10);
+        if (pix > num) pix = num;
+        if (pix <= 0) pix = 1;
 
-      const c = args.COLOR;
-      //console.log('c=', c);
-      if (typeof c === 'number') { // hex number, without '#'
-        this.strips[pin].pixel(parseInt(pix-1)).color('#'+ c.toString(16));
-      } else if (typeof c === 'string' && c[0] === '#') { // with # hex string
-        this.strips[pin].pixel(parseInt(pix-1)).color(c);
-      } else {
-        vm.emit('showAlert', {msg: 'wrong input type'});
-        return;
-      }
+        const c = args.COLOR;
+        //console.log('c=', c);
+        if (typeof c === 'number') { // hex number, without '#'
+            this.strips[pin].pixel(parseInt(pix - 1)).color('#' + c.toString(16));
+        } else if (typeof c === 'string' && c[0] === '#') { // with # hex string
+            this.strips[pin].pixel(parseInt(pix - 1)).color(c);
+        } else {
+            vm.emit('showAlert', { msg: 'wrong input type' });
+            return;
+        }
     }
 
-    ws2812setGen (gen, block){
+    ws2812setGen(gen, block) {
         //const pin = board.pin2firmata(gen.valueToCode(block, 'PIN'));
-        const pin = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][2]);
+        const pin = board.pin2firmata(board._port[gen.valueToCode(block, 'PIN') - 1][2]);
         const num = gen.valueToCode(block, 'NUMPIXELS');
         if (num <= 0) {
-          vm.emit('showAlert', {msg: 'Wrong pixel number defined'});
+            vm.emit('showAlert', { msg: 'Wrong pixel number defined' });
         }
         const pix = gen.valueToCode(block, 'PIX');
         const c = gen.valueToCode(block, 'COLOR');
@@ -1251,138 +1403,138 @@ void theaterChaseRainbow${pin}(int wait) {
         //const color = gen.hexToRgb(gen.valueToCode(block, 'COLOR')); // #hex String to RGB number array
 
         gen.includes_['rgb'] = '#include <Adafruit_NeoPixel.h>';
-        gen.definitions_['rgb_'+pin] = `Adafruit_NeoPixel neopix_${pin}(${num}, ${pin});`;
-        gen.setupCodes_['begin_'+pin] = `neopix_${pin}.begin();
+        gen.definitions_['rgb_' + pin] = `Adafruit_NeoPixel neopix_${pin}(${num}, ${pin});`;
+        gen.setupCodes_['begin_' + pin] = `neopix_${pin}.begin();
   neopix_${pin}.show();   // Initialize all pixels to 'off'`;
-        gen.setupCodes_['brightness_'+pin] = `neopix_${pin}.setBrightness(50);`;
+        gen.setupCodes_['brightness_' + pin] = `neopix_${pin}.setBrightness(50);`;
 
-        if (typeof c === 'string' && c[0] === '#'){ // with # hex string
-          const color = gen.hexToRgb(gen.valueToCode(block, 'COLOR')); // #hex String to RGB number array
-          //console.log('color=', color);
-          return gen.line(`neopix_${pin}.setPixelColor(${pix}-1, ${color.r}, ${color.g}, ${color.b})`);
+        if (typeof c === 'string' && c[0] === '#') { // with # hex string
+            const color = gen.hexToRgb(gen.valueToCode(block, 'COLOR')); // #hex String to RGB number array
+            //console.log('color=', color);
+            return gen.line(`neopix_${pin}.setPixelColor(${pix}-1, ${color.r}, ${color.g}, ${color.b})`);
         } else {
-          return gen.line(`neopix_${pin}.setPixelColor(${pix}-1, ${c})`);
+            return gen.line(`neopix_${pin}.setPixelColor(${pix}-1, ${c})`);
         }
     }
 
-    ws2812refresh(args){
-      //const pin = board.pin2firmata(args.PIN);
-      const pin = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
-      //if (this.strips[pin]) console.log("this.strip already configured as", this.strips[pin]);
-      if (!this.strips[pin] || this.strips[pin].pin != pin){
-        /*return Promise.reject(formatMessage({
-            id: 'cDisplay.notify.rgbrefresh',
-            defaultMessage: `Need to config the strip first`,
-        }));*/
-        return Promise.reject(`Need to config the strip first`);
-      }
-      //console.log("Start to refresh");
-      this.strips[pin].show();
+    ws2812refresh(args) {
+        //const pin = board.pin2firmata(args.PIN);
+        const pin = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
+        //if (this.strips[pin]) console.log("this.strip already configured as", this.strips[pin]);
+        if (!this.strips[pin] || this.strips[pin].pin != pin) {
+            /*return Promise.reject(formatMessage({
+                id: 'cDisplay.notify.rgbrefresh',
+                defaultMessage: `Need to config the strip first`,
+            }));*/
+            return Promise.reject(`Need to config the strip first`);
+        }
+        //console.log("Start to refresh");
+        this.strips[pin].show();
     }
 
-    ws2812refreshGen (gen, block){
+    ws2812refreshGen(gen, block) {
         //const pin = board.pin2firmata(gen.valueToCode(block, 'PIN'));
-        const pin = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][2]);
+        const pin = board.pin2firmata(board._port[gen.valueToCode(block, 'PIN') - 1][2]);
         return gen.line(`neopix_${pin}.show()`);
     }
 
-    ws2812off(args){
-      //const pin = board.pin2firmata(args.PIN);
-      const pin = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
-      //if (this.strips[pin]) console.log("this.strip already configured as", this.strips[pin]);
-      if (!this.strips[pin] || this.strips[pin].pin != pin){
-        return Promise.reject(`Need to config the strip first`);
-      }
-      //console.log("Strip off");
-      this.strips[pin].off();
+    ws2812off(args) {
+        //const pin = board.pin2firmata(args.PIN);
+        const pin = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
+        //if (this.strips[pin]) console.log("this.strip already configured as", this.strips[pin]);
+        if (!this.strips[pin] || this.strips[pin].pin != pin) {
+            return Promise.reject(`Need to config the strip first`);
+        }
+        //console.log("Strip off");
+        this.strips[pin].off();
     }
 
-    ws2812clearGen (gen, block){
-      //const pin = board.pin2firmata(gen.valueToCode(block, 'PIN'));
-      const pin = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][2]);
-      return gen.line(`neopix_${pin}.clear()`) + gen.line(`neopix_${pin}.show()`);
+    ws2812clearGen(gen, block) {
+        //const pin = board.pin2firmata(gen.valueToCode(block, 'PIN'));
+        const pin = board.pin2firmata(board._port[gen.valueToCode(block, 'PIN') - 1][2]);
+        return gen.line(`neopix_${pin}.clear()`) + gen.line(`neopix_${pin}.show()`);
     }
 
-    rgb2hex(args){
-      return five.Fn.uint24(args.R, args.G, args.B); // RGB2HEX. type:number; without '#'
+    rgb2hex(args) {
+        return five.Fn.uint24(args.R, args.G, args.B); // RGB2HEX. type:number; without '#'
     }
 
-    rgb2hexGen(gen, block){
-      const r = gen.valueToCode(block,'R');
-      const g = gen.valueToCode(block,'G');
-      const b = gen.valueToCode(block,'B');
-      const hex = five.Fn.uint24(r, g, b); // RGB2HEX. type:number; without '#'
-      return [`${hex}`, gen.ORDER_ATOMIC];
+    rgb2hexGen(gen, block) {
+        const r = gen.valueToCode(block, 'R');
+        const g = gen.valueToCode(block, 'G');
+        const b = gen.valueToCode(block, 'B');
+        const hex = five.Fn.uint24(r, g, b); // RGB2HEX. type:number; without '#'
+        return [`${hex}`, gen.ORDER_ATOMIC];
     }
 
-    ws2812reset(args){
-      //console.log("reset all Strips");
-      let data = [];
-      data.push(PIXEL_COMMAND);
-      data.push(PIXEL_RESET);
-      //console.log("PIXEL_RESET -> firmata", data); //for debug
-      board.sysexCommand(data);
+    ws2812reset(args) {
+        //console.log("reset all Strips");
+        let data = [];
+        data.push(PIXEL_COMMAND);
+        data.push(PIXEL_RESET);
+        //console.log("PIXEL_RESET -> firmata", data); //for debug
+        board.sysexCommand(data);
 
-      this.strips = {};
-      //console.log("strips{}=", this.strips); //for debug
+        this.strips = {};
+        //console.log("strips{}=", this.strips); //for debug
     }
 
     /*_add0(num, length) {
         return (Array(length).join('0') + num).slice(-length);
     }*/
 
-    tm1637num (args){
+    tm1637num(args) {
         /*const pin = args.PIN;
         let pinArray = pin.split(",");
         const clk = board.pin2firmata(pinArray[0]);
         const dio = board.pin2firmata(pinArray[1]);*/
-        const clk = board.pin2firmata(board._port[parseInt(args.PIN)-1][1]);
-        const dio = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
-        if (!this.digitube[dio] || this.digitube[dio].dio != dio){
-          this.digitube[dio] = new tm1637({
-            clk: clk,
-            dio: dio,
-            //board: j5board,
-            board: board,
-            brightness: 0.7,
-          });
+        const clk = board.pin2firmata(board._port[parseInt(args.PIN) - 1][1]);
+        const dio = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
+        if (!this.digitube[dio] || this.digitube[dio].dio != dio) {
+            this.digitube[dio] = new tm1637({
+                clk: clk,
+                dio: dio,
+                //board: j5board,
+                board: board,
+                brightness: 0.7,
+            });
         };
         this.digitube[dio].show((Array(4).join('0') + args.NUM).slice(-4));
     }
 
-    tm1637off (args){
-        const clk = board.pin2firmata(board._port[parseInt(args.PIN)-1][1]);
-        const dio = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
-        if (!this.digitube[dio] || this.digitube[dio].clk != dio){
-          this.digitube[dio] = new tm1637({
-            clk: clk,
-            dio: dio,
-            board: board,
-            brightness: 0.7,
-          });
+    tm1637off(args) {
+        const clk = board.pin2firmata(board._port[parseInt(args.PIN) - 1][1]);
+        const dio = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
+        if (!this.digitube[dio] || this.digitube[dio].clk != dio) {
+            this.digitube[dio] = new tm1637({
+                clk: clk,
+                dio: dio,
+                board: board,
+                brightness: 0.7,
+            });
         };
 
         this.digitube[dio].off();
     }
 
-    tm1637numGen (gen, block){
+    tm1637numGen(gen, block) {
         gen.includes_['digitube'] = '#include "TM1637Display.h"';
         const pin = gen.valueToCode(block, 'PIN');
-        const clk = board.pin2firmata(board._port[pin-1][1]);
-        const dio = board.pin2firmata(board._port[pin-1][2]);
-        gen.definitions_['digitube'+dio] = `TM1637Display digiTube_${dio}(${clk}, ${dio});`;
-        gen.setupCodes_['digitube_bright'+dio] = `digiTube_${dio}.setBrightness(5,true)`;
+        const clk = board.pin2firmata(board._port[pin - 1][1]);
+        const dio = board.pin2firmata(board._port[pin - 1][2]);
+        gen.definitions_['digitube' + dio] = `TM1637Display digiTube_${dio}(${clk}, ${dio});`;
+        gen.setupCodes_['digitube_bright' + dio] = `digiTube_${dio}.setBrightness(5,true)`;
         const num = gen.valueToCode(block, 'NUM');
 
         return gen.line(`digiTube_${dio}.showNumberDec(${num})`);
     }
 
-    tm1637offGen (gen, block){
+    tm1637offGen(gen, block) {
         gen.includes_['digitube'] = '#include "TM1637Display.h"';
         const pin = gen.valueToCode(block, 'PIN');
-        const clk = board.pin2firmata(board._port[pin-1][1]);
-        const dio = board.pin2firmata(board._port[pin-1][2]);
-        gen.definitions_['digitube'+dio] = `TM1637Display digiTube_${dio}(${clk}, ${dio});`;
+        const clk = board.pin2firmata(board._port[pin - 1][1]);
+        const dio = board.pin2firmata(board._port[pin - 1][2]);
+        gen.definitions_['digitube' + dio] = `TM1637Display digiTube_${dio}(${clk}, ${dio});`;
 
         return gen.line(`digiTube_${dio}.clear()`);
     }
@@ -1406,60 +1558,60 @@ void theaterChaseRainbow${pin}(int wait) {
         return gen.template2code(block, 'digiTube.println');
     }*/
 
-    max72xxPatt (args){
-      /*const pin = args.PIN;
-      let pinArray = pin.split(",");
-      const din = board.pin2firmata(pinArray[2]);
-      const cs = board.pin2firmata(pinArray[1]);
-      const clk = board.pin2firmata(pinArray[0]);*/
-      const din = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
-      const cs = board.pin2firmata(board._port[parseInt(args.PIN)-1][1]);
-      const clk = board.pin2firmata(board._port[parseInt(args.PIN)-1][0]);
-      const maxInUse = 2;
-      if (!this.matrix[din] || this.matrix[din].data != din){
-        this.matrix[din] = new five.Led.Matrix({
-           pins: {
-              data: din,
-              clock: clk,
-              cs: cs
-           },
-           devices: maxInUse // how many mx72xx modules be connected
-        });
-        this.matrix[din].brightness(10); // 0-100%
-      };
-      this.matrix[din].on();// need to turn on device first
-      //console.log('LEDMATRIX=', typeof args.MAT, args.MAT);
-      if (args.MAT.length > 2) {
-        let matAryL = [],
-            matAryR = [];
-        for (let i = 0; i < 8; i++) {
-          matAryL[i] = parseInt(args.MAT.substr(i*4,2),16);
-          matAryR[i] = parseInt(args.MAT.substr(i*4+2,2),16);
+    max72xxPatt(args) {
+        /*const pin = args.PIN;
+        let pinArray = pin.split(",");
+        const din = board.pin2firmata(pinArray[2]);
+        const cs = board.pin2firmata(pinArray[1]);
+        const clk = board.pin2firmata(pinArray[0]);*/
+        const din = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
+        const cs = board.pin2firmata(board._port[parseInt(args.PIN) - 1][1]);
+        const clk = board.pin2firmata(board._port[parseInt(args.PIN) - 1][0]);
+        const maxInUse = 2;
+        if (!this.matrix[din] || this.matrix[din].data != din) {
+            this.matrix[din] = new five.Led.Matrix({
+                pins: {
+                    data: din,
+                    clock: clk,
+                    cs: cs
+                },
+                devices: maxInUse // how many mx72xx modules be connected
+            });
+            this.matrix[din].brightness(10); // 0-100%
+        };
+        this.matrix[din].on();// need to turn on device first
+        //console.log('LEDMATRIX=', typeof args.MAT, args.MAT);
+        if (args.MAT.length > 2) {
+            let matAryL = [],
+                matAryR = [];
+            for (let i = 0; i < 8; i++) {
+                matAryL[i] = parseInt(args.MAT.substr(i * 4, 2), 16);
+                matAryR[i] = parseInt(args.MAT.substr(i * 4 + 2, 2), 16);
+            }
+            //console.log('matAryL=',matAryL);
+            //console.log('matAryR=',matAryR);
+            this.matrix[din].draw(0, matAryR);
+            this.matrix[din].draw(1, matAryL);
+        } else {
+            if (!this.face) {
+                this.face = require('./face8x16.js');
+            }
+            this.matrix[din].draw(0, this.face.EYER[args.MAT]);// EYE are Objects, index is string
+            this.matrix[din].draw(1, this.face.EYEL[args.MAT]);// so no need to parseInt(args.MAT)
         }
-        //console.log('matAryL=',matAryL);
-        //console.log('matAryR=',matAryR);
-        this.matrix[din].draw(0,matAryR);
-        this.matrix[din].draw(1,matAryL);
-      } else {
-        if (!this.face) {
-          this.face = require('./face8x16.js');
-        }
-          this.matrix[din].draw(0, this.face.EYER[args.MAT]);// EYE are Objects, index is string
-          this.matrix[din].draw(1, this.face.EYEL[args.MAT]);// so no need to parseInt(args.MAT)
-      }
     }
 
-    max72xxPattGen (gen, block){
+    max72xxPattGen(gen, block) {
         gen.includes_['max72xx'] = '#include "MaxMatrix.h"';
         //gen.includes_['max72xx'] = '#include <LedControl.h>';
         const pin = gen.valueToCode(block, 'PIN');
-        const din = board._port[pin-1][2];
-        const cs = board._port[pin-1][1];
-        const clk = board._port[pin-1][0];
+        const din = board._port[pin - 1][2];
+        const cs = board._port[pin - 1][1];
+        const clk = board._port[pin - 1][0];
         const maxInUse = 2;
-        gen.definitions_['max72xx'+din] = `MaxMatrix m_${din}(${din}, ${cs}, ${clk}, ${maxInUse});`;
+        gen.definitions_['max72xx' + din] = `MaxMatrix m_${din}(${din}, ${cs}, ${clk}, ${maxInUse});`;
         //gen.definitions_['max72xx'+din] = `LedControl m_${din}(${din},${clk},${cs},${maxInUse});`;
-        gen.setupCodes_['max72xx'+din] = `m_${din}.init();
+        gen.setupCodes_['max72xx' + din] = `m_${din}.init();
   m_${din}.setIntensity(1); //ranges from 0 to 15
   `;
         /*gen.setupCodes_['max72xx'+din] = `m_${din}.shutdown(0,false);
@@ -1468,19 +1620,19 @@ void theaterChaseRainbow${pin}(int wait) {
   `;*/
         let pat = gen.valueToCode(block, 'MAT');
         //console.log('pat=',typeof pat,pat);
-        if (pat.length > 2){
-          pat = pat.substr(1,32);
-          //console.log('pat=',pat);
-          let matAryL = [],
-              matAryR = [];
-          for (let i = 0; i < 8; i++) {
-            matAryL[i] = parseInt(pat.substr(i*4,2),16);
-            matAryR[i] = parseInt(pat.substr(i*4+2,2),16);
-          }
-          //console.log('matAryL=',matAryL);
-          //console.log('matAryR=',matAryR);
-          gen.definitions_['max72xxpatt'+din] = `uint8_t matAryL[8], matAryR[8];`;
-          return `
+        if (pat.length > 2) {
+            pat = pat.substr(1, 32);
+            //console.log('pat=',pat);
+            let matAryL = [],
+                matAryR = [];
+            for (let i = 0; i < 8; i++) {
+                matAryL[i] = parseInt(pat.substr(i * 4, 2), 16);
+                matAryR[i] = parseInt(pat.substr(i * 4 + 2, 2), 16);
+            }
+            //console.log('matAryL=',matAryL);
+            //console.log('matAryR=',matAryR);
+            gen.definitions_['max72xxpatt' + din] = `uint8_t matAryL[8], matAryR[8];`;
+            return `
   //EYEL = {${matAryL}}, // for database building
   //EYER = {${matAryR}},
 
@@ -1507,8 +1659,8 @@ void theaterChaseRainbow${pin}(int wait) {
     };
 `;
         } else {
-          gen.includes_['face72xx'] = '#include "face8x16.h"';
-          return `
+            gen.includes_['face72xx'] = '#include "face8x16.h"';
+            return `
     for (uint8_t i=0; i<8; i++) {
       m_${din}.setColumn(i,EYEL[${pat}][i]);
       m_${din}.setColumn(i+8,EYER[${pat}][i]);
@@ -1517,47 +1669,47 @@ void theaterChaseRainbow${pin}(int wait) {
         }
     }
 
-    max72xxIcon (args){
-        const din = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
-        const cs = board.pin2firmata(board._port[parseInt(args.PIN)-1][1]);
-        const clk = board.pin2firmata(board._port[parseInt(args.PIN)-1][0]);
+    max72xxIcon(args) {
+        const din = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
+        const cs = board.pin2firmata(board._port[parseInt(args.PIN) - 1][1]);
+        const clk = board.pin2firmata(board._port[parseInt(args.PIN) - 1][0]);
         const maxInUse = 2;
-        if (!this.matrix[din] || this.matrix[din].data != din){
-          this.matrix[din] = new five.Led.Matrix({
-             pins: {
-                data: din,
-                clock: clk,
-                cs: cs
-             },
-             devices: maxInUse
-          });
-          this.matrix[din].brightness(10); // 0-100%
+        if (!this.matrix[din] || this.matrix[din].data != din) {
+            this.matrix[din] = new five.Led.Matrix({
+                pins: {
+                    data: din,
+                    clock: clk,
+                    cs: cs
+                },
+                devices: maxInUse
+            });
+            this.matrix[din].brightness(10); // 0-100%
         };
 
         if (!this.icon8) {
-          this.icon8 = require('./icon8.js');
+            this.icon8 = require('./icon8.js');
         }
         this.matrix[din].on();// need to turn on device first
         //console.log('LR=',typeof args.LR,args.LR);
         if (args.LR === 'left') {
-          this.matrix[din].draw(1, this.icon8[args.MAT]);
+            this.matrix[din].draw(1, this.icon8[args.MAT]);
         } else if (args.LR === 'right') {
-          this.matrix[din].draw(0, this.icon8[args.MAT]);
+            this.matrix[din].draw(0, this.icon8[args.MAT]);
         }
     }
 
-    max72xxIconGen (gen, block){
+    max72xxIconGen(gen, block) {
         gen.includes_['max72xx'] = '#include "MaxMatrix.h"';
         //gen.includes_['max72xx'] = '#include <LedControl.h>';
         gen.includes_['icon72xx'] = '#include "icon8.h"';
         const pin = gen.valueToCode(block, 'PIN');
-        const din = board._port[pin-1][2];
-        const cs = board._port[pin-1][1];
-        const clk = board._port[pin-1][0];
+        const din = board._port[pin - 1][2];
+        const cs = board._port[pin - 1][1];
+        const clk = board._port[pin - 1][0];
         const maxInUse = 2;
-        gen.definitions_['max72xx'+din] = `MaxMatrix m_${din}(${din}, ${cs}, ${clk}, ${maxInUse});`;
+        gen.definitions_['max72xx' + din] = `MaxMatrix m_${din}(${din}, ${cs}, ${clk}, ${maxInUse});`;
         //gen.definitions_['max72xx'+din] = `LedControl m_${din}(${din},${clk},${cs},${maxInUse});`;
-        gen.setupCodes_['max72xx'+din] = `m_${din}.init();
+        gen.setupCodes_['max72xx' + din] = `m_${din}.init();
   m_${din}.setIntensity(1);
   `;
         /*gen.setupCodes_['max72xx'+din] = `m_${din}.shutdown(0,false);
@@ -1568,28 +1720,28 @@ void theaterChaseRainbow${pin}(int wait) {
         const lr = gen.valueToCode(block, 'LR');
         //console.log('lr=',typeof lr,lr);
         if (lr === 'left') {
-          return gen.line(`for (uint8_t i=0; i<8; i++) { m_${din}.setColumn(i,PAT[${no}][i]); }`);
+            return gen.line(`for (uint8_t i=0; i<8; i++) { m_${din}.setColumn(i,PAT[${no}][i]); }`);
         } else if (lr === 'right') {
-          return gen.line(`for (uint8_t i=0; i<8; i++) { m_${din}.setColumn(i+8,PAT[${no}][i]); }`);
+            return gen.line(`for (uint8_t i=0; i<8; i++) { m_${din}.setColumn(i+8,PAT[${no}][i]); }`);
         }
         //return gen.line(`for (uint8_t i=0; i<8; i++) { m_${din}.setRow(0,i,PAT[${no}][i]); })`;
     }
 
-    async max72xxText (args){
-        const din = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
-        const cs = board.pin2firmata(board._port[parseInt(args.PIN)-1][1]);
-        const clk = board.pin2firmata(board._port[parseInt(args.PIN)-1][0]);
+    async max72xxText(args) {
+        const din = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
+        const cs = board.pin2firmata(board._port[parseInt(args.PIN) - 1][1]);
+        const clk = board.pin2firmata(board._port[parseInt(args.PIN) - 1][0]);
         const maxInUse = 2;
-        if (!this.matrix[din] || this.matrix[din].data != din){
-          this.matrix[din] = new five.Led.Matrix({
-              pins: {
-                 data: din,
-                 clock: clk,
-                 cs: cs
-              },
-             devices: maxInUse  // how many mx72xx modules be connected
-           });
-           this.matrix[din].brightness(10); // 0-100%
+        if (!this.matrix[din] || this.matrix[din].data != din) {
+            this.matrix[din] = new five.Led.Matrix({
+                pins: {
+                    data: din,
+                    clock: clk,
+                    cs: cs
+                },
+                devices: maxInUse  // how many mx72xx modules be connected
+            });
+            this.matrix[din].brightness(10); // 0-100%
         };
         this.matrix[din].on();// need to turn on device first
         //this.matrix[din].draw(0,five.Led.Matrix.CHARS.donut);
@@ -1597,29 +1749,29 @@ void theaterChaseRainbow${pin}(int wait) {
         //let msg = args.TEXT.split('');
         //console.log('msg=',msg);
         for (let i = 0; i < args.TEXT.length; i++) {
-          //let c=msg.shift();
-          //console.log('c=',c);
-          //this.matrix[din].draw(0,c);
-          if (i<args.TEXT.length) {
-            this.matrix[din].draw(0,args.TEXT[i]);
-          } else this.matrix[din].clear(0);
-          if (i>0) this.matrix[din].draw(1,args.TEXT[i-1]);
-          await timeout(50);
+            //let c=msg.shift();
+            //console.log('c=',c);
+            //this.matrix[din].draw(0,c);
+            if (i < args.TEXT.length) {
+                this.matrix[din].draw(0, args.TEXT[i]);
+            } else this.matrix[din].clear(0);
+            if (i > 0) this.matrix[din].draw(1, args.TEXT[i - 1]);
+            await timeout(50);
         }
     }
 
-    max72xxTextGen (gen, block){
+    max72xxTextGen(gen, block) {
         gen.includes_['max72xx'] = '#include "MaxMatrix.h"';
         //gen.includes_['char72xx'] = '#include "CharMatrix8.h"';
         gen.includes_['font72xx'] = '#include "font8.h"';
         const pin = gen.valueToCode(block, 'PIN');
-        const din = board._port[pin-1][2];
-        const cs = board._port[pin-1][1];
-        const clk = board._port[pin-1][0];
+        const din = board._port[pin - 1][2];
+        const cs = board._port[pin - 1][1];
+        const clk = board._port[pin - 1][0];
         const maxInUse = 2;
-        gen.definitions_['max72xx'+din] = `MaxMatrix m_${din}(${din}, ${cs}, ${clk}, ${maxInUse});`;
+        gen.definitions_['max72xx' + din] = `MaxMatrix m_${din}(${din}, ${cs}, ${clk}, ${maxInUse});`;
         //gen.definitions_['max72xxtext'+din] = `byte buffer[8];`;
-        gen.definitions_['printStr'+din] = `
+        gen.definitions_['printStr' + din] = `
 void printCharWithShift_${din}(char c, int shift_speed){
   if (c < 32) return;
   c -= 32;
@@ -1645,7 +1797,7 @@ void printStringWithShift_${din}(char* s, int shift_speed){
 }
 `;
 
-        gen.setupCodes_['max72xx'+din] = `m_${din}.init();
+        gen.setupCodes_['max72xx' + din] = `m_${din}.init();
   m_${din}.setIntensity(1); // brightness: 0-15
 `;
         const str = gen.valueToCode(block, 'TEXT');
@@ -1653,38 +1805,38 @@ void printStringWithShift_${din}(char* s, int shift_speed){
 
     }
 
-    max72xxClear (args){
-      const din = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
-      const cs = board.pin2firmata(board._port[parseInt(args.PIN)-1][1]);
-      const clk = board.pin2firmata(board._port[parseInt(args.PIN)-1][0]);
-      const maxInUse = 2;
-      if (!this.matrix[din] || this.matrix[din].data != din){
-        this.matrix[din] = new five.Led.Matrix({
-            pins: {
-               data: din,
-               clock: clk,
-               cs: cs
-            },
-           devices: maxInUse
-         });
-      };
-      // Clear the entire display for all devices
-      // clear() does not shut off the device.
-      this.matrix[din].clear();
+    max72xxClear(args) {
+        const din = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
+        const cs = board.pin2firmata(board._port[parseInt(args.PIN) - 1][1]);
+        const clk = board.pin2firmata(board._port[parseInt(args.PIN) - 1][0]);
+        const maxInUse = 2;
+        if (!this.matrix[din] || this.matrix[din].data != din) {
+            this.matrix[din] = new five.Led.Matrix({
+                pins: {
+                    data: din,
+                    clock: clk,
+                    cs: cs
+                },
+                devices: maxInUse
+            });
+        };
+        // Clear the entire display for all devices
+        // clear() does not shut off the device.
+        this.matrix[din].clear();
     }
 
-    max72xxClearGen (gen, block){
-      gen.includes_['max72xx'] = '#include "MaxMatrix.h"';
-      //gen.includes_['max72xx'] = '#include <LedControl.h>';
-      const din = board._port[pin-1][2];
-      const cs = board._port[pin-1][1];
-      const clk = board._port[pin-1][0];
-      const maxInUse = 2;
-      gen.definitions_['max72xx'+din] = `MaxMatrix m_${din}(${din}, ${cs}, ${clk}, ${maxInUse});`;
-      //gen.definitions_['max72xx'+din] = `LedControl m_${din}(${din},${clk},${cs},${maxInUse});`;
+    max72xxClearGen(gen, block) {
+        gen.includes_['max72xx'] = '#include "MaxMatrix.h"';
+        //gen.includes_['max72xx'] = '#include <LedControl.h>';
+        const din = board._port[pin - 1][2];
+        const cs = board._port[pin - 1][1];
+        const clk = board._port[pin - 1][0];
+        const maxInUse = 2;
+        gen.definitions_['max72xx' + din] = `MaxMatrix m_${din}(${din}, ${cs}, ${clk}, ${maxInUse});`;
+        //gen.definitions_['max72xx'+din] = `LedControl m_${din}(${din},${clk},${cs},${maxInUse});`;
 
-      return gen.line(`m_${din}.clear()`);
-      //return gen.line(`m_${din}.clearDisplay(0)`);
+        return gen.line(`m_${din}.clear()`);
+        //return gen.line(`m_${din}.clearDisplay(0)`);
     }
 
     /*i2cledmatrix (args){
