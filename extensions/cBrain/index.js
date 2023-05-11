@@ -186,18 +186,18 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
     mpu.aa.x = -aa.x; // unit:mm/s2
     mpu.aa.y = -aa.y;
     mpu.aa.z = aa.z;
-    mpu.aaReal.x = int((float)-aaReal.x/8192*9800);
-    mpu.aaReal.y = int((float)-aaReal.y/8192*9800);
-    mpu.aaReal.z = int((float)aaReal.z/8192*9800);
+    mpu.aaReal.x = int((float)-aaReal.x*1.2); // 9800/8192
+    mpu.aaReal.y = int((float)-aaReal.y*1.2);
+    mpu.aaReal.z = int((float)aaReal.z*1.2);
     mpu.gyro.x = -gyro.x;
     mpu.gyro.y = -gyro.y;
     mpu.gyro.z = gyro.z;
     mpu.gravity.x = int(-1000*gravity.x); // unit:mG, 方向:反作用力
     mpu.gravity.y = int(-1000*gravity.y);
     mpu.gravity.z = int(1000*gravity.z);
-    mpu.yaw = int(ypr[0] * -180/M_PI);
-    mpu.pitch = int(ypr[2] * -180/M_PI);
-    mpu.roll = int(ypr[1] * 180/M_PI);
+    mpu.yaw = int(ypr[0] * -180.0/M_PI);
+    mpu.pitch = int(ypr[2] * -180.0/M_PI);
+    mpu.roll = int(ypr[1] * 180.0/M_PI);
     */
 
   } else { 
@@ -208,30 +208,30 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
 
   switch (d) { // imu x-y-z軸與主機不同
     case 1: //yaw
-        if (bias) { return (int(ypr[0] * -180/M_PI)-yaw_bias);}
-        else { return int(ypr[0] * -180/M_PI);}
+        if (bias) { return (int(ypr[0] * -180.0/M_PI)-yaw_bias);}
+        else { return int(ypr[0] * -180.0/M_PI);}
         //if (bias) { return (mpu.yaw - mpu.yaw_bias);}
         //else { return mpu.yaw;}
       break;
     case 2: //pitch
         //return mpu.pitch;
-        return int(ypr[2] * -180/M_PI);
+        return int(ypr[2] * -180.0/M_PI);
       break;
     case 3: //roll
         //return mpu.roll;
-        return int(ypr[1] * 180/M_PI);
+        return int(ypr[1] * 180.0/M_PI);
       break;
     case 11: //ax, unit:mm/s2
         //return mpu.aaReal.x;
-        return int((float)-aaReal.x/8192*9800);
+        return int((float)-aaReal.x*1.2); // 9800/8192=1.2
       break;
     case 22: //ay
         //return mpu.aaReal.y;
-        return int((float)-aaReal.y/8192*9800);
+        return int((float)-aaReal.y*1.2);
       break;
     case 33: //az
         //return mpu.aaReal.z;
-        return int((float)aaReal.z/8192*9800);
+        return int((float)aaReal.z*1.2);
       break;
     case 111: //gx
         //return mpu.gyro.x;
@@ -1321,25 +1321,25 @@ class cBrain {
             arduino: this.varGen
           }
         },
-        /*{
-            opcode: 'var_data',
-            blockType: BlockType.COMMAND,
-            text: 'variable [TYPO] = [VALUE]',
-            arguments: {
-                VALUE: {
-                    type: ArgumentType.NUMBER,
-                    defaultValue: 0
-                },
-                TYPO: {
-                    type: ArgumentType.STRING,
-                    defaultValue: 'a',
-                }
+        {
+          opcode: 'var_data',
+          blockType: BlockType.COMMAND,
+          text: 'variable [VAR] = [VALUE]',
+          arguments: {
+            VAR: {
+              type: ArgumentType.STRING,
+              defaultValue: 'c',
             },
-            func: 'noop',
-            gen: {
-                arduino: this.var_dataGen
+            VALUE: {
+              type: ArgumentType.NUMBER,
+              defaultValue: 0
             }
-          },*/
+          },
+          func: 'noop',
+          gen: {
+            arduino: this.var_dataGen
+          }
+        },
         {
           opcode: 'var_value',
           blockType: BlockType.REPORTER,
@@ -1698,6 +1698,7 @@ class cBrain {
           },
           'typecast': '轉換[VALUE]的資料型態為[TYPO]',
           'var': '變數[VAR]設為[VALUE], 資料型態為[TYPO], 範圍:[SCOPE]',
+          'var_data': '變數[VAR]設為[VALUE]',
           'var_value': '變數[VAR]',
           'imuYPR': '[IMU]角度(°)',
           'imuG': '反作用力的[IMU]G值(mg)',
@@ -1754,6 +1755,7 @@ class cBrain {
           },
           'typecast': '转换[VALUE]的资料型态为[TYPO]',
           'var': '变数[VAR]设为[VALUE], 资料型态为[TYPO], 作用域为[SCOPE]',
+          'var_data': '变数[VAR]设为[VALUE]',
           'var_value': '变数[VAR]',
           'imuYPR': '[IMU]角度(°)',
           'imuG': '反作用力的[IMU]G值(mg)',
@@ -2393,10 +2395,10 @@ class cBrain {
         d = 77;
         break;
       case 'C':
-        return [`((float)mpu.getTemperature()/340 + 36.53)`, gen.ORDER_ATOMIC];
+        return [`((float)mpu.getTemperature()/340.0 + 36.53)`, gen.ORDER_ATOMIC];
         break;
       case 'F':
-        return [`(((float)mpu.getTemperature()/340 + 36.53)*1.8 + 32.0)`, gen.ORDER_ATOMIC];
+        return [`(((float)mpu.getTemperature()/340.0 + 36.53)*1.8 + 32.0)`, gen.ORDER_ATOMIC];
         break;
       default:
         d = 0;
@@ -3078,6 +3080,13 @@ while (${sertype}.available()) {
     } else {
       return gen.line(`${typo} ${va} = ${value}`);
     }
+  }
+
+  var_dataGen(gen, block) {
+    let va = gen.valueToCode(block, 'VAR');
+    const value = gen.valueToCode(block, 'VALUE');
+    va = va.substr(1, va.length - 2);
+    return gen.line(`${va} = ${value}`);
   }
 
   var_valueGen(gen, block) {
