@@ -83,9 +83,30 @@ const mpuCommon = gen => {
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     #include "Wire.h"
 #endif
-
+/*
+class cBrainIMU:public MPU6050 {
+  public:
+    cBrainIMU(){
+      yaw_bias=0;
+    }
+    cBrainIMU(uint8_t address=(MPU6050_IMU::MPU6050_DEFAULT_ADDRESS)):MPU6050(address){
+      yaw_bias=0;
+    }
+    VectorInt16 aa;
+    VectorInt16 aaReal;
+    VectorInt16 gyro;
+    VectorInt16 gravity;
+    int16_t yaw;
+    int16_t pitch;
+    int16_t roll;
+    int16_t yaw_bias;
+    
+}
+cBrainIMU mpu;
+*/
 MPU6050 mpu;
 int16_t yaw_bias=0;
+
 //#define DEBUG
 `;
 
@@ -103,23 +124,24 @@ void mpufailed(){
 `;
   gen.definitions_['mpu6050read'] = `
 int16_t mpu6050read(uint8_t d, boolean bias=true){
-  uint8_t fifoBuffer[64]; // FIFO storage buffer
-  Quaternion q;           // [w, x, y, z]         quaternion container
-  VectorInt16 aa;         // [x, y, z]            accel sensor measurements
-  VectorInt16 gyro;       // [x, y, z]            gyro sensor measurements
-  VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
-  VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
-  VectorFloat gravity;    // [x, y, z]            gravity vector
-  float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+  uint8_t fifoBuffer[42];       // FIFO storage buffer, dmpPacketSize = 42
+  Quaternion q;                 // [w, x, y, z]         quaternion container
+  VectorInt16 aa;               // [x, y, z]            accel sensor measurements
+  static VectorInt16 gyro;      // [x, y, z]            gyro sensor measurements
+  static VectorInt16 aaReal;    // [x, y, z]            gravity-free accel sensor measurements
+  //VectorInt16 aaWorld;        // [x, y, z]            world-frame accel sensor measurements
+  static VectorFloat gravity;   // [x, y, z]            gravity vector
+  static float ypr[3];          // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
   if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet
+
     mpu.dmpGetQuaternion(&q, fifoBuffer);
     mpu.dmpGetAccel(&aa, fifoBuffer);
     mpu.dmpGetGyro(&gyro, fifoBuffer);
     mpu.dmpGetGravity(&gravity, &q);
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
     mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-    mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+    //mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
     #ifdef DEBUG
         Serial.print("ypr\t");
@@ -146,12 +168,12 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
         Serial.print(aaReal.y);
         Serial.print("\t");
         Serial.println(aaReal.z);
-        Serial.print("arealW\t");
-        Serial.print(aaWorld.x);
-        Serial.print("\t");
-        Serial.print(aaWorld.y);
-        Serial.print("\t");
-        Serial.println(aaWorld.z);
+        //Serial.print("arealW\t");
+        //Serial.print(aaWorld.x);
+        //Serial.print("\t");
+        //Serial.print(aaWorld.y);
+        //Serial.print("\t");
+        //Serial.println(aaWorld.z);
         Serial.print("gravity\t");
         Serial.print(gravity.x);
         Serial.print("\t");
@@ -159,66 +181,98 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
         Serial.print("\t");
         Serial.println(gravity.z);
     #endif
-
-    switch (d) { // imu x-y-z軸與主機不同
-        case 1: //yaw
-            if (bias) { return (int(ypr[0] * -180/M_PI)-yaw_bias);}
-            else { return int(ypr[0] * -180/M_PI);}
-          break;
-        case 2: //pitch
-            return int(ypr[2] * -180/M_PI);
-          break;
-        case 3: //roll
-            return int(ypr[1] * 180/M_PI);
-          break;
-        case 11: //ax, unit:mm/s2
-            return -aaReal.x;
-          break;
-        case 22: //ay
-            return -aaReal.y;
-          break;
-        case 33: //az
-            return aaReal.z;
-          break;
-        case 111: //gx
-            return -gyro.x;
-          break;
-        case 122: //gy
-            return -gyro.y;
-          break;
-        case 133: //gz
-            return gyro.z;
-          break;
-        case 55: // Gx, unit:mG, 方向:反作用力
-            return int(-1000*gravity.x);
-          break;
-        case 66: // Gy
-            return int(-1000*gravity.y);
-          break;
-        case 77: // Gz
-            return int(1000*gravity.z);
-          break;
-        case 255: // shaked? 1G=8192 for mpu6050
-            if (abs(aaReal.x)>4000) {
-              if (abs(aaReal.y)>4000 || abs(aaReal.z)>4000) return true;
-            } else if (abs(aaReal.y)>4000) {
-              if (abs(aaReal.z)>4000) return true;
-            } else {
-              return false;
-            }
-          break;
-        default:
-          return;
-      }
+    /*
+    // imu x-y-z軸與主機不同
+    mpu.aa.x = -aa.x; // unit:mm/s2
+    mpu.aa.y = -aa.y;
+    mpu.aa.z = aa.z;
+    mpu.aaReal.x = int((float)-aaReal.x/8192*9800);
+    mpu.aaReal.y = int((float)-aaReal.y/8192*9800);
+    mpu.aaReal.z = int((float)aaReal.z/8192*9800);
+    mpu.gyro.x = -gyro.x;
+    mpu.gyro.y = -gyro.y;
+    mpu.gyro.z = gyro.z;
+    mpu.gravity.x = int(-1000*gravity.x); // unit:mG, 方向:反作用力
+    mpu.gravity.y = int(-1000*gravity.y);
+    mpu.gravity.z = int(1000*gravity.z);
+    mpu.yaw = int(ypr[0] * -180/M_PI);
+    mpu.pitch = int(ypr[2] * -180/M_PI);
+    mpu.roll = int(ypr[1] * 180/M_PI);
+    */
 
   } else { 
     #ifdef DEBUG
-        Serial.println("no valid data is available");
-    #endif
-    return;
+      Serial.println("no valid data is available");
+    #endif    
   }
 
-}`;
+  switch (d) { // imu x-y-z軸與主機不同
+    case 1: //yaw
+        if (bias) { return (int(ypr[0] * -180/M_PI)-yaw_bias);}
+        else { return int(ypr[0] * -180/M_PI);}
+        //if (bias) { return (mpu.yaw - mpu.yaw_bias);}
+        //else { return mpu.yaw;}
+      break;
+    case 2: //pitch
+        //return mpu.pitch;
+        return int(ypr[2] * -180/M_PI);
+      break;
+    case 3: //roll
+        //return mpu.roll;
+        return int(ypr[1] * 180/M_PI);
+      break;
+    case 11: //ax, unit:mm/s2
+        //return mpu.aaReal.x;
+        return int((float)-aaReal.x/8192*9800);
+      break;
+    case 22: //ay
+        //return mpu.aaReal.y;
+        return int((float)-aaReal.y/8192*9800);
+      break;
+    case 33: //az
+        //return mpu.aaReal.z;
+        return int((float)aaReal.z/8192*9800);
+      break;
+    case 111: //gx
+        //return mpu.gyro.x;
+        return -gyro.x;
+      break;
+    case 122: //gy
+        //return mpu.gyro.y;
+        return -gyro.y;
+      break;
+    case 133: //gz
+        //return mpu.gyro.z;
+        return gyro.z;
+      break;
+    case 55: // Gx, unit:mG, 方向:反作用力
+        return int(-1000*gravity.x);
+        //return mpu.gravity.x;
+      break;
+    case 66: // Gy
+        return int(-1000*gravity.y);
+        //return mpu.gravity.y;
+      break;
+    case 77: // Gz
+        return int(1000*gravity.z);
+        //return mpu.gravity.z;
+      break;
+    case 255: // shaked? 1G=8192 for mpu6050
+        if (abs(aaReal.x)>4000) {
+          if (abs(aaReal.y)>4000 || abs(aaReal.z)>4000) return true;
+        } else if (abs(aaReal.y)>4000) {
+          if (abs(aaReal.z)>4000) return true;
+        } else {
+          return false;
+        }
+      break;
+    default:
+      return;
+  }
+
+}
+`;
+
   gen.definitions_['mpu6050shaked'] = `
 bool IMUshaked(){
     uint8_t shakeCnt=0;
@@ -237,7 +291,8 @@ bool IMUshaked(){
   #endif
     if (shakeCnt>4) {return true;
     } else {return false;}
-}`;
+}
+`;
 
   gen.setupCodes_['mpu6050'] = `
   // join I2C bus (I2Cdev library doesn't do this automatically)
@@ -280,6 +335,7 @@ bool IMUshaked(){
       mpu.setMotionDetectionDuration(20);
       mpu.setZeroMotionDetectionThreshold(4);
       mpu.setZeroMotionDetectionDuration(1);
+      
       #ifdef DEBUG
         Serial.print(F("FF Threshold:	"));
         Serial.println(mpu.getFreefallDetectionThreshold());
@@ -2022,6 +2078,7 @@ class cBrain {
 
   resetyawGen(gen, block) {
     mpuCommon(gen);
+    //return gen.line(`mpu.yaw_bias = mpu6050read(1,false)`);
     return gen.line(`yaw_bias = mpu6050read(1,false)`);
   }
 
