@@ -62,16 +62,17 @@ class cSensorsExtension {
                 {
                     opcode: 'sensorDigit2',
                     blockType: BlockType.REPORTER,
-
-                    text: formatMessage({
-                        id: 'cSensors.sensorAnalog',
-                        default: 'digital sensor reading at port [PIN]'
-                    }),
+                    text: 'digital sensor reading at port [PORT][PIN]',
                     arguments: {
-                        PIN: {
+                        PORT: {
                             type: ArgumentType.STRING,
                             defaultValue: '2',
                             menu: 'dPort'
+                        },
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 2,
+                            menu: 'dPin'
                         }
                     },
                     func: 'sensorDigit',
@@ -79,47 +80,7 @@ class cSensorsExtension {
                         arduino: this.sensorDigiGen
                     }
                 },
-                /*{
-                    opcode: 'rir',
-                    blockType: BlockType.BOOLEAN,
-
-                    text: formatMessage({
-                        id: 'cSensors.rir',
-                        default: 'reflective IR sensor at port [PIN] is triggered?'
-                    }),
-                    arguments: {
-                        PIN: {
-                            type: ArgumentType.STRING,
-                            defaultValue: '2',
-                            menu: 'dPort'
-                        }
-                    },
-                    func: 'rir',
-                    gen: {
-                        arduino: this.rirGen
-                    }
-                },*/
-                /*{
-                    opcode: 'tilt',
-                    blockType: BlockType.BOOLEAN,
-
-                    text: formatMessage({
-                        id: 'cSensors.tilt',
-                        default: 'tilt switch at port [PIN] is triggered?'
-                    }),
-                    arguments: {
-                        PIN: {
-                            type: ArgumentType.STRING,
-                            defaultValue: '2',
-                            menu: 'dPort'
-                        }
-                    },
-                    func: 'sensorDigit',
-                    gen: {
-                        arduino: this.sensorDigiGen
-                    }
-                },*/
-
+                '---', 
                 /*{
                     opcode: 'analogKeypad',
                     blockType: BlockType.BOOLEAN,
@@ -145,15 +106,11 @@ class cSensorsExtension {
                         arduino: this.analogKeypadGen
                     }
                 },*/
-                '---',
+
                 {
                     opcode: 'sensorAnalog',
                     blockType: BlockType.REPORTER,
-
-                    text: formatMessage({
-                        id: 'cSensors.sensorAnalog',
-                        default: 'analog sensor reading at port [PIN]'
-                    }),
+                    text: 'analog sensor reading at port [PIN]',
                     arguments: {
                         PIN: {
                             type: ArgumentType.STRING,
@@ -170,11 +127,7 @@ class cSensorsExtension {
                 {
                     opcode: 'sensorAnalog2',
                     blockType: BlockType.REPORTER,
-
-                    text: formatMessage({
-                        id: 'cSensors.sensorAnalog2',
-                        default: 'analog sensor reading at port [PORT][PIN]'
-                    }),
+                    text: 'analog sensor reading at port [PORT][PIN]',
                     arguments: {
                         PORT: {
                             type: ArgumentType.STRING,
@@ -183,7 +136,7 @@ class cSensorsExtension {
                         },
                         PIN: {
                             type: ArgumentType.STRING,
-                            defaultValue: 1,
+                            defaultValue: 2,
                             menu: 'aPin'
                         }
                     },
@@ -932,21 +885,22 @@ class cSensorsExtension {
                 ],
                 qtr_type: ['RC', 'Analog'],
                 dht11function: ['temperature', 'humidity'],
-                /*aButton: ['1','2','3','4','5','6','7','8'],
-                aPort: [
-                  {text: '1', value: board._port.p1[2]},
-                  {text: '2', value: board._port.p2[2]},
-                  {text: '3', value: board._port.p3[2]},
-                  //{text: '4', value: board._port.p4[2]}
-                ],*/
+                //aButton: ['1','2','3','4','5','6','7','8'],
+
                 dPort: ['1', '2', '3', '5', '6', '7', '8'],
                 dPort3: ['5', '6', '7', '8'],
                 aPort: ['2', '3'],
                 aPort2: ['3'],
                 aPin: [
-                    { text: 'A', value: 1 },
-                    { text: 'B', value: 2 },
+                    { text: 'A', value: 2 },
+                    { text: 'B', value: 1 },
                 ],
+                dPin: [
+                    { text: 'A', value: 2 },
+                    { text: 'B', value: 1 },
+                    { text: 'C', value: 0 },
+                ],
+
                 '#colorList': [
                     {
                         src: 'static/extension-assets/Robot4FUN-cBrain-assets/black.png',
@@ -1002,7 +956,7 @@ class cSensorsExtension {
                     'sensorAnalog': '接口[PIN]的類比感應器讀值 (0~1023)',
                     'sensorAnalog2': '接口[PORT][PIN]的類比感應器讀值 (0~1023)',
                     'sensorDigit': '接口[PIN]的[SENSOR]被觸發？',
-                    'sensorDigit2': '接口[PIN]的數位感應器讀值 (0/1)',
+                    'sensorDigit2': '接口[PORT][PIN]的數位感應器讀值 (0/1)',
                     '2tracers': '接口[PA]的2眼循線感應器讀值是[PAT]？',
                     '2tracersArray': '接口[PA]的2眼循線感應器讀值 (二進制)',
                     '2tracersMatch': '[SENREAD]是[PAT]？',
@@ -1050,7 +1004,7 @@ class cSensorsExtension {
                     'sensorAnalog': '端口[PIN]的模拟传感器读数 (0~1023)',
                     'sensorAnalog2': '端口[PORT][PIN]的模拟传感器读数 (0~1023)',
                     'sensorDigit': '端口[PIN]的[SENSOR]被触发？',
-                    'sensorDigit2': '端口[PIN]的数字传感器读数 (0/1)',
+                    'sensorDigit2': '端口[PORT][PIN]的数字传感器读数 (0/1)',
                     '2tracers': '端口[PA]的2路循迹传感器读值是[PAT]？',
                     '2tracersArray': '端口[PA]的2路循迹传感器读值 (二进制)',
                     '2tracersMatch': '[SENREAD]是[PAT]？',
@@ -1188,38 +1142,19 @@ int whichkey(int sensorValue) {
         } else {
             pin = board._port[pin - 1][2];
         }
-        /*      gen.definitions_['analog_raw'] = `
-        uint16_t analogRaw(){
-        
-        }
-        `;*/
         gen.setupCodes_['aSensor' + pin] = `pinMode(${pin},INPUT)`;
         return [`analogRead(${pin})`, gen.ORDER_ATOMIC];
-        //return [`analogRaw(${pin})`, gen.ORDER_ATOMIC];
     }
 
-    /*    rir (args){
-            const pin = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
-            if (board.pins[pin].mode != board.MODES.INPUT ){
-                board.pinMode(pin, board.MODES.INPUT);
-            }
-            if (board.eventNames().indexOf(`digital-read-${pin}`) === -1){ // just call once
-                board.digitalRead(pin, value => {   //只要call一次,即使沒執行此block仍會一直回報..
-                });
-            }
-    
-            return board.pins[pin].value? 0:1;//RIR is normal on
-        }
-    
-        rirGen (gen, block){
-            const pin = board.pin2firmata(board._port[gen.valueToCode(block,'PIN')-1][2]);
-            gen.setupCodes_['sensor'+pin] = `pinMode(${pin},INPUT)`;
-            return [`!digitalRead(${pin})`, gen.ORDER_ATOMIC]; //RIR is normal on
-        }
-        */
     sensorDigit(args) {
-        //const pin = board.pin2firmata(args.PIN);
-        const pin = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
+        const port = parseInt(args.PORT);
+        let pin = parseInt(args.PIN);
+        if (port) {
+            pin = board.pin2firmata(board._port[port - 1][pin]);
+        } else {
+            pin = board.pin2firmata(board._port[pin - 1][2]);
+        }
+        //const pin = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
         if (board.pins[pin].mode != board.MODES.INPUT) {
             //vm.emit('showAlert', {msg: 'Wrong PinMode defined'});
             board.pinMode(pin, board.MODES.INPUT);
@@ -1245,8 +1180,14 @@ int whichkey(int sensorValue) {
     }
 
     sensorDigiGen(gen, block) {
-        //const pin = board.pin2firmata(gen.valueToCode(block, 'PIN'));
-        const pin = board.pin2firmata(board._port[gen.valueToCode(block, 'PIN') - 1][2]);
+        const port = gen.valueToCode(block, 'PORT');
+        let pin = gen.valueToCode(block, 'PIN');
+        if (port) {
+            pin = board.pin2firmata(board._port[port - 1][pin]);
+        } else {
+            pin = board.pin2firmata(board._port[pin - 1][2]);
+        }
+        //const pin = board.pin2firmata(board._port[gen.valueToCode(block, 'PIN') - 1][2]);
         const sen = gen.valueToCode(block, 'SENSOR');
         console.log('sen=', typeof sen, sen);
         gen.setupCodes_['sensor' + pin] = `pinMode(${pin},INPUT)`;
