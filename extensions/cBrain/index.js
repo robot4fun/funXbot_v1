@@ -1295,8 +1295,13 @@ class cBrain {
         {
           opcode: 'var',
           blockType: BlockType.COMMAND,
-          text: 'variable [VAR] = [VALUE] ([TYPO], [SCOPE])',
+          text: '[TYPE] [VAR] = [VALUE] ([TYPO], [SCOPE])',
           arguments: {
+            TYPE: {
+              type: ArgumentType.STRING,
+              defaultValue: 'v',
+              menu: 'dataType'
+            },
             VAR: {
               type: ArgumentType.STRING,
               defaultValue: 'c'
@@ -1584,6 +1589,7 @@ class cBrain {
         { text: 'Space', value: ' ' }],
         StrTypo: ['HEX', 'BIN', 'DEC'],
         Scope: ['local', 'global'],
+        dataType: ['v', 'const', 'static', 'volatile'],
         Typo1: ['bool', 'int8_t', 'uint8_t', 'int16_t', 'uint16_t', 'int32_t', 'uint32_t', 'float', 'String'],
         Typo2: ['char', 'byte', 'int', 'word', 'long', 'float', 'String', 'TEXT'],
         ypr: ['yaw', 'pitch', 'roll'],
@@ -1691,13 +1697,14 @@ class cBrain {
           'stringtypo': '將[TEXT]以[TYPO]進制展示',
           'StrTypo': { 'HEX': '十六', 'BIN': '二', 'DEC': '十' },
           'Scope': { 'local': '區域', 'global': '全域' },
+          'dataType': { 'v': '變數', 'const': '常數', 'static': '靜態變數' },
           'Typo1': { 'bool': '布林', 'float': '小數', 'String': '字串' },
           'Typo2': {
             'char': 'int8_t', 'byte': 'uint8_t', 'int': 'int16_t', 'word': 'uint16_t',
             'long': 'int32_t', 'float': '小數', 'String': '字串', 'TEXT': '字符'
           },
           'typecast': '轉換[VALUE]的資料型態為[TYPO]',
-          'var': '變數[VAR]設為[VALUE], 資料型態為[TYPO], 範圍:[SCOPE]',
+          'var': '宣告[TYPE][VAR], 初始值為[VALUE], 資料型態:[TYPO], 範圍:[SCOPE]',
           'var_data': '變數[VAR]設為[VALUE]',
           'var_value': '變數[VAR]',
           'imuYPR': '[IMU]角度(°)',
@@ -1748,13 +1755,14 @@ class cBrain {
           'stringtypo': '将[TEXT]以[TYPO]进制展示',
           'StrTypo': { 'HEX': '十六', 'BIN': '二', 'DEC': '十' },
           'Scope': { 'local': '局部', 'global': '全局' },
+          'dataType': { 'v': '变量', 'const': '常量', 'static': '静态变量' },
           'Typo1': { 'bool': '布尔', 'float': '小数', 'String': '字符串' },
           'Typo2': {
             'char': 'int8_t', 'byte': 'uint8_t', 'int': 'int16_t', 'word': 'uint16_t',
             'long': 'int32_t', 'float': '小数', 'String': '字符串', 'TEXT': '字符'
           },
           'typecast': '转换[VALUE]的资料型态为[TYPO]',
-          'var': '变数[VAR]设为[VALUE], 资料型态为[TYPO], 作用域为[SCOPE]',
+          'var': '声明[TYPE][VAR], 初始为[VALUE], 资料型态为[TYPO], 作用域为[SCOPE]',
           'var_data': '变数[VAR]设为[VALUE]',
           'var_value': '变数[VAR]',
           'imuYPR': '[IMU]角度(°)',
@@ -3068,24 +3076,31 @@ while (${sertype}.available()) {
   }
 
   varGen(gen, block) {
+    let _type = gen.valueToCode(block, 'TYPE');
+    if (_type == 'v') _type = '';
     let va = gen.valueToCode(block, 'VAR');
+    va = va.substr(1, va.length - 2);
     const value = gen.valueToCode(block, 'VALUE');
+    //console.log('value', typeof value, value);
     const typo = gen.valueToCode(block, 'TYPO');
     const _scope = gen.valueToCode(block, 'SCOPE');
-    va = va.substr(1, va.length - 2);
+    
     gen.includes_['stdint'] = `#include <stdint.h>`;
+    
     if (_scope == 'global') {
-      gen.definitions_['var' + va] = `${typo} ${va};`;
-      return gen.line(`${va} = ${value}`);
+      if (value == '""') { gen.definitions_['var' + va] = `${_type} ${typo} ${va};`;
+      } else { gen.definitions_['var' + va] = `${_type} ${typo} ${va} = ${value};`; }
+      //if (_type == 'const') { return; } else { return gen.line(`${va} = ${value}`); }
     } else {
-      return gen.line(`${typo} ${va} = ${value}`);
+      if (value == '""') { return gen.line(`${_type} ${typo} ${va}`);
+      } else { return gen.line(`${_type} ${typo} ${va} = ${value}`) }
     }
   }
 
   var_dataGen(gen, block) {
     let va = gen.valueToCode(block, 'VAR');
-    const value = gen.valueToCode(block, 'VALUE');
     va = va.substr(1, va.length - 2);
+    const value = gen.valueToCode(block, 'VALUE');
     return gen.line(`${va} = ${value}`);
   }
 
