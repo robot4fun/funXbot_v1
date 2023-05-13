@@ -656,7 +656,38 @@ class cSensorsExtension {
                         arduino: this.qtrawGen
                     }
                 },
-
+                '---',
+                {
+                    func: 'noop',
+                    blockType: BlockType.DIVLABEL,
+                    text: 'ISR'
+                },
+                {
+                    opcode: 'isr',
+                    blockType: BlockType.COMMAND,
+                    text: 'attachInterrupt at port 5[PIN], ISR [ISR], mode [MODE]',
+                    arguments: {
+                        ISR: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'fuction',
+                        },
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 2,
+                            menu: 'aPin'
+                        },
+                        MODE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'CHANGE',
+                            menu: 'isrMode'
+                        }
+                    },
+                    func: 'noop',
+                    gen: {
+                        arduino: this.isrGen
+                    }
+                },
+          
                 /*
                                 {
                                     opcode: 'ds18b20Setup',
@@ -949,6 +980,7 @@ class cSensorsExtension {
                 acc: ['ax', 'ay', 'az'],
                 av: ['gx', 'gy', 'gz'],
                 imumenu: ['ax', 'ay', 'az', 'pitch', 'roll', 'yaw', 'gx', 'gy', 'gz'],
+                isrMode: ['CHANGE', 'RISING', 'FALLING', 'HIGH', 'LOW'],
             },
 
             translation_map: {
@@ -999,6 +1031,9 @@ class cSensorsExtension {
                     'ypr': { 'pitch': '俯仰', 'roll': '橫滾', 'yaw': '偏航' },
                     'acc': { 'ax': '加速度x軸分量', 'ay': '加速度y軸分量', 'az': '加速度z軸分量' },
                     'av': { 'gx': '角速度x軸分量', 'gy': '角速度y軸分量', 'gz': '角速度z軸分量' },
+                    'isrMode': { 'CHANGE': '電位改變', 'RISING': '電位升高', 'FALLING': '電位降低', 'HIGH': '高電位', 'LOW': '低電位'},
+                    'isr': '當接口 5[PIN] [MODE]時, 執行中斷服務函式[ISR]',
+          
                 },
                 'zh-cn': {
                     'sensorAnalog': '端口[PIN]的模拟传感器读数 (0~1023)',
@@ -1047,6 +1082,8 @@ class cSensorsExtension {
                     'ypr': { 'pitch': '俯仰', 'roll': '橫滚', 'yaw': '航向' },
                     'acc': { 'ax': '加速度x轴分量', 'ay': '加速度y轴分量', 'az': '加速度z轴分量' },
                     'av': { 'gx': '角速度x轴分量', 'gy': '角速度y轴分量', 'gz': '角速度z轴分量' },
+                    'isrMode': { 'CHANGE': '电平变化', 'RISING': '电平变高', 'FALLING': '电平变低', 'HIGH': '高电平', 'LOW': '低电平'},
+                    'isr': '当端口 5[PIN] [MODE]时, 执行中断服务函数[ISR]',
                 }
             }
 
@@ -2502,6 +2539,14 @@ uint16_t lux(boolean l){
         }
     }
 
+    isrGen(gen, block) {
+        const mode = gen.valueToCode(block, 'MODE');
+        let isr = gen.valueToCode(block, 'ISR');
+        isr = isr.substr(1, isr.length - 2);
+        const pin = board._port[4][gen.valueToCode(block, 'PIN')];
+        gen.setupCodes_['isr_' + pin] = `attachInterrupt(digitalPinToInterrupt(${pin}), ${isr}, ${mode});\n`;
+    }
+ 
     /*
     ds18b20Setup (args){
         const pin = board.pin2firmata(args.PIN);
