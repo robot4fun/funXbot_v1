@@ -2544,7 +2544,8 @@ uint16_t lux(boolean l){
         let isr = gen.valueToCode(block, 'ISR');
         isr = isr.substr(1, isr.length - 2);
         const pin = board._port[4][gen.valueToCode(block, 'PIN')];
-        gen.setupCodes_['isr_' + pin] = `attachInterrupt(digitalPinToInterrupt(${pin}), ${isr}, ${mode});\n`;
+        gen.setupCodes_['isr_' + pin] = `pinMode(${pin}, INPUT);
+    attachInterrupt(digitalPinToInterrupt(${pin}), ${isr}, ${mode});\n`;
     }
  
     /*
