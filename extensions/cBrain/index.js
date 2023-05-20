@@ -1336,7 +1336,7 @@ class cBrain {
               defaultValue: 'c',
             },
             VALUE: {
-              type: ArgumentType.NUMBER,
+              type: ArgumentType.STRING,
               defaultValue: 0
             }
           },
@@ -3085,7 +3085,7 @@ while (${sertype}.available()) {
     const typo = gen.valueToCode(block, 'TYPO');
     const _scope = gen.valueToCode(block, 'SCOPE');
     
-    gen.includes_['stdint'] = `#include <stdint.h>`;
+    //gen.includes_['stdint'] = `#include <stdint.h>`; //already with-in
     
     if (_scope == 'global') {
       if (value == '""') { gen.definitions_['var' + va] = `${_type} ${typo} ${va};`;
