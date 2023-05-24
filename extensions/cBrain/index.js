@@ -132,6 +132,7 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
   //VectorInt16 aaWorld;        // [x, y, z]            world-frame accel sensor measurements
   static VectorFloat gravity;   // [x, y, z]            gravity vector
   static float ypr[3];          // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+  int16_t _yaw;
 
   if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet
 
@@ -208,7 +209,16 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
 
   switch (d) { // imu x-y-z軸與主機不同
     case 1: //yaw
-        if (bias) { return (int(ypr[0] * -180.0/M_PI)-yaw_bias);}
+        if (bias) { 
+          _yaw = int(ypr[0] * -180.0/M_PI) - yaw_bias;
+          if ( _yaw < -180 ) { 
+            _yaw = _yaw + 360;
+          } else if ( _yaw > 180 ) {
+            _yaw = _yaw -360;
+          }
+          return _yaw;
+          //return (int(ypr[0] * -180.0/M_PI)-yaw_bias);
+        }
         else { return int(ypr[0] * -180.0/M_PI);}
         //if (bias) { return (mpu.yaw - mpu.yaw_bias);}
         //else { return mpu.yaw;}
