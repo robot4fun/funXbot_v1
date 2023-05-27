@@ -687,6 +687,70 @@ class cSensorsExtension {
                         arduino: this.isrGen
                     }
                 },
+                {
+                    opcode: 'detaIsr',
+                    blockType: BlockType.COMMAND,
+                    text: 'detachInterrupt at port 5[PIN]',
+                    arguments: {
+                        PIN: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 2,
+                            menu: 'aPin'
+                        }
+                    },
+                    func: 'noop',
+                    gen: {
+                        arduino: this.detachIsrGen
+                    }
+                },
+                '---',
+                {
+                    func: 'noop',
+                    blockType: BlockType.DIVLABEL,
+                    text: 'filter'
+                },
+                {
+                    opcode: '1dKalmanDef',
+                    blockType: BlockType.COMMAND,
+                    text: 'attach SimpleKalmanFilter, data=[KF_DATA], e_mea=[E_MEA]',
+                    arguments: {
+                        KF_DATA: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'distance1dKal',
+                        },
+                        E_MEA: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 1,
+                        }                    
+                    },
+                    func: 'noop',
+                    gen: {
+                        arduino: this.attach1DkalmanGen
+                    }
+                },
+                {
+                    opcode: '1dKalman',
+                    blockType: BlockType.COMMAND,
+                    text: '[EST] = [KF_DATA].updateEstimate([MEA]);',
+                    arguments: {
+                        KF_DATA: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'distance1dKal',
+                        },
+                        MEA: {
+                            type: ArgumentType.STRING,
+                            
+                        },
+                        EST: {
+                            type: ArgumentType.STRING,
+                            
+                        }                        
+                    },
+                    func: 'noop',
+                    gen: {
+                        arduino: this.update1DkalmanGen
+                    }
+                },
           
                 /*
                                 {
@@ -1033,6 +1097,10 @@ class cSensorsExtension {
                     'av': { 'gx': '角速度x軸分量', 'gy': '角速度y軸分量', 'gz': '角速度z軸分量' },
                     'isrMode': { 'CHANGE': '電位改變', 'RISING': '電位升高', 'FALLING': '電位降低', 'HIGH': '高電位', 'LOW': '低電位'},
                     'isr': '當接口 5[PIN] [MODE]時, 執行中斷服務函式[ISR]',
+                    'detaIsr': '終止接口 5[PIN]的中斷服務',
+                    '1dKalmanDef': '使用SimpleKalmanFilter, 資料為[KF_DATA], 預計量測誤差為[E_MEA]',
+                    '1dKalman': '濾波後[EST] = [KF_DATA].updateEstimate([MEA]);',
+
           
                 },
                 'zh-cn': {
@@ -1084,6 +1152,7 @@ class cSensorsExtension {
                     'av': { 'gx': '角速度x轴分量', 'gy': '角速度y轴分量', 'gz': '角速度z轴分量' },
                     'isrMode': { 'CHANGE': '电平变化', 'RISING': '电平变高', 'FALLING': '电平变低', 'HIGH': '高电平', 'LOW': '低电平'},
                     'isr': '当端口 5[PIN] [MODE]时, 执行中断服务函数[ISR]',
+                    'detaIsr': '终止端口 5[PIN]的中断服务',
                 }
             }
 
@@ -2544,10 +2613,32 @@ uint16_t lux(boolean l){
         let isr = gen.valueToCode(block, 'ISR');
         isr = isr.substr(1, isr.length - 2);
         const pin = board._port[4][gen.valueToCode(block, 'PIN')];
-        gen.setupCodes_['isr_' + pin] = `pinMode(${pin}, INPUT);
-    attachInterrupt(digitalPinToInterrupt(${pin}), ${isr}, ${mode});\n`;
+        gen.setupCodes_['isr_' + pin] = `pinMode(${pin}, INPUT);`;
+        return gen.line(`attachInterrupt(digitalPinToInterrupt(${pin}), ${isr}, ${mode})`);
     }
  
+    detachIsrGen(gen, block) {
+        const pin = board._port[4][gen.valueToCode(block, 'PIN')];
+        return gen.line(`detachInterrupt(digitalPinToInterrupt(${pin}))`);    
+    }
+
+    attach1DkalmanGen(gen, block) {
+        let kf_data = gen.valueToCode(block, 'KF_DATA');
+        kf_data = kf_data.substr(1, kf_data.length - 2);
+        const e_mea = gen.valueToCode(block, 'E_MEA');
+        //const e_est = gen.valueToCode(block, 'E_EST');
+        gen.includes_['1dkalman'] = '#include <SimpleKalmanFilter.h>';
+        gen.definitions_['1dkalman'+kf_data] = `SimpleKalmanFilter ${kf_data}(${e_mea}, ${e_mea}, 0.01);`;
+    }
+
+    update1DkalmanGen(gen, block) {
+        let kf_data = gen.valueToCode(block, 'KF_DATA');
+        kf_data = kf_data.substr(1, kf_data.length - 2);
+        const mea = gen.valueToCode(block, 'MEA');
+        const est = gen.valueToCode(block, 'EST');
+        return gen.line(`${est} = ${kf_data}.updateEstimate(${mea})`); 
+    }
+
     /*
     ds18b20Setup (args){
         const pin = board.pin2firmata(args.PIN);
