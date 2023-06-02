@@ -989,6 +989,25 @@ class cBrain {
         },
         '---',
         {
+          opcode: 'resettimer',
+          blockType: BlockType.COMMAND,
+          text: 'reset timer',
+          func: 'noop',//'resetTimer',
+          gen: {
+            arduino: this.resetTimerGen
+          }
+        },
+        {
+          opcode: 'gettimer',
+          text: 'timer value (ms)',
+          blockType: BlockType.REPORTER,
+          func: 'noop',//'getTimer',
+          gen: {
+            arduino: this.getTimerGen
+          }
+        },
+        '---',
+        {
           opcode: 'led',
           blockType: BlockType.COMMAND,
           text: '[VALUE] [PIN] LED',
@@ -1310,7 +1329,7 @@ class cBrain {
             TYPE: {
               type: ArgumentType.STRING,
               defaultValue: 'v',
-              menu: 'dataType'
+              menu: 'varType'
             },
             VAR: {
               type: ArgumentType.STRING,
@@ -1599,7 +1618,7 @@ class cBrain {
         { text: 'Space', value: ' ' }],
         StrTypo: ['HEX', 'BIN', 'DEC'],
         Scope: ['local', 'global'],
-        dataType: ['v', 'const', 'static', 'volatile'],
+        varType: ['v', 'const', 'static', 'volatile'],
         Typo1: ['bool', 'int8_t', 'uint8_t', 'int16_t', 'uint16_t', 'int32_t', 'uint32_t', 'float', 'String'],
         Typo2: ['char', 'byte', 'int', 'word', 'long', 'float', 'String', 'TEXT'],
         ypr: ['yaw', 'pitch', 'roll'],
@@ -1707,7 +1726,7 @@ class cBrain {
           'stringtypo': '將[TEXT]以[TYPO]進制展示',
           'StrTypo': { 'HEX': '十六', 'BIN': '二', 'DEC': '十' },
           'Scope': { 'local': '區域', 'global': '全域' },
-          'dataType': { 'v': '變數', 'const': '常數', 'static': '靜態變數' },
+          'varType': { 'v': '變數', 'const': '常數', 'static': '靜態變數', 'volatile': '易變變數' },
           'Typo1': { 'bool': '布林', 'float': '小數', 'String': '字串' },
           'Typo2': {
             'char': 'int8_t', 'byte': 'uint8_t', 'int': 'int16_t', 'word': 'uint16_t',
@@ -1746,6 +1765,8 @@ class cBrain {
           'text2number': '轉換字串[TEXT]為數字',
           'substring': '擷取字串[TEXT]的第[FROM]到[TO]字',
           'stringlength': '字串[TEXT]長度',
+          'resettimer': '重置計時器',
+          'gettimer': '計時(毫秒)',
         },
         'zh-cn': { // 簡體中文
           //'cBrain': '鸡车脑',
@@ -1765,7 +1786,7 @@ class cBrain {
           'stringtypo': '将[TEXT]以[TYPO]进制展示',
           'StrTypo': { 'HEX': '十六', 'BIN': '二', 'DEC': '十' },
           'Scope': { 'local': '局部', 'global': '全局' },
-          'dataType': { 'v': '变量', 'const': '常量', 'static': '静态变量' },
+          'varType': { 'v': '变量', 'const': '常量', 'static': '静态变量', 'volatile': '易变变量' },
           'Typo1': { 'bool': '布尔', 'float': '小数', 'String': '字符串' },
           'Typo2': {
             'char': 'int8_t', 'byte': 'uint8_t', 'int': 'int16_t', 'word': 'uint16_t',
@@ -1804,6 +1825,8 @@ class cBrain {
           'text2number': '转换字符串[TEXT]为数字',
           'substring': '撷取字符串[TEXT]的第[FROM]到[TO]字',
           'stringlength': '字符串[TEXT]长度',
+          'resettimer': '重置计时器',
+          'gettimer': '计时(毫秒)',
         },
       }
 
@@ -2996,6 +3019,21 @@ void receiveSing(int pin, int song){
 
   millisGen(gen, block) {
     return ['millis()', 0];
+  }
+
+  resetTimerGen(gen, block) {
+    gen.definitions_['timer'] = `
+uint32_t getTimer(bool _reseT = false) {
+  static uint32_t _t0 = 0;
+  if (_reseT) _t0 = millis();
+  return ( millis() - _t0 );
+}
+`;
+    return gen.line(`getTimer(true)`);
+  }
+
+  getTimerGen(gen, block) {
+    return ['getTimer()', gen.ORDER_ATOMIC];
   }
 
   // bellow is for I2C

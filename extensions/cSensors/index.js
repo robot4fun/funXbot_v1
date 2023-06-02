@@ -1099,7 +1099,7 @@ class cSensorsExtension {
                     'isr': '當接口 5[PIN] [MODE]時, 執行中斷服務函式[ISR]',
                     'detaIsr': '終止接口 5[PIN]的中斷服務',
                     '1dKalmanDef': '使用Kalman濾波[KF_DATA]資料, 預計量測誤差為[E_MEA]',
-                    '1dKalman': '變數[EST] = 濾波後的[KF_DATA]資料 ( 量測值為[MEA]);',
+                    '1dKalman': '變數[EST] = 濾波後的[KF_DATA]資料 ( 量測值為變數[MEA]);',
 
           
                 },
@@ -1154,7 +1154,7 @@ class cSensorsExtension {
                     'isr': '当端口 5[PIN] [MODE]时, 执行中断服务函数[ISR]',
                     'detaIsr': '终止端口 5[PIN]的中断服务',
                     '1dKalmanDef': '使用Kalman滤波[KF_DATA]资料, 预计量测误差为[E_MEA]',
-                    '1dKalman': '变数[EST] = 滤波后的[KF_DATA]资料 ( 量测值为[MEA])',
+                    '1dKalman': '变量[EST] = 滤波后的[KF_DATA]资料 ( 量测值为变量[MEA])',
                 }
             }
 
