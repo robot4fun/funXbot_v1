@@ -70,8 +70,8 @@ class cActuatorsExtension {
           arguments: {
             PIN: {
               type: ArgumentType.STRING,
-              defaultValue: '6',
-              menu: 'dPort'//'mPort'//'dPort3'//'pwmPort'
+              defaultValue: '5',
+              menu: 'pwmPort'
             },
             SPEED: {
               type: ArgumentType.SLIDER,
@@ -96,8 +96,8 @@ class cActuatorsExtension {
             },
             PIN: {
               type: ArgumentType.STRING,
-              defaultValue: '6',
-              menu: 'pwmPort'//'dPort'
+              defaultValue: '2',
+              menu: 'sPort'
             },
             DEG: {
               type: ArgumentType.NUMBER,
@@ -114,6 +114,38 @@ class cActuatorsExtension {
           }
         },
         {
+          opcode: 'servoWait',
+          blockType: BlockType.COMMAND,
+          text: 'Waitting for servo motor at port [PIN] to stop',
+          arguments: {
+            PIN: {
+              type: ArgumentType.STRING,
+              defaultValue: '2',
+              menu: 'sPort'
+            },
+          },
+          func: 'noop',//'servoWait',
+          gen: {
+            arduino: this.servoWaitGen
+          }  
+        },
+        {
+          opcode: 'servoStop',
+          blockType: BlockType.COMMAND,
+          text: 'Stop servo motor at port [PIN]',
+          arguments: {
+            PIN: {
+              type: ArgumentType.STRING,
+              defaultValue: '2',
+              menu: 'sPort'
+            },
+          },
+          func: 'noop',//'servoStop',
+          gen: {
+            arduino: this.servoStopGen
+          }  
+        },
+        {
           opcode: 'getServoDeg',
           blockType: BlockType.REPORTER,
           text: 'Servo motor angle reading at port [PIN] (angle range total [MAX]°)',
@@ -126,14 +158,30 @@ class cActuatorsExtension {
             },
             PIN: {
               type: ArgumentType.STRING,
-              defaultValue: '6',
-              menu: 'pwmPort'//'dPort'//
+              defaultValue: '2',
+              menu: 'sPort'
             }
           },
           func: 'getServoDeg',
           gen: {
             arduino: this.getServoDegGen
           }
+        },
+        {
+          opcode: 'isMoving',
+          blockType: BlockType.BOOLEAN,
+          text: 'servo motor at port [PIN] is moving?',
+          arguments: {
+            PIN: {
+              type: ArgumentType.STRING,
+              defaultValue: '2',
+              menu: 'sPort'
+            },
+          },
+          func: 'noop',//'isMoving',
+          gen: {
+            arduino: this.isMovingGen
+          }  
         },
         '---',
         {
@@ -149,12 +197,12 @@ class cActuatorsExtension {
             PORT: {
               type: ArgumentType.STRING,
               defaultValue: '6',
-              menu: 'dPort'//'pwmPort2'
+              menu: 'dPort'
             },
             PIN: {
               type: ArgumentType.STRING,
               defaultValue: 2,
-              menu: 'pwmPin'
+              menu: 'dPin'
             },
             SPEED: {
               type: ArgumentType.SLIDER,
@@ -180,12 +228,12 @@ class cActuatorsExtension {
             PORT: {
               type: ArgumentType.STRING,
               defaultValue: '6',
-              menu: 'pwmPort2'
+              menu: 'dPort'
             },
             PIN: {
               type: ArgumentType.STRING,
               defaultValue: 2,
-              menu: 'pwmPin'
+              menu: 'dPin'
             },
             DEG: {
               type: ArgumentType.NUMBER,
@@ -202,6 +250,48 @@ class cActuatorsExtension {
           }
         },
         {
+          opcode: 'MservoWait',
+          blockType: BlockType.COMMAND,
+          text: 'Waitting for servo motor at port [PORT][PIN] to stop',
+          arguments: {
+            PORT: {
+              type: ArgumentType.STRING,
+              defaultValue: '6',
+              menu: 'dPort'
+            },
+            PIN: {
+              type: ArgumentType.STRING,
+              defaultValue: 2,
+              menu: 'dPin'
+            },
+          },
+          func: 'noop',//'servoWait',
+          gen: {
+            arduino: this.servoWaitGen
+          }  
+        },
+        {
+          opcode: 'MservoStop',
+          blockType: BlockType.COMMAND,
+          text: 'Stop servo motor at port [PORT][PIN]',
+          arguments: {
+            PORT: {
+              type: ArgumentType.STRING,
+              defaultValue: '6',
+              menu: 'dPort'
+            },
+            PIN: {
+              type: ArgumentType.STRING,
+              defaultValue: 2,
+              menu: 'dPin'
+            },
+          },
+          func: 'noop',//'servoStop',
+          gen: {
+            arduino: this.servoStopGen
+          }  
+        },
+        {
           opcode: 'MgetServoDeg',
           blockType: BlockType.REPORTER,
           text: 'Servo motor angle reading at port [PORT][PIN] (angle range total [MAX]°)',
@@ -214,18 +304,39 @@ class cActuatorsExtension {
             PORT: {
               type: ArgumentType.STRING,
               defaultValue: '6',
-              menu: 'pwmPort2'
+              menu: 'dPort'
             },
             PIN: {
               type: ArgumentType.STRING,
               defaultValue: 2,
-              menu: 'pwmPin'
+              menu: 'dPin'
             },
           },
           func: 'getServoDeg',
           gen: {
             arduino: this.getServoDegGen
           }
+        },
+        {
+          opcode: 'MisMoving',
+          blockType: BlockType.BOOLEAN,
+          text: 'servo motor at port [PORT][PIN] is moving?',
+          arguments: {
+            PORT: {
+              type: ArgumentType.STRING,
+              defaultValue: '6',
+              menu: 'dPort'
+            },
+            PIN: {
+              type: ArgumentType.STRING,
+              defaultValue: 2,
+              menu: 'dPin'
+            },
+          },
+          func: 'noop',//'isMoving',
+          gen: {
+            arduino: this.isMovingGen
+          }  
         },
         '---',
         /*
@@ -258,16 +369,16 @@ class cActuatorsExtension {
 
       menus: {
         maxAngle: ['180', '270', '360'],
-        dPort: ['1', '2', '3', '5', '6', '7', '8'],
+        dPort: ['1', '2', /*'3',*/ '5', '6', '7', '8'],
         dPort3: ['5', '6', '7', '8'],
-        mPort: ['6',/*'7',*/'8'],
+        sPort: ['2', '5', '6', '8'],
         pwmPort: ['5', '6', '7'],
         pwmPort2: ['6', '7'],
-        pwmPin: [
+        aPin: [
           { text: 'A', value: 2 },
           { text: 'B', value: 1 },
         ],
-        dPin3: [
+        dPin: [
           { text: 'A', value: 2 },
           { text: 'B', value: 1 },
           { text: 'C', value: 0 },
@@ -285,6 +396,12 @@ class cActuatorsExtension {
           'McontinuousServo': '接口[PORT][PIN]的小馬達轉動速度設為[SPEED](-255~255)',
           'motorH': '接口[PIN]的大馬達轉動速度設為[SPEED](-255~255)',
           'motorHstop': '停止接口[PIN]的大馬達',
+          'servoWait': '等待接口[PIN]的伺服馬達停止',
+          'servoStop': '立即停止接口[PIN]的伺服馬達',
+          'isMoving': '接口[PIN]的伺服馬達正在轉動嗎?',
+          'MservoWait': '等待接口[PORT][PIN]的伺服馬達停止',
+          'MservoStop': '立即停止接口[PORT][PIN]的伺服馬達',
+          'MisMoving': '接口[PORT][PIN]的伺服馬達正在轉動?',
         },
         'zh-cn': {
           'servoGo': '端口[PIN]的舵机( 角度范围[MAX]° )转动到[DEG]°，速度为[SPEED](1~255)',
@@ -295,6 +412,12 @@ class cActuatorsExtension {
           'McontinuousServo': '端口[PORT][PIN]的小电机转动速度设为[SPEED](-255~255)',
           'motorH': '端口[PIN]的大电机转动速度设为[SPEED](-255~255)',
           'motorHstop': '停止端口[PIN]的大电机',
+          'servoWait': '等待端口[PIN]的舵机停止',
+          'servoStop': '立即停止端口[PIN]的舵机',
+          'isMoving': '端口[PIN]的舵机正在转动吗?',
+          'servoWait': '等待端口[PORT][PIN]的舵机停止',
+          'servoStop': '立即停止端口[PORT][PIN]的舵机',
+          'isMoving': '端口[PORT][PIN]的舵机正在转动?',
         },
       }
     };
@@ -377,6 +500,36 @@ class cActuatorsExtension {
     return `servo_${pin}.write(map(${deg},0,${max},544,2500),constrain(${sp},1,255))`;
   }
 
+  servoWaitGen(gen, block) {
+    gen.includes_['servo'] = `#include <VarSpeedServo.h>\n`;
+    const port = gen.valueToCode(block, 'PORT');
+    let pin = gen.valueToCode(block, 'PIN');
+    if (port) {
+      pin = board.pin2firmata(board._port[port - 1][pin]);
+    } else {
+      pin = board.pin2firmata(board._port[pin - 1][2]);
+    }
+    gen.definitions_['servo_' + pin] = `VarSpeedServo servo_${pin};`;
+    gen.setupCodes_['servo_' + pin] = `servo_${pin}.attach(${pin},544,2500)`;
+    
+    return gen.line(`servo_${pin}.wait()`);
+  }
+
+  servoStopGen(gen, block) {
+    gen.includes_['servo'] = `#include <VarSpeedServo.h>\n`;
+    const port = gen.valueToCode(block, 'PORT');
+    let pin = gen.valueToCode(block, 'PIN');
+    if (port) {
+      pin = board.pin2firmata(board._port[port - 1][pin]);
+    } else {
+      pin = board.pin2firmata(board._port[pin - 1][2]);
+    }
+    gen.definitions_['servo_' + pin] = `VarSpeedServo servo_${pin};`;
+    gen.setupCodes_['servo_' + pin] = `servo_${pin}.attach(${pin},544,2500)`;
+    
+    return gen.line(`servo_${pin}.stop()`);
+  }
+
   getServoDeg(args) {
     const port = parseInt(args.PORT);
     let pin = parseInt(args.PIN);
@@ -413,6 +566,21 @@ class cActuatorsExtension {
 
     return [`map(servo_${pin}.readMicroseconds(), 544, 2500, 0, ${max})`, gen.ORDER_ATOMIC];
     //return [`servo_${pin}.read() * ${max}/180`, gen.ORDER_ATOMIC];
+  }
+
+  isMovingGen(gen, block) {
+    gen.includes_['servo'] = `#include <VarSpeedServo.h>\n`;
+    const port = gen.valueToCode(block, 'PORT');
+    let pin = gen.valueToCode(block, 'PIN');
+    if (port) {
+      pin = board.pin2firmata(board._port[port - 1][pin]);
+    } else {
+      pin = board.pin2firmata(board._port[pin - 1][2]);
+    }
+    gen.definitions_['servo_' + pin] = `VarSpeedServo servo_${pin};`;
+    gen.setupCodes_['servo_' + pin] = `servo_${pin}.attach(${pin},544,2500)`;
+    
+    return [`servo_${pin}.isMoving()`, gen.ORDER_ATOMIC];
   }
 
   continuousServo(args) {
