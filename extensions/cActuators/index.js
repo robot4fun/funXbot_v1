@@ -29,7 +29,7 @@ class cActuatorsExtension {
         {
           opcode: 'motorH',
           blockType: BlockType.COMMAND,
-          text: 'Set the big motor speed at port [PIN] to [SPEED](-255~255)',
+          text: 'Set the big motor power at port [PIN] to [SPEED](-255~255)',
           arguments: {
             PIN: {
               type: ArgumentType.STRING,
@@ -66,7 +66,7 @@ class cActuatorsExtension {
         {
           opcode: 'continuousServo',
           blockType: BlockType.COMMAND,
-          text: 'Set the small motor speed at port [PIN] to [SPEED](-255~255)',
+          text: 'Set the small motor power at port [PIN] to [SPEED](-255~255)',
           arguments: {
             PIN: {
               type: ArgumentType.STRING,
@@ -192,7 +192,7 @@ class cActuatorsExtension {
         {
           opcode: 'McontinuousServo',
           blockType: BlockType.COMMAND,
-          text: 'Set the small motor speed at port [PORT][PIN] to [SPEED](-255~255)',
+          text: 'Set the small motor power at port [PORT][PIN] to [SPEED](-255~255)',
           arguments: {
             PORT: {
               type: ArgumentType.STRING,
@@ -392,13 +392,13 @@ class cActuatorsExtension {
           'MservoGo': '接口[PORT][PIN]的伺服馬達( 角度範圍共[MAX]° )轉動到[DEG]°，速度為[SPEED](1~255)',
           'getServoDeg': '接口[PIN]的伺服馬達角度讀值（角度範圍共[MAX]°）',
           'MgetServoDeg': '接口[PORT][PIN]的伺服馬達角度讀值（角度範圍共[MAX]°）',
-          'continuousServo': '接口[PIN]的小馬達轉動速度設為[SPEED](-255~255)',
-          'McontinuousServo': '接口[PORT][PIN]的小馬達轉動速度設為[SPEED](-255~255)',
-          'motorH': '接口[PIN]的大馬達轉動速度設為[SPEED](-255~255)',
+          'continuousServo': '接口[PIN]的小馬達電門設為[SPEED](-255~255)',
+          'McontinuousServo': '接口[PORT][PIN]的小馬達電門設為[SPEED](-255~255)',
+          'motorH': '接口[PIN]的大馬達電門設為[SPEED](-255~255)',
           'motorHstop': '停止接口[PIN]的大馬達',
           'servoWait': '等待接口[PIN]的伺服馬達停止',
           'servoStop': '立即停止接口[PIN]的伺服馬達',
-          'isMoving': '接口[PIN]的伺服馬達正在轉動嗎?',
+          'isMoving': '接口[PIN]的伺服馬達正在轉動?',
           'MservoWait': '等待接口[PORT][PIN]的伺服馬達停止',
           'MservoStop': '立即停止接口[PORT][PIN]的伺服馬達',
           'MisMoving': '接口[PORT][PIN]的伺服馬達正在轉動?',
@@ -408,9 +408,9 @@ class cActuatorsExtension {
           'MservoGo': '端口[PORT][PIN]的舵机( 角度范围[MAX]° )转动到[DEG]°，速度为[SPEED](1~255)',
           'getServoDeg': '端口[PIN]的舵机角度读数（角度范围[MAX]°）',
           'MgetServoDeg': '端口[PORT][PIN]的舵机角度读数（角度范围[MAX]°）',
-          'continuousServo': '端口[PIN]的小电机转动速度设为[SPEED](-255~255)',
-          'McontinuousServo': '端口[PORT][PIN]的小电机转动速度设为[SPEED](-255~255)',
-          'motorH': '端口[PIN]的大电机转动速度设为[SPEED](-255~255)',
+          'continuousServo': '端口[PIN]的小电机电门设为[SPEED](-255~255)',
+          'McontinuousServo': '端口[PORT][PIN]的小电机电门设为[SPEED](-255~255)',
+          'motorH': '端口[PIN]的大电机电门设为[SPEED](-255~255)',
           'motorHstop': '停止端口[PIN]的大电机',
           'servoWait': '等待端口[PIN]的舵机停止',
           'servoStop': '立即停止端口[PIN]的舵机',
