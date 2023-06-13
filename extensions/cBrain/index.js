@@ -112,12 +112,13 @@ int16_t yaw_bias=0;
 
   gen.definitions_['mpufailed'] = `
 void mpufailed(){
-    #define LED_PIN 13
-    bool blinkState = false;
-    pinMode(LED_PIN, OUTPUT);
+    #define LED_WARNING 13
+    //bool blinkState = false;
+    //pinMode(LED_WARNING, OUTPUT);
     for ( uint8_t i=0; i<5; i++) {
-        blinkState = !blinkState;
-        digitalWrite(LED_PIN, blinkState);
+        //blinkState = !blinkState;
+        //digitalWrite(LED_WARNING, blinkState);
+        digitalWrite(LED_WARNING, !digitalRead(LED_WARNING));
         delay(500);
     }
 }
