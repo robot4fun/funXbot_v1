@@ -131,8 +131,8 @@ class cSensorsExtension {
                     arguments: {
                         PORT: {
                             type: ArgumentType.STRING,
-                            defaultValue: '3',
-                            menu: 'aPort2'
+                            defaultValue: '2',
+                            menu: 'aPort'
                         },
                         PIN: {
                             type: ArgumentType.STRING,
@@ -153,7 +153,7 @@ class cSensorsExtension {
                     arguments: {
                         PIN: {
                             type: ArgumentType.STRING,
-                            defaultValue: '1',
+                            defaultValue: '2',
                             menu: 'dPort'
                         }
                     },
@@ -175,7 +175,7 @@ class cSensorsExtension {
                         },
                         PIN: {
                             type: ArgumentType.STRING,
-                            defaultValue: '3',
+                            defaultValue: '2',
                             menu: 'dPort'
                         }
                     },
@@ -320,55 +320,6 @@ class cSensorsExtension {
                     }
                 },
                 '---',
-                /*{
-                    opcode: 'imuYPR',
-                    blockType: BlockType.REPORTER,
-                    text: 'IMU [IMU] reading at port 3',
-                    arguments: {
-                        IMU: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'yaw',
-                            menu: 'ypr'
-                        }
-                    },
-                    func: 'imuRead',
-                    gen: {
-                        arduino: this.imuReadGen
-                    }
-                },
-                {
-                    opcode: 'imuAcc',
-                    blockType: BlockType.REPORTER,
-                    text: 'IMU [IMU] reading at port 3',
-                    arguments: {
-                        IMU: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'ax',
-                            menu: 'acc'
-                        }
-                    },
-                    func: 'imuRead',
-                    gen: {
-                        arduino: this.imuReadGen
-                    }
-                },
-                {
-                    opcode: 'imuAV',
-                    blockType: BlockType.REPORTER,
-                    text: 'IMU [IMU] reading at port 3',
-                    arguments: {
-                        IMU: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'gx',
-                            menu: 'av'
-                        }
-                    },
-                    func: 'imuRead',
-                    gen: {
-                        arduino: this.imuReadGen
-                    }
-                },
-                '---',*/
                 {
                     func: 'noop',
                     blockType: BlockType.DIVLABEL,
@@ -387,7 +338,7 @@ class cSensorsExtension {
                         PA: {
                             type: ArgumentType.STRING,
                             defaultValue: '8',
-                            menu: 'dPort'
+                            menu: 'dPort2'
                         }
                     },
                     func: 'tracers2',
@@ -403,7 +354,7 @@ class cSensorsExtension {
                         PA: {
                             type: ArgumentType.STRING,
                             defaultValue: '8',
-                            menu: 'dPort'
+                            menu: 'dPort2'
                         }
                     },
                     func: 'tracers2array',
@@ -444,7 +395,7 @@ class cSensorsExtension {
                         },
                         PA: {
                             type: ArgumentType.STRING,
-                            defaultValue: '6',
+                            defaultValue: '8',
                             menu: 'dPort3'
                         }
                     },
@@ -460,7 +411,7 @@ class cSensorsExtension {
                     arguments: {
                         PA: {
                             type: ArgumentType.STRING,
-                            defaultValue: '6',
+                            defaultValue: '8',
                             menu: 'dPort3'
                         }
                     },
@@ -502,7 +453,7 @@ class cSensorsExtension {
                         },
                         PA: {
                             type: ArgumentType.STRING,
-                            defaultValue: '3',
+                            defaultValue: '8',
                             menu: 'dPort'
                         },
                         PB: {
@@ -523,7 +474,7 @@ class cSensorsExtension {
                     arguments: {
                         PA: {
                             type: ArgumentType.STRING,
-                            defaultValue: '3',
+                            defaultValue: '8',
                             menu: 'dPort'
                         },
                         PB: {
@@ -570,7 +521,7 @@ class cSensorsExtension {
                         },
                         PA: {
                             type: ArgumentType.STRING,
-                            defaultValue: '3',
+                            defaultValue: '6',
                             menu: 'dPort'
                         },
                         PB: {
@@ -982,10 +933,11 @@ class cSensorsExtension {
                 dht11function: ['temperature', 'humidity'],
                 //aButton: ['1','2','3','4','5','6','7','8'],
 
-                dPort: ['1', '2', '3', '5', '6', '7', '8'],
-                dPort3: ['5', '6', '7', '8'],
-                aPort: ['2', '3'],
-                aPort2: ['3'],
+                dPort: ['2', '5', '6', '7', '8'],
+                dPort2: ['5', '6', '7', '8'],
+                dPort3: ['6', '7', '8'],
+                aPort: ['2', '4'],
+                aPort2: ['4'],
                 aPin: [
                     { text: 'A', value: 2 },
                     { text: 'B', value: 1 },
@@ -1040,10 +992,6 @@ class cSensorsExtension {
                 ],
                 wb: ['dark', 'bright'],
                 light: ['reflected', 'ambient'],
-                ypr: ['pitch', 'roll', 'yaw'],
-                acc: ['ax', 'ay', 'az'],
-                av: ['gx', 'gy', 'gz'],
-                imumenu: ['ax', 'ay', 'az', 'pitch', 'roll', 'yaw', 'gx', 'gy', 'gz'],
                 isrMode: ['CHANGE', 'RISING', 'FALLING', 'HIGH', 'LOW'],
             },
 
@@ -1081,20 +1029,14 @@ class cSensorsExtension {
                     'setIT': '設定曝光時間為[IT]毫秒',
                     'setGain': '設定感光度為[GAIN]倍',
                     'dht': '接口[PIN]的溫溼度感應器[FUNC]讀值',
-                    'imuYPR': '接口 3 的姿態感應器[IMU]角度(°)',
-                    'imuAcc': '接口 3 的姿態感應器[IMU]讀值',
-                    'imuAV': '接口 3 的姿態感應器[IMU]讀值',
                     //'rgb': {'R':'紅','G':'綠','B':'藍'},
-                    'digi': { 'button': '按鈕', 'tilt': '傾斜開關', 'rir': '紅外線感應器' },
+                    'digi': { 'button': '按鈕', 'tilt': '傾斜開關', 'rir': '光感應器' },
                     'dht11function': { 'temperature': '溫度(°C)', 'humidity': '濕度(%)' },
                     'wb': { 'dark': '黑', 'bright': '白' },
                     'qtr_type': { 'RC': '數位', 'Analog': '類比' },
                     'lcolor': { 'Black': '黑', 'White': '白' },
                     'light': { 'reflected': '反射光', 'ambient': '環境光' },
                     'onoff': { 'ON': '打開', 'OFF': '關閉' },
-                    'ypr': { 'pitch': '俯仰', 'roll': '橫滾', 'yaw': '偏航' },
-                    'acc': { 'ax': '加速度x軸分量', 'ay': '加速度y軸分量', 'az': '加速度z軸分量' },
-                    'av': { 'gx': '角速度x軸分量', 'gy': '角速度y軸分量', 'gz': '角速度z軸分量' },
                     'isrMode': { 'CHANGE': '電位改變', 'RISING': '電位升高', 'FALLING': '電位降低', 'HIGH': '高電位', 'LOW': '低電位'},
                     'isr': '當接口 5[PIN] [MODE]時, 執行中斷服務函式[ISR]',
                     'detaIsr': '終止接口 5[PIN]的中斷服務',
@@ -1136,10 +1078,7 @@ class cSensorsExtension {
                     'setIT': '设定曝光时间为[IT]毫秒',
                     'setGain': '设定感光度为[GAIN]倍',
                     'dht': '端口[PIN]的温湿度传感器[FUNC]读值',
-                    'imuYPR': '端口 3 的姿态传感器[IMU]角度(°)',
-                    'imuAcc': '端口 3 的姿态传感器[IMU]读值',
-                    'imuAV': '端口 3 的姿态传感器[IMU]读值',
-                    'digi': { 'button': '按钮', 'tilt': '倾斜开关', 'rir': '红外传感器' },
+                    'digi': { 'button': '按钮', 'tilt': '倾斜开关', 'rir': '光传感器' },
                     'dht11function': { 'temperature': '温度(°C)', 'humidity': '湿度(%)' },
                     'wb': { 'dark': '黑', 'bright': '白' },
                     'light': { 'reflected': '反射光', 'ambient': '环境光' },
@@ -1147,9 +1086,6 @@ class cSensorsExtension {
                     'lcolor': { 'Black': '黑', 'White': '白' },
                     'onoff': { 'ON': '打开', 'OFF': '关闭' },
                     //'rgb': {'R':'红','G':'绿','B':'蓝'},
-                    'ypr': { 'pitch': '俯仰', 'roll': '橫滚', 'yaw': '航向' },
-                    'acc': { 'ax': '加速度x轴分量', 'ay': '加速度y轴分量', 'az': '加速度z轴分量' },
-                    'av': { 'gx': '角速度x轴分量', 'gy': '角速度y轴分量', 'gz': '角速度z轴分量' },
                     'isrMode': { 'CHANGE': '电平变化', 'RISING': '电平变高', 'FALLING': '电平变低', 'HIGH': '高电平', 'LOW': '低电平'},
                     'isr': '当端口 5[PIN] [MODE]时, 执行中断服务函数[ISR]',
                     'detaIsr': '终止端口 5[PIN]的中断服务',

@@ -19,7 +19,7 @@ const Ports_rj = [
   ['', 'A0', 'A1', 'V', 'G', ''],  //port1
   ['', 'A2', 'A3', 'V', 'G', ''],  //port2
   ['', 'A4', 'A5', 'V', 'G', ''],  //port3: A4=SDA, A5=SCL for I2C
-  ['', 'A6', 'A7', 'V', 'G', ''],  //port4: not connected
+  ['', 'A6', 'A7', 'V', 'G', ''],  //port4: 自行拉線; 只能當analog pin
   ['4', '2', '3', 'V', 'G', ''],   //port5
   ['7', '5', '6', 'V', 'G', ''],   //port6
   ['8', '9', '10', 'V', 'G', ''],  //port7
@@ -39,33 +39,6 @@ const Sensors = {
   buzzer: 9 //port7[1], pwm
 };
 
-class TransportStub extends Emitter {
-  constructor(path/*, options, openCallback*/) {
-    super();
-    this.isOpen = true;
-    this.baudRate = 0;
-    this.path = path;
-  }
-
-  write(buffer) {
-    //console.log("transport write", buffer);//for debug
-    // Tests are written to work with arrays not buffers
-    // this shouldn't impact the data, just the container
-    // This also should be changed in future test rewrites
-    /* istanbul ignore else */
-    if (Buffer.isBuffer(buffer)) {
-      buffer = Array.from(buffer);
-    }
-
-    this.lastWrite = buffer;
-    this.emit("write", buffer);
-  }
-
-  static list() {
-    /* istanbul ignore next */
-    return Promise.resolve([]);
-  }
-}
 /*
 const wireCommon = gen => {
     gen.setupCodes_['wire'] = `Wire.begin()`;
@@ -114,7 +87,7 @@ int16_t yaw_bias=0;
 void mpufailed(){
     #define LED_WARNING 13
     //bool blinkState = false;
-    //pinMode(LED_WARNING, OUTPUT);
+    pinMode(LED_WARNING, OUTPUT);
     for ( uint8_t i=0; i<5; i++) {
         //blinkState = !blinkState;
         //digitalWrite(LED_WARNING, blinkState);
@@ -373,6 +346,11 @@ bool IMUshaked(){
       #ifdef DEBUG
         Serial.print(F("DMP Initialization failed (code "));
         Serial.print(devStatus);
+        if (devStatus = 1) {
+          Serial.print(F(": initial memory load failed"));
+        } else if (devStatus = 2) {
+          Serial.print(F(": DMP configuration updates failed"));
+        }
         Serial.println(F(")"));
       #endif
     }
@@ -398,6 +376,34 @@ async function timeout(ms) {
   });
 };
 
+class TransportStub extends Emitter {
+  constructor(path/*, options, openCallback*/) {
+    super();
+    this.isOpen = true;
+    this.baudRate = 0;
+    this.path = path;
+  }
+
+  write(buffer) {
+    //console.log("transport write", buffer);//for debug
+    // Tests are written to work with arrays not buffers
+    // this shouldn't impact the data, just the container
+    // This also should be changed in future test rewrites
+    /* istanbul ignore else */
+    if (Buffer.isBuffer(buffer)) {
+      buffer = Array.from(buffer);
+    }
+
+    this.lastWrite = buffer;
+    this.emit("write", buffer);
+  }
+
+  static list() {
+    /* istanbul ignore next */
+    return Promise.resolve([]);
+  }
+}
+
 class cBrain {
   constructor(runtime) {
     /**
@@ -418,11 +424,11 @@ class cBrain {
     this.lineBuffer = '';
     const firmata = new Firmata();
     this.trans = new TransportStub();
-    //this.board = new firmata.Board(this.trans);
+    this.board = new firmata.Board(this.trans);
     window.board = new firmata.Board(this.trans);
     //console.log("firmata attached(this.board)", this.board);//for debug
     // cross extension usage
-    //window.board = this.board;
+    window.board = this.board;
     board._port = Ports_rj;
     //this.board.sensors = Sensors;
     board.menuIconURI = menuIconURI;
@@ -482,8 +488,10 @@ class cBrain {
    * Called by the runtime when user wants to scan for an cBrain peripheral.
    */
   scan() {
+    console.log("scanning cBrain port to connect..");
     this.comm.getDeviceList().then(result => {
       this.runtime.emit(this.runtime.constructor.PERIPHERAL_LIST_UPDATE, result);
+      console.log("scaned cBrain ports: ", result);
     });
   }
 
@@ -3178,7 +3186,7 @@ while (${sertype}.available()) {
     return [`String(${te}).substring(${fr}-1, ${to})`, 0];
   }
 
-  async reset() { // todo: how to reset j5?
+  reset() { // todo: how to reset j5?
     //console.log('isConnected?',this.isConnected());
     if (this.isConnected()) {
       board.reset();
