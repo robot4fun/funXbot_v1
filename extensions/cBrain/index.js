@@ -431,8 +431,8 @@ class cBrain {
     window.board = this.board;
     board._port = Ports_rj;
     //this.board.sensors = Sensors;
-    board.menuIconURI = menuIconURI;
-    board.blockIconURI = blockIconURI;
+    //board.menuIconURI = menuIconURI;
+    //board.blockIconURI = blockIconURI;
     board.pin2firmata = pin2firmata;
     board.timeout = timeout;
     //board.servo = {};

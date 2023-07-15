@@ -1,6 +1,5 @@
 {
     "name": "cSensors",
     "type": "arduino",
-    "image": "sensor.png",
-    "example": "Arduino"
+    "image": "sensor.png"
 }

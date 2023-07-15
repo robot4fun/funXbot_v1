@@ -8,6 +8,8 @@ const ArgumentType = Scratch.ArgumentType;
 const BlockType = Scratch.BlockType;
 const formatMessage = Scratch.formatMessage;
 const log = Scratch.log;
+const menuIconURI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAAXNSR0IArs4c6QAABXdJREFUaEPtV11MU2cYfr7T9gxoS6WFSrVTUYYuUwRHoc5VRaoyAeOGMTGOaebGdrFlu3HJrnaxiy3bLraZzMVli9No/FkyJ8pACZQ/J4XpDMsStcqPBVdoaYEKtD09ZymZmYWenlKKLqbn9rzv877P87zn+95D8IQ85AnhgTiR/5uTcUfijsyRAvHRmiNho4aNOxK1dHOUGHdkjoSNGjbuSNTSzVFiWEc2Vnak+l3+neJxaicFKOaoB15YFrBRNDEn5I0fvPChwRmuPi8R42vtucwQOcUxyAQe75ZMRHCyCvbdphP5x/nIhCSycfflFRilqzkGGY/aBd5GCRhOw2xp/EHfEComNJEd5iPcBLU3VIKE5qBSMZMWMQyB3S4Gx0VPlxBArfaBooAAjMMuhs8XelBIAveH6ee8NSBkWsVpGWWVVUnufk0Xy0D9cHspSj9WrrJDlmjBPWsXvF4vZHIZNNplcI0sR2uzdJJYpI9EwuGZrHEsXmSB027ByLALEpqGOj0dHMmGuU2FkRFRMBwBI11AZVZ/v6Znap1plSsqaqVWh8rGspA+CFbM8yNfdx0dLdVwDk3/5p5esgi5+pdRX6+Fe5QS5ELTHAzr+9B9swrdli74/f6gnCSZFIVbt6LzLx16u+mgd3QyU3LptL5akMjnR49KvcNamwiQmhpk4FhAp+tEe9NpTExM8DapSFHAsOVNnD+nESRSoLfDevsY+nqtYWM3l5XjtysFcLtFWGe4D3myH/0T/tKDBzZfiIjIUm2qjaYgPXxIBa3WjYG7h2C3DQo2uDI3G0Mju9HfH6ziw4nJCj+ylp1DR2uLIF5CYgLWbnofDfVpqNg3BHU6g2sOtvSj8tKZETn1Yyuey9ai5uxJwaKBAJFYhA0vfYD6ulTe+NU5I+i58TVcIUY0VNLmshJcbXdhz34DAgdNVERqz9VAqVKi8WLIEy9ks4YtlWhuXs5LpEBvRXvjV2BZNiJxcnS58Hg8KCkvmzzVoiJysaoGKcoUNF40RVQ0UMm4fS/q6rJ54/V6K9pMX4KL8MxenZczeRgU79gWPZGfjl3AipUZqDlbFRERsVgM/ab30NK8gDd+VbYbN69/Ak+Yg+Ph5MLiIvTcseGVPSXREzl2RAm1egyWzs8wPjYuSGZp1jKIEl/HrZsJvLFKJYPFC0/hmvmqIF7gY39+XSUuty7C/rcdUMxjZzJatVKaE9koFtJfz8vh9VJ48YVmNNT8ErZwkjQJ64yvwtSQxXszPwAoMt5Dm+lbuEfdvJiEEOjXG3C7exsGBiTYZByFUuVHD2FKv9hXLHxqhboQFy/xInOpCQ01dWCnXF6BThQp82AwluBKWzbsg2JBpcViDkVGC8xNp+F0DE2LF0vEyM3XYdxXjD87ZUHvE+T+0tozBcJEJleUPs0A6//vZg8gqeczKND34O/eDvTdtcIz4YVUJsWSzAzIU3LR2qKByzllpQhDKUBmQ6ELhDXjzo3bGHYNQ0JLkDY/DfMX5qO7JwOWW1NGlMBPK7kNl47rWgUvRHAcKSzvqGbHSHGoPjQLfFClMkiWM3A4JBgcFMM5FP3iSD/FQqv1IV3jxdh9Efr6aLhcIvi80/c2IsEtuQY5VYfzxoSJACh6q20t0ytqAgfhOREcpBgFEHglCvadupP534VC5F1XN1aY98FBfcOxSIxRK1HDEAIPlcx9rCrv+vTMrl3BG+a/qGH3buMbvz/rc7AHiIcYOQ6RfwBRtxycSFFgWYozEwVzMG373WY+EoGsyH8gwM0gNkZMJmGm/0TNaLRi2cqjwHpMKseeWpxI7DWdHWLckdnpF/vsuCOx13R2iHFHZqdf7LPjjsRe09khxh2ZnX6xz/4HXYAIUbBMBFMAAAAASUVORK5CYII=";
+const blockIconURI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAcCAYAAAAjmez3AAAAAXNSR0IArs4c6QAABUVJREFUWEfdl21MU1cYx//n0tJWKNTKqyIvCgKivJRaZUplEhSdSJxOY4xsui0GMpdlcVu2OP2gyz7ishdfMl2yfdgWMzU4QVcp7wgyreCGSmEqaBlFB6WA7b3ee5eWJQO07S1iQjifz/0/z+885znP/xJMk0WmCQemJwjP8+E0TRdyHDdvqldKJBKZRCLR14SQe45cx1SEZdkvKIoqAiCa6iAAOI7jTlAU9S4hxDYehKYoSkzTHMp0j1Df2A+em1pIalUA8tYGQyajYLfb+y0WS0JoaGjPM0HOnuvF4W86pxbBqGwK34rA1k2hnkE+2m9EY9PAGBBCgNAwBlmrrJDKAPDA8BBBhd4fvWbxc0MHBTNYlW3FDP8RKZ7lcaE0AD09T2uvyFDg0P75nkE+3GfElasjIA6AyCgbFi9qxyPzbRhvGjFoHQTlQ2GmUoHE5CSIxPFouTEHpgfeAVE+PGbPZqDRGGHuboextQ1Wy4CzcwMCA5CQvAgsn4COjgh0m8Tg+RHI5csC8dmBWO9AoqIeI3iWHrdarjgBxi9CCGaFBEG1NAtt7Wm4e0ciuDoLFgwjSFmDP641YMABMG45tJVBSqRoMnGvU4OO9hFtwSA/nrmOY8dZ+Ppy0GbWoKLsPFiWdZugn78fcja8inMlKWBZz+NJJuOQs/oyyn45B4Zh3GpLZTJk5mxEVZUKNE2wa6cUBVuSPFekRHcdxcUs1qz9G7W6oxgcsAo65diEOIREbEd9ndztfsd1XbfejFrdMVj6+gVpR82PxpyYHaivU6Co0BdbNiz2DFKqr8DZ0wbMVDxEY229oEAj/USw+/09OH40EhznuipSKYfU5HI0VF0QrO3YuPOd3fj1dDt2FGRiQ26WZ5Cyiouoq61Dy9VmDPRbvAr2yqY86C5pQdOUy+8SF9rwT/cR9Jjue6W9cnUWKIpCeroa63PWCQe51vg7hgeHvQqWkfUS7t1fD9MD102fmGSDqaMYlr6HXmmnqFMxNzoSCfEJ3oE0NxlgFdgfzref55Gbvw4VVdnOpnS14hNt6Os+AnO3dxXR5qyESCSGSqUSBlKqr8bPP7UhPKwTDdXVgk/NUfZde4pw8ttotz0ikXBIS9WjobJMsLaj/7a//SYuXezHtm0pyM/N9Hy1SnQGFBdzWJNrRkXpYdhtdkEB4xYuwNzYrdDrFB5frc1bzDh/6isMDw0J0o6JnQd5UAFutPijqFCC1/IEvFo/nGrGiZNP4OPDQ5tZjdryMjC0+7feT+6PjKx8lOtVgoymRMphpbYRlRdKQNtptzAz/GZgqTYPNbVL8OQJwesFUuzcJmCOjLYocfFWhIc04HJluUsYZdAsLFmRjdabqejqFD7Zo2OGEDG7CVdqfgNtf3bVFUoF1Muzcet2Ou53eTnZR4M4jio4hMHmrd2ovliOttbboGnaOTNkMhmWLNcgKS0d338XhqEhH0HXZPSmyCga+Rt7UXOpEjdb/oTtsQ2EIpBIJUjTpCMxeRnOnA5Df9//2oItyqcHO1BTP3biisU8UtIeIzCQBnib000SIkVXlwQdRomz5BNdIhGPuHg7wsNtIMTudNaEkuDOXzLcveP7lOV5WTsTBz6e57nZm64O4IN9Rpd5UdSIDXU3vScK5UnbYW8+2RuDnFVK1yAcxz0ihCgddtnQYsVlxx/if9Z5oolN9neqVDkyNArn74XdbjcxDJMql8t7x9wHnuf3AjgIQDrZCbwAPYbjuEMGg+FztVrNjAcRsSz7BiHkyxcQeLIl36Mo6iQhxDkXJt6hk53Wc+pNG5B/AX1l1DuYUMDyAAAAAElFTkSuQmCC";
 
 async function timeout(ms) {
     await new Promise((resolve) => {
@@ -34,8 +36,8 @@ class cSensorsExtension {
             color1: '#4CBFE6',
             color2: '#3C95B2',
             color3: '#3C95B2',
-            //menuIconURI: board.menuIconURI,
-            blockIconURI: board.blockIconURI,
+            menuIconURI: menuIconURI,
+            blockIconURI: blockIconURI,
 
             blocks: [
                 {
@@ -1861,7 +1863,7 @@ uint16_t qtrValues[qtrCount];
     }
 
     ultrasonic(args) {
-        //const pin = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]);
+        //const pin = board.pin2firmata(board._port[parseInt(args.PIN)-1][2]); // if trig echo pins 焊接一起
         const trig = board.pin2firmata(board._port[parseInt(args.PIN) - 1][1]);
         const echo = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
         //board.pinMode(pin, board.MODES.PING_READ);
