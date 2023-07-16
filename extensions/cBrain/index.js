@@ -1,11 +1,9 @@
 /**
  * Created by tony on 2019/8/30
  */
-const Firmata = require('./cBrainFirmata.js');
-//const Firmata = require('./firmata.js');
-//const Board = require('./firmata.js').Board;
+//const Firmata = require('./cBrainFirmata.js');
+const five = window.require('johnny-five');
 const Emitter = require("events");
-window.five = window.require('johnny-five');
 
 const ArgumentType = Scratch.ArgumentType;
 const BlockType = Scratch.BlockType;
@@ -39,12 +37,18 @@ const Sensors = {
   buzzer: 9 //port7[1], pwm
 };
 
-/*
 const wireCommon = gen => {
-    gen.setupCodes_['wire'] = `Wire.begin()`;
+    gen.setupCodes_['wire'] = `
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+    Wire.begin();
+    Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+#elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
+    Fastwire::setup(400, true);
+#endif
+`;
     gen.includes_['wire'] = '#include <Wire.h>\n';
 }
-*/
+
 const mpuCommon = gen => {
   gen.includes_['stdint'] = `#include <stdint.h>`;
   gen.includes_['mpu6050'] = `
@@ -73,7 +77,7 @@ class cBrainIMU:public MPU6050 {
     int16_t pitch;
     int16_t roll;
     int16_t yaw_bias;
-    
+
 }
 cBrainIMU mpu;
 */
@@ -175,17 +179,17 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
     mpu.roll = int(ypr[1] * 180.0/M_PI);
     */
 
-  } else { 
+  } else {
     #ifdef DEBUG
       Serial.println("no valid data is available");
-    #endif    
+    #endif
   }
 
   switch (d) { // imu x-y-z軸與主機不同
     case 1: //yaw
-        if (bias) { 
+        if (bias) {
           _yaw = int(ypr[0] * -180.0/M_PI) - yaw_bias;
-          if ( _yaw < -180 ) { 
+          if ( _yaw < -180 ) {
             _yaw = _yaw + 360;
           } else if ( _yaw > 180 ) {
             _yaw = _yaw -360;
@@ -262,7 +266,7 @@ bool IMUshaked(){
     uint8_t shakeCnt=0;
     uint32_t preT=millis();
 
-    while((millis()-preT)<1500){ 
+    while((millis()-preT)<1500){
       if (abs(mpu6050read(11))>4000 || abs(mpu6050read(22))>4000 || abs(mpu6050read(33))>4000) shakeCnt++;
       // ~0.5G, 1G=8192 in mpu6050
       delay(50);
@@ -319,7 +323,7 @@ bool IMUshaked(){
       mpu.setMotionDetectionDuration(20);
       mpu.setZeroMotionDetectionThreshold(4);
       mpu.setZeroMotionDetectionDuration(1);
-      
+
       #ifdef DEBUG
         Serial.print(F("FF Threshold:	"));
         Serial.println(mpu.getFreefallDetectionThreshold());
@@ -385,7 +389,7 @@ class TransportStub extends Emitter {
   }
 
   write(buffer) {
-    //console.log("transport write", buffer);//for debug
+    console.log("transport write", buffer);//for debug
     // Tests are written to work with arrays not buffers
     // this shouldn't impact the data, just the container
     // This also should be changed in future test rewrites
@@ -422,19 +426,23 @@ class cBrain {
     this.onclose = this.onclose.bind(this);
     this.decoder = new TextDecoder();
     this.lineBuffer = '';
-    const firmata = new Firmata();
+    //const firmata = new Firmata();
     this.trans = new TransportStub();
-    this.board = new firmata.Board(this.trans);
-    window.board = new firmata.Board(this.trans);
+    //this.board = new firmata.Board(this.trans);
+    this.board = new five.Board({
+      io: this.trans,
+      //id: 'cBrain1',
+      //port: this.trans,
+      debug: false,
+      repl: false
+    });
     //console.log("firmata attached(this.board)", this.board);//for debug
     // cross extension usage
+    this.board._port = Ports_rj;
+    //this.board._sensors = Sensors;
+    this.board.pin2firmata = pin2firmata;
+    this.board.timeout = timeout;
     window.board = this.board;
-    board._port = Ports_rj;
-    //this.board.sensors = Sensors;
-    //board.menuIconURI = menuIconURI;
-    //board.blockIconURI = blockIconURI;
-    board.pin2firmata = pin2firmata;
-    board.timeout = timeout;
     //board.servo = {};
     //board.matrix = {};
     console.log("firmata attached(window.board)", board);//for debug
@@ -442,23 +450,23 @@ class cBrain {
 
     this.trans.on("write", data => {
       if (this.session) this.session.write(data);
-      //console.log("session write", data);//for debug
+      console.log("session write", data);//for debug
     });
 
-    board.once('ready', () => { // when cBrainFirmata firmware loaded
+    this.board.once('ready', () => { // when cBrainFirmata firmware loaded
       console.log("firmware ready", board);//for debug
       // ToDo: j5 allows muti-boards by use of Board.id
       // will give a new id when call a new Board
       // but module blocks such like Servo still use old j5board. why?
       //if (!window.j5board){
-      window.j5board = new five.Board({
+      /*window.j5board = new five.Board({
         io: board,
         //id: 'cBrain1',
         debug: false,
         repl: false
       });
       console.log("j5 attached", j5board);//for debug
-      //}
+      //}*/
       vm.emit('showAlert', { msg: 'online', type: 'info' });
     });
     /*
@@ -472,7 +480,7 @@ class cBrain {
   onmessage(data) {
     board.transport.emit('data', data);
     //this.board.transport.emit('data', data);
-    //console.log("message from cBrainFirmata..", data);//for debug
+    console.log("message from cBrainFirmata..", data);//for debug
     //console.log("Firmata status..", board);//for debug
   }
 
@@ -507,6 +515,7 @@ class cBrain {
       this.session = sess;
       this.session.onmessage = this.onmessage;
       this.session.onclose = this.onclose;
+      //console.log(this.runtime.getBoardName());
       console.log("cBrain connected");//for debug
       // notify gui connected
       this.runtime.emit(this.runtime.constructor.PERIPHERAL_CONNECTED);
@@ -585,14 +594,14 @@ class cBrain {
                             //     A LOOP block is like a CONDITIONAL block with two differences:
                             //     - the block is assumed to have exactly one child branch, and
                             //     - each time a child branch finishes, the loop block is called again.
-        
+
                             branchCount: 2,
                             // Required for CONDITIONAL blocks, ignored for others: the number of
                             // child branches this block controls. An "if" or "repeat" block would
                             // specify a branch count of 1; an "if-else" block would specify a
                             // branch count of 2.
                             // TODO: should we support dynamic branch count for "switch"-likes?
-        
+
                             isTerminal: true,
                             message2: 'loop',
                             text: ['cBrain Setup', 'loop'],
@@ -600,15 +609,15 @@ class cBrain {
                             func: 'noop'
                             // Optional: the function implementing this block.
                             // If absent, assume `func` is the same as `opcode`.
-        
+
                         },
                         {
                             opcode: 'serialreadline',
                             blockType: BlockType.CONDITIONAL,
-        
+
                             branchCount: 1,
                             isTerminal: false,
-        
+
                             text: formatMessage({
                                 id: 'arduino.serialreadline',
                                 default: '[SERIAL] Readline'
@@ -631,18 +640,18 @@ class cBrain {
                                       //STRING: 'string', //String value with text field
                                       //MATRIX: 'matrix', //String value with matrix field
                                       //NOTE: 'note' //MIDI note number with note picker (piano) field
-        
+
                                     menu: 'serialtype',
                                     defaultValue: 'Serial'
                                 }
                             },
                             func: 'noop'
                         },
-        
+
                         {
                             opcode: 'softwareserial',
                             blockType: BlockType.COMMAND,
-        
+
                             text: formatMessage({
                                 id: 'arduino.softwareserial',
                                 default: 'Software Serial TX[TX] RX[RX] [BAUD]'
@@ -668,7 +677,7 @@ class cBrain {
                         {
                             opcode: 'softwareserialprintln',
                             blockType: BlockType.COMMAND,
-        
+
                             text: formatMessage({
                                 id: 'arduino.softwareserialprintln',
                                 default: 'Software Serial Println [TEXT]'
@@ -685,7 +694,7 @@ class cBrain {
                         {
                             opcode: 'pinmode',
                             blockType: BlockType.COMMAND,
-        
+
                             text: formatMessage({
                                 id: 'arduino.pinmode',
                                 default: 'Pin Mode [PIN] [MODE]'
@@ -707,7 +716,7 @@ class cBrain {
                         {
                             opcode: 'digitalwrite',
                             blockType: BlockType.COMMAND,
-        
+
                             text: formatMessage({
                                 id: 'arduino.digitalwrite',
                                 default: 'Digital Write [PIN] [VALUE]'
@@ -729,7 +738,7 @@ class cBrain {
                         {
                             opcode: 'analogwrite',
                             blockType: BlockType.COMMAND,
-        
+
                             text: formatMessage({
                                 id: 'arduino.analogwrite',
                                 default: 'Analog Write [PIN] [VALUE]'
@@ -750,7 +759,7 @@ class cBrain {
                         {
                             opcode: 'digitalread',
                             blockType: BlockType.BOOLEAN,
-        
+
                             text: formatMessage({
                                 id: 'arduino.digitalread',
                                 default: 'Digital Read [PIN]'
@@ -767,7 +776,7 @@ class cBrain {
                         {
                             opcode: 'analogread',
                             blockType: BlockType.REPORTER,
-        
+
                             text: formatMessage({
                                 id: 'arduino.analogread',
                                 default: 'Analog Read [PIN]'
@@ -2068,7 +2077,7 @@ class cBrain {
   }
 
   getSound(args) {
-    const pin = board.pin2firmata(Sensors.sound, 1);// 1: in firmata.js, analogPin with no "A"
+    const pin = pin2firmata(Sensors.sound, 1);// 1: in firmata.js, analogPin with no "A"
     // in Firmata.js, all analog pins are set to board.MODES.ANALOG (analog input) by default.
     return new Promise(resolve => {
       board.analogRead(pin, ret => {
@@ -2085,7 +2094,7 @@ class cBrain {
   }
 
   getBrightness(args) {
-    const pin = board.pin2firmata(Sensors.light, 1);
+    const pin = pin2firmata(Sensors.light, 1);
     return new Promise(resolve => {
       board.analogRead(pin, ret => {
         board.reportAnalogPin(pin, 0);
@@ -2101,7 +2110,7 @@ class cBrain {
   }
 
   getSlider(args) {
-    const pin = board.pin2firmata(Sensors.slider, 1);
+    const pin = pin2firmata(Sensors.slider, 1);
     return new Promise(resolve => {
       board.analogRead(pin, ret => {
         board.reportAnalogPin(pin, 0);
@@ -3141,9 +3150,9 @@ while (${sertype}.available()) {
     //console.log('value', typeof value, value);
     const typo = gen.valueToCode(block, 'TYPO');
     const _scope = gen.valueToCode(block, 'SCOPE');
-    
+
     //gen.includes_['stdint'] = `#include <stdint.h>`; //already with-in
-    
+
     if (_scope == 'global') {
       if (value == '""') { gen.definitions_['var' + va] = `${_type} ${typo} ${va};`;
       } else { gen.definitions_['var' + va] = `${_type} ${typo} ${va} = ${value};`; }
