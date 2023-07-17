@@ -2,7 +2,8 @@
  * Created by tony on 2019/8/30
  */
 //const Firmata = require('./cBrainFirmata.js');
-const five = window.require('johnny-five');
+//const five = window.require('johnny-five');
+const { Board } = window.require('johnny-five');
 const Emitter = require("events");
 
 const ArgumentType = Scratch.ArgumentType;
@@ -414,10 +415,17 @@ class cBrain {
     * Store this for later communication with the Scratch VM runtime.
     * If this extension is running in a sandbox then `runtime` is an async proxy object.
     */
+    /**
+    * The Scratch 3.0 runtime used to trigger the green flag button.
+    * @type {Runtime}
+    * @private
+    */
     this.runtime = runtime;
+    this._ioport = null;
     // communication related
     // 其中comm是kittenblock的通信io实体，session是通信上下文，具体在打开端口后进行实例化。
     this.comm = runtime.ioDevices.comm;
+    //this.comm = new runtime.ioDevices.comm('cBrain', this.runtime);
     this.session = null;
     this.runtime.registerPeripheralExtension('cBrain', this);
     this.runtime.on('PROJECT_STOP_ALL', this.stopAll.bind(this));
@@ -427,9 +435,9 @@ class cBrain {
     this.decoder = new TextDecoder();
     this.lineBuffer = '';
     //const firmata = new Firmata();
-    this.trans = new TransportStub();
+    //this.trans = new TransportStub();
     //this.board = new firmata.Board(this.trans);
-    this.board = new five.Board({
+    /*this.board = new five.Board({
       io: this.trans,
       //id: 'cBrain1',
       //port: this.trans,
@@ -459,14 +467,14 @@ class cBrain {
       // will give a new id when call a new Board
       // but module blocks such like Servo still use old j5board. why?
       //if (!window.j5board){
-      /*window.j5board = new five.Board({
+      window.j5board = new five.Board({
         io: board,
         //id: 'cBrain1',
         debug: false,
         repl: false
       });
       console.log("j5 attached", j5board);//for debug
-      //}*/
+      //}
       vm.emit('showAlert', { msg: 'online', type: 'info' });
     });
     /*
@@ -478,8 +486,9 @@ class cBrain {
   }
 
   onmessage(data) {
-    board.transport.emit('data', data);
+    //board.transport.emit('data', data);
     //this.board.transport.emit('data', data);
+    this.board.emit('data', data);
     console.log("message from cBrainFirmata..", data);//for debug
     //console.log("Firmata status..", board);//for debug
   }
@@ -499,12 +508,15 @@ class cBrain {
     console.log("scanning cBrain port to connect..");
     this.comm.getDeviceList().then(result => {
       this.runtime.emit(this.runtime.constructor.PERIPHERAL_LIST_UPDATE, result);
-      console.log("scaned cBrain ports: ", result);
+
+      this._ioport = result;
+      console.log("scaned cBrain ports: ", this._ioport);
     });
   }
 
   stopAll() {
     this.arduinoStarted = false;
+    this._ioport = null;
   }
   /**
    * Called by the runtime when user wants to connect to a certain cBrain peripheral.
@@ -519,6 +531,20 @@ class cBrain {
       console.log("cBrain connected");//for debug
       // notify gui connected
       this.runtime.emit(this.runtime.constructor.PERIPHERAL_CONNECTED);
+
+      if (!this.board){
+        this.board = new Board({
+          port: this._ioport,
+          debug: false,
+          repl: false
+        });
+        console.log("j5 attached", this.board);
+      }
+      this.board.once('ready', () => {
+        console.log("firmware ready", this.board);//for debug
+        vm.emit('showAlert', { msg: 'online', type: 'info' });
+      });
+  
     }).catch(err => {
       log.warn('connect peripheral fail', err);
     });
@@ -526,6 +552,7 @@ class cBrain {
 
   disconnect() {
     this.session.close();
+    this.reset();
     console.log("cBrain disconnected");//for debug
   }
 
