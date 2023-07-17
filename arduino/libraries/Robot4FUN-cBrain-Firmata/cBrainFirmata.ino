@@ -44,6 +44,10 @@
 //  DHT_MESSAGE is for use with DHT sensor
 #define DHT_MESSAGE              0x74
 
+#define TOTAL_ANALOG_PINS       8  // include A6, A7
+#define TOTAL_PINS              22 // 14 digital + 8 analog
+#define IS_PIN_ANALOG(p)        ((p) >= 14 && (p) < 14 + TOTAL_ANALOG_PINS)
+
 /*==============================================================================
  * GLOBAL VARIABLES
  *============================================================================*/
