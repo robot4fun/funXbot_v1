@@ -71,7 +71,7 @@ class cBrainIMU:public MPU6050 {
     int16_t pitch;
     int16_t roll;
     int16_t yaw_bias;
-    
+
 }
 cBrainIMU mpu;
 */
@@ -173,17 +173,17 @@ int16_t mpu6050read(uint8_t d, boolean bias=true){
     mpu.roll = int(ypr[1] * 180.0/M_PI);
     */
 
-  } else { 
+  } else {
     #ifdef DEBUG
       Serial.println("no valid data is available");
-    #endif    
+    #endif
   }
 
   switch (d) { // imu x-y-z軸與主機不同
     case 1: //yaw
-        if (bias) { 
+        if (bias) {
           _yaw = int(ypr[0] * -180.0/M_PI) - yaw_bias;
-          if ( _yaw < -180 ) { 
+          if ( _yaw < -180 ) {
             _yaw = _yaw + 360;
           } else if ( _yaw > 180 ) {
             _yaw = _yaw -360;
@@ -260,7 +260,7 @@ bool IMUshaked(){
     uint8_t shakeCnt=0;
     uint32_t preT=millis();
 
-    while((millis()-preT)<1500){ 
+    while((millis()-preT)<1500){
       if (abs(mpu6050read(11))>4000 || abs(mpu6050read(22))>4000 || abs(mpu6050read(33))>4000) shakeCnt++;
       // ~0.5G, 1G=8192 in mpu6050
       delay(50);
@@ -317,7 +317,7 @@ bool IMUshaked(){
       mpu.setMotionDetectionDuration(20);
       mpu.setZeroMotionDetectionThreshold(4);
       mpu.setZeroMotionDetectionDuration(1);
-      
+
       #ifdef DEBUG
         Serial.print(F("FF Threshold:	"));
         Serial.println(mpu.getFreefallDetectionThreshold());
@@ -405,13 +405,14 @@ class TransportStub extends Emitter {
 class cBrain {
   constructor(runtime) {
     /**
-    * Store this for later communication with the Scratch VM runtime.
+    * Store this for later communication with the Scratch VM runtime used to trigger the green flag button..
     * If this extension is running in a sandbox then `runtime` is an async proxy object.
     */
     this.runtime = runtime;
     // communication related
     // 其中comm是kittenblock的通信io实体，session是通信上下文，具体在打开端口后进行实例化。
     this.comm = runtime.ioDevices.comm;
+    //this.comm = new runtime.ioDevices.comm('cBrain', this.runtime);
     this.session = null;
     this.runtime.registerPeripheralExtension('cBrain', this);
     this.runtime.on('PROJECT_STOP_ALL', this.stopAll.bind(this));
@@ -420,9 +421,10 @@ class cBrain {
     this.onclose = this.onclose.bind(this);
     this.decoder = new TextDecoder();
     this.lineBuffer = '';
-    const firmata = new Firmata();
+    //const firmata = new Firmata();
     this.trans = new TransportStub();
-    this.board = new firmata.Board(this.trans);
+    //this.board = new firmata.Board(this.trans);
+    this.board = new Firmata(this.trans);
     //window.board = new firmata.Board(this.trans);
     //console.log("firmata attached(this.board)", this.board);//for debug
     // cross extension usage
@@ -583,14 +585,14 @@ class cBrain {
                             //     A LOOP block is like a CONDITIONAL block with two differences:
                             //     - the block is assumed to have exactly one child branch, and
                             //     - each time a child branch finishes, the loop block is called again.
-        
+
                             branchCount: 2,
                             // Required for CONDITIONAL blocks, ignored for others: the number of
                             // child branches this block controls. An "if" or "repeat" block would
                             // specify a branch count of 1; an "if-else" block would specify a
                             // branch count of 2.
                             // TODO: should we support dynamic branch count for "switch"-likes?
-        
+
                             isTerminal: true,
                             message2: 'loop',
                             text: ['cBrain Setup', 'loop'],
@@ -598,15 +600,15 @@ class cBrain {
                             func: 'noop'
                             // Optional: the function implementing this block.
                             // If absent, assume `func` is the same as `opcode`.
-        
+
                         },
                         {
                             opcode: 'serialreadline',
                             blockType: BlockType.CONDITIONAL,
-        
+
                             branchCount: 1,
                             isTerminal: false,
-        
+
                             text: formatMessage({
                                 id: 'arduino.serialreadline',
                                 default: '[SERIAL] Readline'
@@ -629,18 +631,18 @@ class cBrain {
                                       //STRING: 'string', //String value with text field
                                       //MATRIX: 'matrix', //String value with matrix field
                                       //NOTE: 'note' //MIDI note number with note picker (piano) field
-        
+
                                     menu: 'serialtype',
                                     defaultValue: 'Serial'
                                 }
                             },
                             func: 'noop'
                         },
-        
+
                         {
                             opcode: 'softwareserial',
                             blockType: BlockType.COMMAND,
-        
+
                             text: formatMessage({
                                 id: 'arduino.softwareserial',
                                 default: 'Software Serial TX[TX] RX[RX] [BAUD]'
@@ -666,7 +668,7 @@ class cBrain {
                         {
                             opcode: 'softwareserialprintln',
                             blockType: BlockType.COMMAND,
-        
+
                             text: formatMessage({
                                 id: 'arduino.softwareserialprintln',
                                 default: 'Software Serial Println [TEXT]'
@@ -683,7 +685,7 @@ class cBrain {
                         {
                             opcode: 'pinmode',
                             blockType: BlockType.COMMAND,
-        
+
                             text: formatMessage({
                                 id: 'arduino.pinmode',
                                 default: 'Pin Mode [PIN] [MODE]'
@@ -705,7 +707,7 @@ class cBrain {
                         {
                             opcode: 'digitalwrite',
                             blockType: BlockType.COMMAND,
-        
+
                             text: formatMessage({
                                 id: 'arduino.digitalwrite',
                                 default: 'Digital Write [PIN] [VALUE]'
@@ -727,7 +729,7 @@ class cBrain {
                         {
                             opcode: 'analogwrite',
                             blockType: BlockType.COMMAND,
-        
+
                             text: formatMessage({
                                 id: 'arduino.analogwrite',
                                 default: 'Analog Write [PIN] [VALUE]'
@@ -748,7 +750,7 @@ class cBrain {
                         {
                             opcode: 'digitalread',
                             blockType: BlockType.BOOLEAN,
-        
+
                             text: formatMessage({
                                 id: 'arduino.digitalread',
                                 default: 'Digital Read [PIN]'
@@ -765,7 +767,7 @@ class cBrain {
                         {
                             opcode: 'analogread',
                             blockType: BlockType.REPORTER,
-        
+
                             text: formatMessage({
                                 id: 'arduino.analogread',
                                 default: 'Analog Read [PIN]'
@@ -3139,9 +3141,9 @@ while (${sertype}.available()) {
     //console.log('value', typeof value, value);
     const typo = gen.valueToCode(block, 'TYPO');
     const _scope = gen.valueToCode(block, 'SCOPE');
-    
+
     //gen.includes_['stdint'] = `#include <stdint.h>`; //already with-in
-    
+
     if (_scope == 'global') {
       if (value == '""') { gen.definitions_['var' + va] = `${_type} ${typo} ${va};`;
       } else { gen.definitions_['var' + va] = `${_type} ${typo} ${va} = ${value};`; }
