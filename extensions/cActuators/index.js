@@ -74,7 +74,7 @@ class cActuatorsExtension {
             PIN: {
               type: ArgumentType.STRING,
               defaultValue: '5',
-              menu: 'sPort' // todo-> 改接A端線, 跟伺服馬達相同
+              menu: 'dPort3' // todo-> 改接A端線, 跟伺服馬達相同
             },
             SPEED: {
               type: ArgumentType.SLIDER,
