@@ -421,22 +421,24 @@ class cBrain {
     this.onclose = this.onclose.bind(this);
     this.decoder = new TextDecoder();
     this.lineBuffer = '';
-    //const firmata = new Firmata();
+    const firmata = new Firmata();
     this.trans = new TransportStub();
-    //this.board = new firmata.Board(this.trans);
-    this.board = new Firmata(this.trans);
-    //window.board = new firmata.Board(this.trans);
+    this.board = new firmata.Board(this.trans);
+    //this.board = new Firmata(this.trans).Board;
     //console.log("firmata attached(this.board)", this.board);//for debug
+    
     // cross extension usage
     window.board = this.board;
     board._port = Ports_rj;
-    //this.board.sensors = Sensors;
+    //board.sensors = Sensors;
     board.pin2firmata = pin2firmata;
     board.timeout = timeout;
     //board.servo = {};
     //board.matrix = {};
     console.log("firmata attached(window.board)", board);//for debug
     //window.five = window.require('johnny-five');
+
+    this.firstrun = true;
 
     this.trans.on("write", data => {
       if (this.session) this.session.write(data);
@@ -468,8 +470,7 @@ class cBrain {
   }
 
   onmessage(data) {
-    board.transport.emit('data', data);
-    //this.board.transport.emit('data', data);
+    this.board.transport.emit('data', data);
     //console.log("message from cBrainFirmata..", data);//for debug
     //console.log("Firmata status..", board);//for debug
   }
@@ -477,8 +478,8 @@ class cBrain {
   onclose() {
     this.session = null;
     console.log("cBrain closed");//for debug
-    console.log('window.board:', board);
-    //console.log('window.j5board:',j5board);
+    //console.log('window.board:', board);
+    console.log('window.j5board:',j5board);
   }
 
   // method required by vm runtime
@@ -497,6 +498,12 @@ class cBrain {
     this.arduinoStarted = false;
     this.reset();
   }
+
+  ready() {
+    this.board.isReady = true;
+    this.board.emit("ready");    
+  }
+
   /**
    * Called by the runtime when user wants to connect to a certain cBrain peripheral.
    * id - the id of the peripheral to connect to.
@@ -506,9 +513,19 @@ class cBrain {
       this.session = sess;
       this.session.onmessage = this.onmessage;
       this.session.onclose = this.onclose;
-      console.log("cBrain connected");//for debug
       // notify gui connected
       this.runtime.emit(this.runtime.constructor.PERIPHERAL_CONNECTED);
+
+      console.log("cBrain connected");//for debug
+      if(!this.firstrun){
+        console.log('window.board:', board);
+        console.log('window.j5board:',j5board);
+        /*board.queryCapabilities(() => {
+          board.queryAnalogMapping(this.ready);
+        });*/
+      }
+      this.firstrun = false;
+
     }).catch(err => {
       log.warn('connect peripheral fail', err);
     });
@@ -518,6 +535,8 @@ class cBrain {
     this.session.close();
     this.reset();
     console.log("cBrain disconnected");//for debug
+    console.log('window.board:', board);
+    //console.log('window.j5board:',j5board);
   }
 
   isConnected() {
