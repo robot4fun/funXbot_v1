@@ -447,10 +447,10 @@ class cActuatorsExtension {
     }
     //console.log('pin=',typeof pin,pin);
     // cBrainFirmata allows controlling servos from analog pins..
-    // but actually only pwm pins work. why?
-    if (pin >= 14) {
+    // but actually only pwm pins work. why?  --> already solved !!
+    /*if (pin >= 14) {
       return Promise.reject(`servo not allowed at port ${args.PIN} for online mode`);
-    };
+    };*/
     const max = parseInt(args.MAX, 10);
     /*
     // use board.servo for cBrain.reset block
@@ -541,9 +541,9 @@ class cActuatorsExtension {
     } else {
       pin = board.pin2firmata(board._port[pin - 1][2]);
     }
-    if (pin >= 14) {
+    /*if (pin >= 14) {
       return Promise.reject(`servo not allowed at ${args.PIN} for online mode`);
-    };
+    };*/
     const max = parseInt(args.MAX, 10);
     //if (!board.servo[pin] || board.servo[pin].pin != pin){
     if (board.pins[pin].mode != board.MODES.SERVO) {
@@ -595,10 +595,10 @@ class cActuatorsExtension {
       pin = board.pin2firmata(board._port[pin - 1][1]);
     }
     // cBrainFirmata allows controlling servos from analog pins..
-    // but actually only digital pins work
-    if (pin >= 14) {
+    // but actually only digital pins work --> already solved !!
+    /*if (pin >= 14) {
       return Promise.reject(`servo not allowed at ${args.PIN} for online mode`);
-    };
+    };*/
     /*
     console.log('before call new, board.servo=', board.servo);
     if (!board.servo[pin] || board.servo[pin].pin != pin){

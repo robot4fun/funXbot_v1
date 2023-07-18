@@ -21,6 +21,9 @@
   License as published by the Free Software Foundation; either
   version 2.1 of the License, or (at your option) any later version.
 */
+
+/* Last updated July 17th, 2023 by tonyet */
+
 #include <Servo.h>
 #include <Wire.h>
 #include <Firmata.h>
@@ -34,19 +37,24 @@
 #define I2C_STOP_READING B00011000
 #define I2C_READ_WRITE_MODE_MASK B00011000
 #define I2C_10BIT_ADDRESS_MODE_MASK B00100000
+#define I2C_END_TX_MASK             B01000000
+#define I2C_STOP_TX                 1
+#define I2C_RESTART_TX              0
+#define I2C_MAX_QUERIES             8
+#define I2C_REGISTER_NOT_SPECIFIED  -1
 
-#define MAX_QUERIES 8
-#define MINIMUM_SAMPLING_INTERVAL 10
+// the minimum interval for sampling analog input
+#define MINIMUM_SAMPLING_INTERVAL 1
 
-#define REGISTER_NOT_SPECIFIED -1
 #define PING_READ                0x75
 // PING_READ is for use with HCSR04 and similar "ultrasonic ping" components
-//  DHT_MESSAGE is for use with DHT sensor
+// DHT_MESSAGE is for use with DHT sensor
 #define DHT_MESSAGE              0x74
 
 #define TOTAL_ANALOG_PINS       8  // include A6, A7
 #define TOTAL_PINS              22 // 14 digital + 8 analog
 #define IS_PIN_ANALOG(p)        ((p) >= 14 && (p) < 14 + TOTAL_ANALOG_PINS)
+#define IS_PIN_SERVO(p)         IS_PIN_DIGITAL(p)
 
 /*==============================================================================
  * GLOBAL VARIABLES
@@ -77,7 +85,7 @@ struct i2c_device_info {
 };
 
 // for i2c read continuous more
-i2c_device_info query[MAX_QUERIES];
+i2c_device_info query[I2C_MAX_QUERIES];
 
 byte i2cRxData[32];
 boolean isI2CEnabled = false;
@@ -97,7 +105,7 @@ void readAndReportData(byte address, int theRegister, byte numBytes) {
   // allow I2C requests that don't require a register read
   // for example, some devices using an interrupt pin to signify new data available
   // do not always require the register read so upon interrupt you call Wire.requestFrom()
-  if (theRegister != REGISTER_NOT_SPECIFIED) {
+  if (theRegister != I2C_REGISTER_NOT_SPECIFIED) {
     Wire.beginTransmission(address);
     Wire.write((byte)theRegister);
     Wire.endTransmission();
@@ -351,14 +359,14 @@ void sysexCallback(byte command, byte argc, byte *argv) {
             data = argv[4] + (argv[5] << 7);  // bytes to read
           } else {
             // a slave register is NOT specified
-            slaveRegister = (int)REGISTER_NOT_SPECIFIED;
+            slaveRegister = (int)I2C_REGISTER_NOT_SPECIFIED;
             data = argv[2] + (argv[3] << 7);  // bytes to read
           }
 
           if (mode == I2C_READ) {
             readAndReportData(slaveAddress, slaveRegister, data);
           } else {
-            if ((queryIndex + 1) >= MAX_QUERIES) {
+            if ((queryIndex + 1) >= I2C_MAX_QUERIES) {
               Firmata.sendString("too many queries");
               break;
             }
@@ -389,7 +397,7 @@ void sysexCallback(byte command, byte argc, byte *argv) {
             }
 
             for (byte i = queryIndexToSkip; i < queryIndex + 1; i++) {
-              if (i < MAX_QUERIES) {
+              if (i < I2C_MAX_QUERIES) {
                 query[i].addr = query[i + 1].addr;
                 query[i].reg = query[i + 1].reg;
                 query[i].bytes = query[i + 1].bytes;
