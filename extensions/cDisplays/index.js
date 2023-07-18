@@ -579,7 +579,7 @@ class cDisplaysExtension {
                 '---',
             ],
             menus: {
-                dPort: ['1', '2', '3', '5', '6', '7', '8'],
+                dPort: ['1', '2', '5', '6', '7', '8'],
                 dPort3: ['5', '6', '7'/*,'8'*/],
                 lr: ['left', 'right'],
                 '#face8x16list': [
