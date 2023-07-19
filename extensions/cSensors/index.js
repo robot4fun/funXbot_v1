@@ -1192,15 +1192,14 @@ int whichkey(int sensorValue) {
         return [`analogRead(${pin})`, gen.ORDER_ATOMIC];
     }
 
-    sensorDigit(args) {
+    async sensorDigit(args) {
         const port = parseInt(args.PORT);
         let pin = parseInt(args.PIN);
         if (port) {
             pin = board.pin2firmata(board._port[port - 1][pin]);
         } else {
             pin = board.pin2firmata(board._port[pin - 1][2]);
-        }
-        //const pin = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
+        }        
         if (board.pins[pin].mode != board.MODES.INPUT) {
             //vm.emit('showAlert', {msg: 'Wrong PinMode defined'});
             board.pinMode(pin, board.MODES.INPUT);
@@ -1212,12 +1211,15 @@ int whichkey(int sensorValue) {
                 resolve(ret);
             });
         });*/
-
+        // digitalRead執行後會開始監聽digital-read- , pin value變化即會回報並存在pins.value內
         if (board.eventNames().indexOf(`digital-read-${pin}`) === -1) { // just call once
-            board.digitalRead(pin, value => {   //只要call一次,即使沒執行此block仍會一直回報..
-                //console.log('pin value=', value); // let the data being fresh
+            board.digitalRead(pin, value => {   //只要call一次,當值改變即使沒執行此block仍會一直回報..
+                //console.log('pin value=', value);
             });
+            //console.log('old pin value=', board.pins[pin].value);
+            await timeout(75);    // let the 1st data being fresh
         }
+        //console.log('now pin value=', board.pins[pin].value);
         if (args.SENSOR && args.SENSOR == 'rir') {
             return board.pins[pin].value ? 0 : 1;//RIR is normal HIGH
         } else {
@@ -1245,7 +1247,7 @@ int whichkey(int sensorValue) {
         }
     }
 
-    tracers2(args) {
+    async tracers2(args) {
         let se_rir = [];
         const pin1 = board.pin2firmata(board._port[parseInt(args.PA) - 1][1]);
         const pin2 = board.pin2firmata(board._port[parseInt(args.PA) - 1][2]);
@@ -1259,9 +1261,11 @@ int whichkey(int sensorValue) {
 
         if (board.eventNames().indexOf(`digital-read-${pin1}`) === -1) { // just call once
             board.digitalRead(pin1, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
         if (board.eventNames().indexOf(`digital-read-${pin2}`) === -1) { // just call once
             board.digitalRead(pin2, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
         // RIR HIGH: white line; LOW: black line
         se_rir[0] = board.pins[pin1].value;//? 0:1;
@@ -1307,7 +1311,7 @@ int whichkey(int sensorValue) {
         }
     }
 
-    tracers2array(args) {
+    async tracers2array(args) {
         let se_rir = [];
         const pin1 = board.pin2firmata(board._port[parseInt(args.PA) - 1][1]);
         const pin2 = board.pin2firmata(board._port[parseInt(args.PA) - 1][2]);
@@ -1321,9 +1325,11 @@ int whichkey(int sensorValue) {
 
         if (board.eventNames().indexOf(`digital-read-${pin1}`) === -1) { // just call once
             board.digitalRead(pin1, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
         if (board.eventNames().indexOf(`digital-read-${pin2}`) === -1) { // just call once
             board.digitalRead(pin2, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
 
         se_rir[0] = board.pins[pin1].value;//? 0:1;
@@ -1369,7 +1375,7 @@ uint8_t readline2sens(uint8_t p1, uint8_t p2) {
 
     }
 
-    tracers3(args) {
+    async tracers3(args) {
         const pin1 = board.pin2firmata(board._port[parseInt(args.PA) - 1][0]);
         const pin2 = board.pin2firmata(board._port[parseInt(args.PA) - 1][1]);
         const pin3 = board.pin2firmata(board._port[parseInt(args.PA) - 1][2]);
@@ -1387,12 +1393,15 @@ uint8_t readline2sens(uint8_t p1, uint8_t p2) {
 
         if (board.eventNames().indexOf(`digital-read-${pin1}`) === -1) { // just call once
             board.digitalRead(pin1, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
         if (board.eventNames().indexOf(`digital-read-${pin2}`) === -1) { // just call once
             board.digitalRead(pin2, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
         if (board.eventNames().indexOf(`digital-read-${pin3}`) === -1) { // just call once
             board.digitalRead(pin3, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
         se_rir[0] = board.pins[pin1].value;//? 0:1;
         se_rir[1] = board.pins[pin2].value;//? 0:1;
@@ -1464,7 +1473,7 @@ uint8_t readline2sens(uint8_t p1, uint8_t p2) {
         }
     }
 
-    tracers3array(args) {
+    async tracers3array(args) {
         let se_rir = [];
         const pin1 = board.pin2firmata(board._port[parseInt(args.PA) - 1][0]);
         const pin2 = board.pin2firmata(board._port[parseInt(args.PA) - 1][1]);
@@ -1482,12 +1491,15 @@ uint8_t readline2sens(uint8_t p1, uint8_t p2) {
 
         if (board.eventNames().indexOf(`digital-read-${pin1}`) === -1) { // just call once
             board.digitalRead(pin1, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
         if (board.eventNames().indexOf(`digital-read-${pin2}`) === -1) { // just call once
             board.digitalRead(pin2, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
         if (board.eventNames().indexOf(`digital-read-${pin3}`) === -1) { // just call once
             board.digitalRead(pin3, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
 
         se_rir[0] = board.pins[pin1].value;//? 0:1;
@@ -1541,7 +1553,7 @@ uint8_t readline3sens(uint8_t p1, uint8_t p2, uint8_t p3) {
 
     }
 
-    tracers4(args) {
+    async tracers4(args) {
         const pin1 = board.pin2firmata(board._port[parseInt(args.PA) - 1][1]);
         const pin2 = board.pin2firmata(board._port[parseInt(args.PA) - 1][2]);
         const pin3 = board.pin2firmata(board._port[parseInt(args.PB) - 1][1]);
@@ -1562,15 +1574,19 @@ uint8_t readline3sens(uint8_t p1, uint8_t p2, uint8_t p3) {
 
         if (board.eventNames().indexOf(`digital-read-${pin1}`) === -1) { // just call once
             board.digitalRead(pin1, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
         if (board.eventNames().indexOf(`digital-read-${pin2}`) === -1) { // just call once
             board.digitalRead(pin2, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
         if (board.eventNames().indexOf(`digital-read-${pin3}`) === -1) { // just call once
             board.digitalRead(pin3, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
         if (board.eventNames().indexOf(`digital-read-${pin4}`) === -1) { // just call once
             board.digitalRead(pin4, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
 
         switch (args.PAT) { // HIGH: black line; LOW: white line
@@ -1688,7 +1704,7 @@ uint8_t readline3sens(uint8_t p1, uint8_t p2, uint8_t p3) {
         }
     }
 
-    tracers4array(args) {
+    async tracers4array(args) {
         let se_rir = [];
         const pin1 = board.pin2firmata(board._port[parseInt(args.PA) - 1][1]);
         const pin2 = board.pin2firmata(board._port[parseInt(args.PA) - 1][2]);
@@ -1710,15 +1726,19 @@ uint8_t readline3sens(uint8_t p1, uint8_t p2, uint8_t p3) {
 
         if (board.eventNames().indexOf(`digital-read-${pin1}`) === -1) { // just call once
             board.digitalRead(pin1, value => { });
+            await timeout(75);    // let the 1st data being fresh
         }
         if (board.eventNames().indexOf(`digital-read-${pin2}`) === -1) { // just call once
             board.digitalRead(pin2, value => { });
+            await timeout(75);
         }
         if (board.eventNames().indexOf(`digital-read-${pin3}`) === -1) { // just call once
             board.digitalRead(pin3, value => { });
+            await timeout(75);
         }
         if (board.eventNames().indexOf(`digital-read-${pin4}`) === -1) { // just call once
             board.digitalRead(pin4, value => { });
+            await timeout(75);
         }
 
         se_rir[0] = board.pins[pin1].value;//? 0:1;
@@ -1870,7 +1890,7 @@ uint16_t qtrValues[qtrCount];
         board.pinMode(trig, board.MODES.PING_READ);
         return new Promise(resolve => {
             board.pingRead({
-                //pin: pin, // trig & echo have to short
+                //pin: pin, // 可將 trig & echo short 共用pin腳位
                 trigPin: trig,
                 echoPin: echo,
                 value: board.HIGH,

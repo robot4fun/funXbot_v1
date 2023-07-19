@@ -423,7 +423,7 @@ class cBrain {
     this.lineBuffer = '';
     const firmata = new Firmata();
     this.trans = new TransportStub();
-    this.board = new firmata.Board(this.trans);
+    this.board = new firmata.Board(this.trans /*, {samplingInterval: 10}*/);
     //this.board = new Firmata(this.trans).Board;
     //console.log("firmata attached(this.board)", this.board);//for debug
     
@@ -451,13 +451,13 @@ class cBrain {
       // will give a new id when call a new Board
       // but module blocks such like Servo still use old j5board. why?
       //if (!window.j5board){
-      window.j5board = new five.Board({
+      this.j5board = new five.Board({
         io: board,
         //id: 'cBrain1',
         debug: false,
         repl: false
       });
-      console.log("j5 attached", j5board);//for debug
+      console.log("j5 attached", this.j5board);//for debug
       //}
       vm.emit('showAlert', { msg: 'online', type: 'info' });
     });
@@ -479,7 +479,7 @@ class cBrain {
     this.session = null;
     console.log("cBrain closed");//for debug
     //console.log('window.board:', board);
-    console.log('window.j5board:',j5board);
+    console.log('j5board:',this.j5board);
   }
 
   // method required by vm runtime
@@ -519,10 +519,7 @@ class cBrain {
       console.log("cBrain connected");//for debug
       if(!this.firstrun){
         console.log('window.board:', board);
-        console.log('window.j5board:',j5board);
-        /*board.queryCapabilities(() => {
-          board.queryAnalogMapping(this.ready);
-        });*/
+        console.log('j5board:',this.j5board);
       }
       this.firstrun = false;
 
@@ -2064,19 +2061,21 @@ class cBrain {
       });
   }    */
 
-  buttonPressed(args) {
+  async buttonPressed(args) {
     const pin = Sensors.button;
     if (board.pins[pin].mode != board.MODES.INPUT) {
       board.pinMode(pin, board.MODES.INPUT);
       //in firmata.js, All digital pins are set to board.MODES.OUTPUT by default
     }
-
+    // digitalRead執行後會開始監聽digital-read- , pin value變化即會回報並存在pins.value內
     if (board.eventNames().indexOf(`digital-read-${pin}`) === -1) { // just call digitalRead() once
-      board.digitalRead(pin, value => {   //because只要call一次,即使沒執行此block仍會一直回報..
-        //console.log('pin value=', value); // let the data being fresh
+      board.digitalRead(pin, value => {   // 只要call一次,pin value變化時(即使沒執行此block)
+        //console.log('pin value=', value); // 即會執行此callback      
       });
+      //console.log('old pin value=', board.pins[pin].value);
+      await timeout(75);  // let the 1st data being fresh
     }
-    //console.log('stored pin value=', board.pins[pin].value); // for debug
+    //console.log('now pin value=', board.pins[pin].value);
     return board.pins[pin].value;//stored value at any other time 有誤差
   }
 
@@ -2139,7 +2138,7 @@ class cBrain {
     if (!this.imu) {
       this.imu = new five.IMU({
         controller: "MPU6050",
-        board: j5board,
+        board: this.j5board,
       });
       this.imu.yaw_bias = 0;
     }
@@ -2157,7 +2156,7 @@ class cBrain {
     if (!this.imu) {
       this.imu = new five.IMU({
         controller: "MPU6050",
-        board: j5board,
+        board: this.j5board,
       });
       this.imu.yaw_bias = 0;
     }
@@ -2367,7 +2366,7 @@ class cBrain {
     if (!this.imu) {
       this.imu = new five.IMU({
         controller: "MPU6050",
-        board: j5board,
+        board: this.j5board,
       });
       this.imu.yaw_bias = 0;
     }
@@ -2379,6 +2378,7 @@ class cBrain {
         break;
       case 'pitch':
         return -1 * this.imu.accelerometer.roll;
+        //return -1 * this.imu.gyro.roll;
         break;
       case 'roll':
         return this.imu.accelerometer.pitch;
