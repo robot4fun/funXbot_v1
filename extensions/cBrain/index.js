@@ -2143,7 +2143,7 @@ class cBrain {
       this.imu.yaw_bias = 0;
     }
 
-    this.imu.yaw_bias = 15 * this.imu.gyro.yaw.angle;
+    this.imu.yaw_bias = /*15 */ this.imu.gyro.yaw.angle;
   }
 
   resetyawGen(gen, block) {
@@ -2203,10 +2203,10 @@ class cBrain {
         return (Math.abs(this.imu.accelerometer.z + 1) < 0.13);
         break;
       case '11': //逆時針旋
-        return ((15 * this.imu.gyro.yaw.angle - this.imu.yaw_bias) > 5);
+        return ((/*15 */ this.imu.gyro.yaw.angle - this.imu.yaw_bias) > 5);
         break;
       case '12': //順時針旋
-        return ((15 * this.imu.gyro.yaw.angle - this.imu.yaw_bias) < -5);
+        return ((/*15 */ this.imu.gyro.yaw.angle - this.imu.yaw_bias) < -5);
         break;
       case '13': //前俯
         return (-1 * this.imu.accelerometer.roll < -5);
@@ -2372,13 +2372,18 @@ class cBrain {
     }
     //console.log('imuAllData:',this.imu);
     //console.log('args.IMU=',typeof args.IMU, args.IMU);
+    //console.log('gyro.cal?',this.imu.gyro.isCalibrated);
+    //console.log('gyro.yaw:',this.imu.gyro.yaw.angle);
+    //console.log('gyro.roll:',this.imu.gyro.roll.angle);
+    //console.log('accelerometer.roll:',this.imu.accelerometer.roll);
+    //console.log('accelerometer.inclination:',this.imu.accelerometer.inclination);
+    //console.log('accelerometer.orientation:',this.imu.accelerometer.orientation);
     switch (args.IMU) {  // imu x-y-z軸與主機不同
       case 'yaw':
-        return (15 * this.imu.gyro.yaw.angle - this.imu.yaw_bias);
+        return (/*15 */ this.imu.gyro.yaw.angle - this.imu.yaw_bias);        
         break;
       case 'pitch':
         return -1 * this.imu.accelerometer.roll;
-        //return -1 * this.imu.gyro.roll;
         break;
       case 'roll':
         return this.imu.accelerometer.pitch;
