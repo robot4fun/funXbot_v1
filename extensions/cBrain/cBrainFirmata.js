@@ -726,6 +726,7 @@ class Firmata extends Emitter {
       if (this.versionReceived === false) {
         this.reportVersion(function() {});
         this.queryFirmware(function() {});
+        console.log("1st time to require Firmata reporting version..");
       }
     }, settings.reportVersionTimeout);
 
@@ -742,8 +743,9 @@ class Firmata extends Emitter {
     this.once("reportversion", () => {
       clearTimeout(this.reportVersionTimeoutId);
       this.versionReceived = true;
+      console.log("versionReceived! listen 2 queryfirmware..");
       this.once("queryfirmware", () => {
-
+        console.log("firmware info received! listen 2 capability-query..");
         // Only preemptively set the sampling interval if `samplingInterval`
         // property was _explicitly_ set as a constructor option.
         if (options.samplingInterval !== undefined) {
@@ -776,6 +778,7 @@ class Firmata extends Emitter {
           ready();
         } else {
           this.queryCapabilities(() => {
+            console.log("capability info received! lissten2 analog-mapping-query..");
             this.queryAnalogMapping(ready);
           });
         }

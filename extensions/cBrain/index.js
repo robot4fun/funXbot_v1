@@ -3,7 +3,7 @@
  */
 const Firmata = require('./cBrainFirmata.js');
 const Emitter = require("events");
-window.five = window.require('johnny-five');
+//window.five = window.require('johnny-five');
 
 const ArgumentType = Scratch.ArgumentType;
 const BlockType = Scratch.BlockType;
@@ -436,14 +436,7 @@ class cBrain {
     //board.servo = {};
     //board.matrix = {};
     console.log("firmata attached(window.board)", board);//for debug
-    //window.five = window.require('johnny-five');
-
-    this.firstrun = true;
-
-    this.trans.on("write", data => {
-      if (this.session) this.session.write(data);
-      //console.log("session write", data);//for debug
-    });
+    window.five = window.require('johnny-five');
 
     board.once('ready', () => { // when cBrainFirmata firmware loaded
       console.log("firmware ready", board);//for debug
@@ -461,6 +454,14 @@ class cBrain {
       //}
       vm.emit('showAlert', { msg: 'online', type: 'info' });
     });
+
+    this.firstrun = true;
+
+    this.trans.on("write", data => {
+      if (this.session) this.session.write(data);
+      console.log("session write", data);//for debug
+    });
+
     /*
     const viewedTutorial = localStorage.getItem("showed-arduino-tutorial")
     if (!viewedTutorial){
@@ -471,13 +472,13 @@ class cBrain {
 
   onmessage(data) {
     this.board.transport.emit('data', data);
-    //console.log("message from cBrainFirmata..", data);//for debug
+    console.log("message from AVR chip..", data);//for debug
     //console.log("Firmata status..", board);//for debug
   }
 
   onclose() {
     this.session = null;
-    console.log("cBrain closed");//for debug
+    console.log("connect port closed");//for debug
     //console.log('window.board:', board);
     console.log('j5board:',this.j5board);
   }
@@ -499,13 +500,8 @@ class cBrain {
     this.reset();
   }
 
-  ready() {
-    this.board.isReady = true;
-    this.board.emit("ready");    
-  }
-
   /**
-   * Called by the runtime when user wants to connect to a certain cBrain peripheral.
+   * Called by the runtime when user wants to connect to a certain peripheral.
    * id - the id of the peripheral to connect to.
    */
   connect(id) {
@@ -513,15 +509,26 @@ class cBrain {
       this.session = sess;
       this.session.onmessage = this.onmessage;
       this.session.onclose = this.onclose;
-      // notify gui connected
-      this.runtime.emit(this.runtime.constructor.PERIPHERAL_CONNECTED);
 
       console.log("cBrain connected");//for debug
-      if(!this.firstrun){
+      if(!this.board.isReady){        
+        console.log("after connected, to request version again..");
+        this.board.reportVersion(() => {
+          console.log('-> after connected, got version finally');
+        });
+        this.board.queryFirmware(() => {
+          console.log('-> after connected, got firmware info finally');
+        });
+      }      
+      if(this.firstrun) {
+        this.firstrun = false;
+      } else {
         console.log('window.board:', board);
         console.log('j5board:',this.j5board);
       }
-      this.firstrun = false;
+
+      // notify gui connected
+      this.runtime.emit(this.runtime.constructor.PERIPHERAL_CONNECTED);
 
     }).catch(err => {
       log.warn('connect peripheral fail', err);
@@ -529,8 +536,8 @@ class cBrain {
   }
 
   disconnect() {
-    this.session.close();
     this.reset();
+    this.session.close();    
     console.log("cBrain disconnected");//for debug
     console.log('window.board:', board);
     //console.log('window.j5board:',j5board);
@@ -952,6 +959,7 @@ class cBrain {
           opcode: 'imuYPR',
           blockType: BlockType.REPORTER,
           text: 'IMU [IMU] reading(°)',
+          //checkboxInFlyout: true,
           arguments: {
             IMU: {
               type: ArgumentType.STRING,
@@ -968,6 +976,7 @@ class cBrain {
           opcode: 'imuG',
           blockType: BlockType.REPORTER,
           text: 'IMU [IMU] reading(mg)',
+          //checkboxInFlyout: true,
           arguments: {
             IMU: {
               type: ArgumentType.STRING,
@@ -984,6 +993,7 @@ class cBrain {
           opcode: 'imuAcc',
           blockType: BlockType.REPORTER,
           text: 'IMU [IMU] reading(mm/s²)',
+          //checkboxInFlyout: true,
           arguments: {
             IMU: {
               type: ArgumentType.STRING,
@@ -1000,6 +1010,7 @@ class cBrain {
           opcode: 'imuAV',
           blockType: BlockType.REPORTER,
           text: 'IMU [IMU] reading(°/s)',
+          //checkboxInFlyout: true,
           arguments: {
             IMU: {
               type: ArgumentType.STRING,
@@ -1163,6 +1174,7 @@ class cBrain {
           opcode: 'serialavailable',
           blockType: BlockType.REPORTER,
           text: 'Serial Available',
+          //checkboxInFlyout: false,
           func: 'noop',
           gen: {
             arduino: this.serAvailableGen
@@ -1172,6 +1184,7 @@ class cBrain {
           opcode: 'serialread',
           blockType: BlockType.REPORTER,
           text: 'Serial Read',
+          //checkboxInFlyout: false,
           func: 'noop',
           gen: {
             arduino: this.serReadGen
@@ -1251,6 +1264,7 @@ class cBrain {
           opcode: 'serialavailable4write',
           blockType: BlockType.REPORTER,
           text: 'Serial Available for Write',
+          //checkboxInFlyout: false,
           func: 'noop',
           gen: {
             arduino: this.serAvailable4WriteGen
@@ -1442,6 +1456,7 @@ class cBrain {
           opcode: 'coreTemp',
           blockType: BlockType.REPORTER,
           text: 'core temperature (°[IMU])',
+          //checkboxInFlyout: true,
           arguments: {
             IMU: {
               type: ArgumentType.STRING,
@@ -1458,6 +1473,7 @@ class cBrain {
           opcode: 'v',
           blockType: BlockType.REPORTER,
           text: 'Vcc reading (mV)',
+          //checkboxInFlyout: false,
           func: 'noop',
           gen: {
             arduino: this.vGen
@@ -1470,6 +1486,7 @@ class cBrain {
             id: 'arduino.millis',
             default: 'millis'
           }),
+          //checkboxInFlyout: false,
           func: 'noop',
           gen: {
             arduino: this.millisGen
@@ -3214,20 +3231,20 @@ while (${sertype}.available()) {
     //console.log('isConnected?',this.isConnected());
     if (this.isConnected()) {
       board.reset();
-      //console.log('before.. board.event:', board.eventNames());
-      for (let pin = 0; pin < board.pins.length; pin++) {
+    } 
+    //console.log('before.. board.event:', board.eventNames());
+    for (let pin = 0; pin < board.pins.length; pin++) {
         board.removeAllListeners("digital-read-" + pin);
         board.pins[pin].mode = undefined;
         board.pins[pin].value = 0;
-      }
-      //console.log('after.. board.event:', board.eventNames());
-      //board.servo = {};
-      //board.matrix = {};
-      //console.log('now board:', board);
-      //await board.reportVersion(data=>{
-      //console.log(data);
-      //});
     }
+    //console.log('after.. board.event:', board.eventNames());
+    this.board.pending = 0;
+    this.board.buffer = [];  
+    //board.servo = {};
+    //board.matrix = {};
+    //console.log('now board:', board);
+
   }
 
   resetGen(gen, block) {

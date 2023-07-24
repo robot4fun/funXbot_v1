@@ -2,8 +2,8 @@ const {app, BrowserWindow, ipcMain} = require('electron')
 const path = require('path')
 const url = require('url')
 const cp = require('child_process');
-const {autoUpdater} = require("electron-updater");
-const isDev = require('electron-is-dev');
+//const {autoUpdater} = require("electron-updater");
+//const isDev = require('electron-is-dev');
 const os = require('os');
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -28,7 +28,7 @@ function randomInt(minInclusive, maxInclusive) {
 //app.commandLine.appendSwitch('enable-zero-copy', 'true');
 //app.commandLine.appendSwitch('disable-software-rasterizer', 'false');
 //app.commandLine.appendSwitch('enable-native-gpu-memory-buffers', 'true');
-    
+/*    
 autoUpdater.autoDownload = false;
 autoUpdater.on('checking-for-update', () => {
   console.log('Checking for update...');
@@ -53,14 +53,14 @@ autoUpdater.on('update-downloaded', (info) => {
     autoUpdater.quitAndInstall();  
   }, 3000)
 });
-
+*/
 let closeWd = false;
 
 ipcMain.on('update', (event, msg) => {
     if(msg == 'downloadupdate'){
-        autoUpdater.downloadUpdate();
+        //autoUpdater.downloadUpdate();
     }else if(msg == 'quitandinstall'){
-        autoUpdater.quitAndInstall();
+        //autoUpdater.quitAndInstall();
     }
 });
 
@@ -148,7 +148,8 @@ function createWindow () {
   })
 
   // and load the index.html of the app.
-  let indexPath = isDev ? "E:\\KittenblockV3\\scratch-gui\\build\\index.html" : path.join(__dirname, 'index.html');
+  //let indexPath = isDev ? "E:\\KittenblockV3\\scratch-gui\\build\\index.html" : path.join(__dirname, 'index.html');
+  let indexPath = path.join(__dirname, 'index.html');
   console.log("index path", indexPath);
   
   // powerSaveBlocker.start('prevent-app-suspension'); // will trig rod?
@@ -164,9 +165,9 @@ function createWindow () {
   win.webContents.on("did-stop-loading", () => {
     if(!mainFrameLoaded){ // fix for frame switching
         sendStartConfig();
-        if (isDev) {
+        /*if (isDev) {
             win.webContents.openDevTools({ mode: "detach" });
-        }
+        }*/
         mainFrameLoaded = true;
     if (initFile){
       win.webContents.send('opensb3', initFile);
@@ -177,9 +178,9 @@ function createWindow () {
   win.once('ready-to-show', () => {
     win.show()
     splash.close();
-    if(!isDev){
-      //autoUpdater.checkForUpdates();
-    }
+    /*if(!isDev){
+      autoUpdater.checkForUpdates();
+    }*/
   });
 
   win.on('close', function(e){
