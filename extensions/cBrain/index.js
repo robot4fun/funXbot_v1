@@ -84,12 +84,12 @@ int16_t yaw_bias=0;
   gen.definitions_['mpufailed'] = `
 void mpufailed(){
     #define LED_WARNING 13
-    //bool blinkState = false;
+    bool blinkState = false;
     pinMode(LED_WARNING, OUTPUT);
     for ( uint8_t i=0; i<5; i++) {
-        //blinkState = !blinkState;
-        //digitalWrite(LED_WARNING, blinkState);
-        digitalWrite(LED_WARNING, !digitalRead(LED_WARNING));
+        blinkState = !blinkState;
+        digitalWrite(LED_WARNING, blinkState);
+        //digitalWrite(LED_WARNING, !digitalRead(LED_WARNING));
         delay(500);
     }
 }
@@ -480,7 +480,7 @@ class cBrain {
     this.session = null;
     console.log("connect port closed");//for debug
     //console.log('window.board:', board);
-    console.log('j5board:',this.j5board);
+    console.log('after port closed, j5board:',this.j5board);
   }
 
   // method required by vm runtime
@@ -536,11 +536,11 @@ class cBrain {
   }
 
   disconnect() {
+    console.log('before disconnect, window.board:', board); // 沒用, reset比較快執行完
+    //console.log('window.j5board:',j5board);
     this.reset();
     this.session.close();    
-    console.log("cBrain disconnected");//for debug
-    console.log('window.board:', board);
-    //console.log('window.j5board:',j5board);
+    console.log("cBrain disconnected");//for debug    
   }
 
   isConnected() {
@@ -2397,7 +2397,16 @@ class cBrain {
     //console.log('accelerometer.orientation:',this.imu.accelerometer.orientation);
     switch (args.IMU) {  // imu x-y-z軸與主機不同
       case 'yaw':
-        return (/*15 */ this.imu.gyro.yaw.angle - this.imu.yaw_bias);        
+        {
+          let _yaw = this.imu.gyro.yaw.angle - this.imu.yaw_bias;
+          if ( _yaw < -180 ) {
+            _yaw = _yaw + 360;
+          } else if ( _yaw > 180 ) {
+            _yaw = _yaw -360;
+          }
+          return _yaw;
+        }
+        //return (/*15 */ this.imu.gyro.yaw.angle - this.imu.yaw_bias);
         break;
       case 'pitch':
         return -1 * this.imu.accelerometer.roll;
