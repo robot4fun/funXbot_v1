@@ -82,7 +82,7 @@ class cSensorsExtension {
                         arduino: this.sensorDigiGen
                     }
                 },
-                '---', 
+                '---',
                 /*{
                     opcode: 'analogKeypad',
                     blockType: BlockType.BOOLEAN,
@@ -674,7 +674,7 @@ class cSensorsExtension {
                         E_MEA: {
                             type: ArgumentType.STRING,
                             defaultValue: 1,
-                        }                    
+                        }
                     },
                     func: 'noop',
                     gen: {
@@ -692,24 +692,24 @@ class cSensorsExtension {
                         },
                         MEA: {
                             type: ArgumentType.STRING,
-                            
+
                         },
                         EST: {
                             type: ArgumentType.STRING,
-                            
-                        }                        
+
+                        }
                     },
                     func: 'noop',
                     gen: {
                         arduino: this.update1DkalmanGen
                     }
                 },
-          
+
                 /*
                                 {
                                     opcode: 'ds18b20Setup',
                                     blockType: BlockType.COMMAND,
-                
+
                                     text: formatMessage({
                                         id: 'sensors.ds18b20Setup',
                                         default: 'Setup 18B20 Pin [PIN]'
@@ -729,7 +729,7 @@ class cSensorsExtension {
                                 {
                                     opcode: 'ds18b20Read',
                                     blockType: BlockType.COMMAND,
-                
+
                                     text: formatMessage({
                                         id: 'sensors.ds18b20Read',
                                         default: '18B20 Read'
@@ -742,7 +742,7 @@ class cSensorsExtension {
                                 {
                                     opcode: 'ds18b20',
                                     blockType: BlockType.REPORTER,
-                
+
                                     text: formatMessage({
                                         id: 'sensors.ds18b20',
                                         default: '18B20 Temperature [INDEX]'
@@ -759,7 +759,7 @@ class cSensorsExtension {
                                     }
                                 },
                                 '---',
-                
+
                                 {
                                     opcode: 'infraen',
                                     blockType: BlockType.COMMAND,
@@ -1045,7 +1045,7 @@ class cSensorsExtension {
                     '1dKalmanDef': '使用Kalman濾波[KF_DATA]資料, 預計量測誤差為[E_MEA]',
                     '1dKalman': '變數[EST] = 濾波後的[KF_DATA]資料 ( 量測值為變數[MEA]);',
 
-          
+
                 },
                 'zh-cn': {
                     'sensorAnalog': '端口[PIN]的模拟传感器读数 (0~1023)',
@@ -1199,7 +1199,7 @@ int whichkey(int sensorValue) {
             pin = board.pin2firmata(board._port[port - 1][pin]);
         } else {
             pin = board.pin2firmata(board._port[pin - 1][2]);
-        }        
+        }
         if (board.pins[pin].mode != board.MODES.INPUT) {
             //vm.emit('showAlert', {msg: 'Wrong PinMode defined'});
             board.pinMode(pin, board.MODES.INPUT);
@@ -1887,14 +1887,15 @@ uint16_t qtrValues[qtrCount];
         const trig = board.pin2firmata(board._port[parseInt(args.PIN) - 1][1]);
         const echo = board.pin2firmata(board._port[parseInt(args.PIN) - 1][2]);
         //board.pinMode(pin, board.MODES.PING_READ);
-        board.pinMode(trig, board.MODES.PING_READ);
+        board.pinMode(echo, board.MODES.PING_READ);
         return new Promise(resolve => {
             board.pingRead({
-                //pin: pin, // 可將 trig & echo short 共用pin腳位
+                // 可將 trig & echo short 共用pin腳位
                 trigPin: trig,
                 echoPin: echo,
-                value: board.HIGH,
+                trigSignal: board.HIGH,
                 pulseOut: 10,//5,
+                timeout: 30000
             }, ms => {
                 ms = ms || 0;
                 let mm = ms / 29.1 / 2 * 10;
@@ -2576,10 +2577,10 @@ uint16_t lux(boolean l){
         gen.setupCodes_['isr_' + pin] = `pinMode(${pin}, INPUT);`;
         return gen.line(`attachInterrupt(digitalPinToInterrupt(${pin}), ${isr}, ${mode})`);
     }
- 
+
     detachIsrGen(gen, block) {
         const pin = board._port[4][gen.valueToCode(block, 'PIN')];
-        return gen.line(`detachInterrupt(digitalPinToInterrupt(${pin}))`);    
+        return gen.line(`detachInterrupt(digitalPinToInterrupt(${pin}))`);
     }
 
     attach1DkalmanGen(gen, block) {
@@ -2596,7 +2597,7 @@ uint16_t lux(boolean l){
         kf_data = kf_data.substr(1, kf_data.length - 2);
         const mea = gen.valueToCode(block, 'MEA');
         const est = gen.valueToCode(block, 'EST');
-        return gen.line(`${est} = ${kf_data}.updateEstimate(${mea})`); 
+        return gen.line(`${est} = ${kf_data}.updateEstimate(${mea})`);
     }
 
     /*

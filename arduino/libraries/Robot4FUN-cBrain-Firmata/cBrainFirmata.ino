@@ -521,55 +521,60 @@ void sysexCallback(byte command, byte argc, byte *argv) {
       }
       Serial.write(END_SYSEX);
       break;
-    case PING_READ:{
-      byte pulseDurationArray[4] = {
-        (argv[2] & 0x7F) | ((argv[3] & 0x7F) << 7),
-        (argv[4] & 0x7F) | ((argv[5] & 0x7F) << 7),
-        (argv[6] & 0x7F) | ((argv[7] & 0x7F) << 7),
-        (argv[8] & 0x7F) | ((argv[9] & 0x7F) << 7)
-      };
-      unsigned long pulseDuration = ((unsigned long)pulseDurationArray[0] << 24)
+    case PING_READ:
+      if (argc > 1) {
+        uint8_t trig = argv[0];
+        uint8_t echo = argv[1];
+        uint8_t trigSignal = argv[2];
+        uint8_t pulseDurationArray[4] = {
+            (argv[3] & 0x7F) | ((argv[4] & 0x7F) << 7),
+            (argv[5] & 0x7F) | ((argv[6] & 0x7F) << 7),
+            (argv[7] & 0x7F) | ((argv[8] & 0x7F) << 7),
+            (argv[9] & 0x7F) | ((argv[10] & 0x7F) << 7)
+        };
+        uint32_t pulseDuration = ((unsigned long)pulseDurationArray[0] << 24)
               + ((unsigned long)pulseDurationArray[1] << 16)
               + ((unsigned long)pulseDurationArray[2] << 8)
               + ((unsigned long)pulseDurationArray[3]);
-      if (argv[1] == HIGH){
-        pinMode(argv[0],OUTPUT);
-        digitalWrite(argv[0],LOW);
-        delayMicroseconds(2);
-        digitalWrite(argv[0],HIGH);
-        delayMicroseconds(pulseDuration);
-        digitalWrite(argv[0],LOW);
-      } else {
-        digitalWrite(argv[0],HIGH);
-        delayMicroseconds(2);
-        digitalWrite(argv[0],LOW);
-        delayMicroseconds(pulseDuration);
-        digitalWrite(argv[0],HIGH);
+        uint8_t timeoutArray[4] = {
+            (argv[11] & 0x7F) | ((argv[12] & 0x7F) << 7),
+            (argv[13] & 0x7F) | ((argv[14] & 0x7F) << 7),
+            (argv[15] & 0x7F) | ((argv[16] & 0x7F) << 7),
+            (argv[17] & 0x7F) | ((argv[18] & 0x7F) << 7)
+        };
+        uint32_t timeout = ((unsigned long)timeoutArray[0] << 24) +
+                            ((unsigned long)timeoutArray[1] << 16) +
+                            ((unsigned long)timeoutArray[2] << 8) +
+                            ((unsigned long)timeoutArray[3]);
+        uint32_t duration;
+        uint8_t responseArray[5];
+
+        pinMode(trig, OUTPUT);
+        if (trigSignal == HIGH){
+          digitalWrite(trig,LOW);
+          delayMicroseconds(2);
+          digitalWrite(trig,HIGH);
+          delayMicroseconds(pulseDuration);
+          digitalWrite(trig,LOW);
+        } else {
+          digitalWrite(trig,HIGH);
+          delayMicroseconds(2);
+          digitalWrite(trig,LOW);
+          delayMicroseconds(pulseDuration);
+          digitalWrite(trig,HIGH);
+        }
+
+        pinMode(echo, INPUT);
+        duration = pulseIn(echo, trigSignal, timeout);
+        responseArray[0] = ((byte)echo);
+        responseArray[1] = (((unsigned long)duration >> 24) & 0xFF);
+        responseArray[2] = (((unsigned long)duration >> 16) & 0xFF);
+        responseArray[3] = (((unsigned long)duration >> 8) & 0xFF);
+        responseArray[4] = (((unsigned long)duration & 0xFF));
+
+        Firmata.sendSysex(PING_READ, 5, responseArray);
       }
-      unsigned long duration;
-      byte responseArray[5];
-      byte timeoutArray[4] = {
-          (argv[10] & 0x7F) | ((argv[11] & 0x7F) << 7),
-          (argv[12] & 0x7F) | ((argv[13] & 0x7F) << 7),
-          (argv[14] & 0x7F) | ((argv[15] & 0x7F) << 7),
-          (argv[16] & 0x7F) | ((argv[17] & 0x7F) << 7)
-      };
-      unsigned long timeout = ((unsigned long)timeoutArray[0] << 24) +
-                              ((unsigned long)timeoutArray[1] << 16) +
-                              ((unsigned long)timeoutArray[2] << 8) +
-                              ((unsigned long)timeoutArray[3]);
-
-      pinMode(argv[0],INPUT);
-      duration = pulseIn(argv[0], argv[1],timeout);
-      responseArray[0] = argv[0];
-      responseArray[1] = (((unsigned long)duration >> 24) & 0xFF);
-      responseArray[2] = (((unsigned long)duration >> 16) & 0xFF);
-      responseArray[3] = (((unsigned long)duration >> 8) & 0xFF);
-      responseArray[4] = (((unsigned long)duration & 0xFF));
-
-      Firmata.sendSysex(PING_READ, 5, responseArray);
       break;
-    }
     case DHT_MESSAGE: // copy from webduino
         DHT.read(argv[1]);
         Firmata.write(START_SYSEX);

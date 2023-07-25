@@ -1802,15 +1802,15 @@ class Firmata extends Emitter {
 
   pingRead(options, callback) {
 
-    if (!this.pins[options.trigPin].supportedModes.includes(PING_READ)) {
+    if (!this.pins[options.echoPin].supportedModes.includes(PING_READ)) {
       throw new Error("Please upload cBrainFirmata.hex to the board");
     }
 
     const {
       trigPin,
       echoPin,
-      value, // trig signal: HIGH or LOW
-      pulseOut = 0,
+      trigSignal, // trig signal: HIGH or LOW
+      pulseOut = 0, // trig pulse width. unit: us
       timeout = 1000000
     } = options;
 
@@ -1819,7 +1819,7 @@ class Firmata extends Emitter {
       PING_READ,
       trigPin,
       echoPin,
-      value,
+      trigSignal,
       ...Firmata.encode([
         (pulseOut >> 24) & 0xFF,
         (pulseOut >> 16) & 0xFF,
@@ -1835,7 +1835,7 @@ class Firmata extends Emitter {
       END_SYSEX,
     ]);
 
-    this.once(`ping-read-${trigPin}`, callback);
+    this.once(`ping-read-${echoPin}`, callback);
   }
 
   /**
