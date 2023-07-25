@@ -22,9 +22,10 @@
   version 2.1 of the License, or (at your option) any later version.
 */
 
-/* Last updated July 17th, 2023 by tonyet */
+/* Last updated July 25th, 2023 by tonyet */
 
-#include <Servo.h>
+//#include <Servo.h>
+#include <VarSpeedServo.h>
 #include <Wire.h>
 #include <Firmata.h>
 #include <dht11.h>
@@ -50,6 +51,8 @@
 // PING_READ is for use with HCSR04 and similar "ultrasonic ping" components
 // DHT_MESSAGE is for use with DHT sensor
 #define DHT_MESSAGE              0x74
+#define BUZZER_MESSAGE           0x7C
+#define SERVO_WRITE              0x7D
 
 #define TOTAL_ANALOG_PINS       8  // include A6, A7
 #define TOTAL_PINS              22 // 14 digital + 8 analog
@@ -94,7 +97,8 @@ signed char queryIndex = -1;
 // default delay time between i2c read request and Wire.requestFrom()
 unsigned int i2cReadDelayTime = 0;
 
-Servo servos[MAX_SERVOS];
+//Servo servos[MAX_SERVOS];
+VarSpeedServo servos[MAX_SERVOS];
 byte servoPinMap[TOTAL_PINS];
 byte detachedServos[MAX_SERVOS];
 byte detachedServoCount = 0;
@@ -387,8 +391,6 @@ void sysexCallback(byte command, byte argc, byte *argv) {
   byte slaveRegister;
   byte data;
   unsigned int delayTime;
-  byte strLen;
-  String strData;
 
   switch(command) {
     case I2C_REQUEST:
@@ -500,7 +502,6 @@ void sysexCallback(byte command, byte argc, byte *argv) {
           servos[PIN_TO_SERVO(pin)].attach(PIN_TO_DIGITAL(pin), minPulse, maxPulse);
           */
           if (servos[servoPinMap[pin]].attached()) {
-            
             detachServo(pin);
           }
           attachServo(pin, minPulse, maxPulse);
@@ -508,6 +509,20 @@ void sysexCallback(byte command, byte argc, byte *argv) {
         }
       }
       break;
+    case SERVO_WRITE:{
+      uint8_t pin = argv[0];
+      int16_t value = argv[1] + (argv[2] << 7);
+      int16_t speed = argv[3] + (argv[4] << 7);
+      if (IS_PIN_SERVO(pin)) {
+          if (speed == 0) {
+            servos[servoPinMap[pin]].write(value);
+          } else {
+            servos[servoPinMap[pin]].write(value,constrain(speed,1,255));
+          }
+          pinState[pin] = value;
+      }
+      break;
+    }
     case SAMPLING_INTERVAL:
       if (argc > 1) {
         samplingInterval = argv[0] + (argv[1] << 7);
@@ -634,7 +649,7 @@ void sysexCallback(byte command, byte argc, byte *argv) {
 
         pinMode(echo, INPUT);
         duration = pulseIn(echo, trigSignal, timeout);
-        responseArray[0] = ((byte)echo);
+        responseArray[0] = ((uint8_t)echo);
         responseArray[1] = (((unsigned long)duration >> 24) & 0xFF);
         responseArray[2] = (((unsigned long)duration >> 16) & 0xFF);
         responseArray[3] = (((unsigned long)duration >> 8) & 0xFF);
@@ -643,25 +658,38 @@ void sysexCallback(byte command, byte argc, byte *argv) {
         Firmata.sendSysex(PING_READ, 5, responseArray);
       }
       break;
-    case DHT_MESSAGE: // copy from webduino
-        DHT.read(argv[1]);
-        Firmata.write(START_SYSEX);
-        Firmata.write(DHT_MESSAGE);
-        Firmata.write(DHT_MESSAGE);
-        Firmata.write(argv[1]);
-        strData = String(int(DHT.humidity * 100)) + String(int(DHT.temperature * 100));
-        //Serial.println(strData);
-        strLen = strData.length();
-        for (int i = 0; i < strLen; i++) {
-          Firmata.write(strData.charAt(i));
-        }
-        Firmata.write(END_SYSEX);
+    case DHT_MESSAGE:
+      if (argc > 0) {
+        uint8_t data[3];
+
+        DHT.read(argv[0]); //pin
+        delay(30);
+        data[0] = argv[0];
+        data[1] = DHT.humidity;
+        data[2] = DHT.temperature;
+
+        Firmata.sendSysex(DHT_MESSAGE, 3, data);
+      }
       break;
     case PIXEL_COMMAND:
         if (argc > 0) {
             // maybe bounce the first command off here.
             process_command(argc, argv);
         }
+      break;
+    case BUZZER_MESSAGE:
+      if (argc > 0) {
+        uint32_t freq = (uint32_t)argv[1] +
+          ((uint32_t)argv[2]<<7) +
+          ((uint32_t)argv[3]<<14) +
+          ((uint32_t)argv[4] << 21);
+        uint32_t delay = (uint32_t)argv[5] +
+          ((uint32_t)argv[6]<<7) +
+          ((uint32_t)argv[7]<<14) +
+          ((uint32_t)argv[8] << 21);
+
+        tone(argv[0], freq, delay);
+      }
       break;
 
   }
