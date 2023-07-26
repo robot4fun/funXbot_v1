@@ -37,23 +37,23 @@ const Sensors = {
   buzzer: 9 //port7[1], pwm
 };
 
-/*
+
 const wireCommon = gen => {
     gen.setupCodes_['wire'] = `Wire.begin()`;
     gen.includes_['wire'] = '#include <Wire.h>\n';
 }
-*/
+
 const mpuCommon = gen => {
   gen.includes_['stdint'] = `#include <stdint.h>`;
   gen.includes_['mpu6050'] = `
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 
-// Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
+/* Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
 // is used in I2Cdev.h
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     #include "Wire.h"
-#endif
+#endif*/
 /*
 class cBrainIMU:public MPU6050 {
   public:
@@ -277,14 +277,14 @@ bool IMUshaked(){
 `;
 
   gen.setupCodes_['mpu6050'] = `
-  // join I2C bus (I2Cdev library doesn't do this automatically)
+  /* join I2C bus (I2Cdev library doesn't do this automatically)
   #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
       Wire.begin();
       Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
   #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
       Fastwire::setup(400, true);
-  #endif
-
+  #endif*/
+  
   #ifdef DEBUG
     Serial.begin(115200);
   #endif
@@ -456,6 +456,8 @@ class cBrain {
     });
 
     this.firstrun = true;
+    this.compass = null;
+    this.imu = null;
 
     this.trans.on("write", data => {
       if (this.session) this.session.write(data);
@@ -1501,7 +1503,25 @@ class cBrain {
             arduino: this.resetGen
           }
         },
-
+        {
+          opcode: 'resetMagYaw',
+          blockType: BlockType.COMMAND,
+          text: 'reset Yaw angle',
+          func: 'resetMagYaw',
+          gen: {
+            arduino: this.resetMagYawGen
+          }
+        },
+        {
+          opcode: 'magYaw',
+          blockType: BlockType.REPORTER,
+          text: 'Yaw reading(°)',
+          //checkboxInFlyout: true,
+          func: 'magYaw',
+          gen: {
+            arduino: this.magYawGen
+          }
+        },
         /*
         {
             opcode: 's4xparse',
@@ -1809,6 +1829,8 @@ class cBrain {
           'stringlength': '字串[TEXT]長度',
           'resettimer': '重置計時器',
           'gettimer': '計時(毫秒)',
+          'resetMagYaw': '將偏航角歸零',
+          'magYaw': '偏航角度(°)',
         },
         'zh-cn': { // 簡體中文
           //'cBrain': '鸡车脑',
@@ -1869,6 +1891,8 @@ class cBrain {
           'stringlength': '字符串[TEXT]长度',
           'resettimer': '重置计时器',
           'gettimer': '计时(毫秒)',
+          'resetMagYaw': '将航向角归零',
+          'magYaw': '航向角度(°)',
         },
       }
 
@@ -2164,9 +2188,160 @@ class cBrain {
   }
 
   resetyawGen(gen, block) {
+    wireCommon(gen);
     mpuCommon(gen);
     //return gen.line(`mpu.yaw_bias = mpu6050read(1,false)`);
     return gen.line(`yaw_bias = mpu6050read(1,false)`);
+  }
+
+  wireRead16(add, reg) {
+    return new Promise(resolve => {
+      this.board.i2cReadOnce(add, reg, 2, reply => {
+        let d16bits = (reply[1] << 8) | reply[0];
+        console.log('d16bits=', d16bits.toString(2), ', ', d16bits);
+        resolve(d16bits);
+      });
+    });
+  }
+
+  async resetMagYaw(args) {
+    if (!this.compass) {
+      this.compass = 0x0D; // QMC5883L i2c address
+      /*
+      this.compass.addr = 0x0D;
+      this.compass.mode = 0b00000001;  // Mode_Continuous
+      this.compass.odr =  0b00001100;  // output data update rate = 200Hz
+      this.compass.rng =  0b00010000;  // range = 8G
+      this.compass.osr =  0b00000000;  // over sampling rate = 512
+      */
+      this.yawBias = 0;
+
+      this.board.i2cConfig();
+      this.board.i2cWriteReg(this.compass, 0x0B, 0x01); // Define Set/Reset period
+      this.board.i2cWriteReg(this.compass, 0x09, 0b00011101); // init setup
+
+    }
+    
+    let x = await this.wireRead16(this.compass,0x00);
+    let y = await this.wireRead16(this.compass,0x02);
+    let z = await this.wireRead16(this.compass,0x04);
+    
+    this.yawBias = Math.atan(x,y) * 180.0/Math.PI;
+    console.log('compass.yaw_bias=', this.yawBias);
+  }
+
+  resetMagYawGen(gen, block) {
+    wireCommon(gen);
+    gen.includes_['QMC5883'] = '#include "MechaQMC5883.h"\n';
+    gen.definitions_['QMC5883'] = `
+MechaQMC5883 qmc;
+int16_t qmcYawBias=0;
+//#define DEBUG
+`;
+    gen.setupCodes_['QMC5883'] = `qmc.init();`;
+    gen.definitions_['readQMC5883'] = `
+int16_t readQMC5883(boolean bias=true) {
+    static int16_t x, y, z;
+    static int16_t yaw;
+    
+    qmc.read(&x, &y, &z, &yaw);
+    //yaw = qmc.azimuth(&y,&x);//you can get custom azimuth
+    if (bias) {
+      yaw = yaw - qmcYawBias;
+      /*
+      if ( yaw < -180 ) {
+        yaw = yaw + 360;
+      } else if ( yaw > 180 ) {
+        yaw = yaw -360;
+      }*/
+    }
+
+  #ifdef DEBUG
+    Serial.print("x: ");
+    Serial.print(x);
+    Serial.print(" y: ");
+    Serial.print(y);
+    Serial.print(" z: ");
+    Serial.print(z);
+    Serial.print(" yaw: ");
+    Serial.print(yaw);
+    Serial.println();
+  #endif
+
+    return yaw;
+}
+`;
+    return gen.line(`qmcYawBias = readQMC5883(false)`);
+  }
+
+  async magYaw(args) {
+    if (!this.compass) {
+      this.compass = 0x0D; // QMC5883L i2c address
+      /*
+      this.compass.addr = 0x0D;
+      this.compass.mode = 0b00000001;  // Mode_Continuous
+      this.compass.odr =  0b00001100;  // output data update rate = 200Hz
+      this.compass.rng =  0b00010000;  // range = 8G
+      this.compass.osr =  0b00000000;  // over sampling rate = 512
+      */
+      this.yawBias = 0;
+
+      this.board.i2cConfig();
+      this.board.i2cWriteReg(this.compass, 0x0B, 0x01); // Define Set/Reset period
+      this.board.i2cWriteReg(this.compass, 0x09, 0b00011101); // init setup
+
+    }
+    
+    let x = await this.wireRead16(this.compass,0x00);
+    let y = await this.wireRead16(this.compass,0x02);
+    let z = await this.wireRead16(this.compass,0x04);
+    let yaw = Math.atan(x,y) * 180.0/Math.PI - this.yawBias;
+    
+    return yaw;
+  }
+
+  magYawGen(gen, block) {
+    wireCommon(gen);
+    gen.includes_['QMC5883'] = '#include "MechaQMC5883.h"\n';
+    gen.definitions_['QMC5883'] = `
+MechaQMC5883 qmc;
+int16_t qmcYawBias=0;
+//#define DEBUG
+`;
+    gen.setupCodes_['QMC5883'] = `qmc.init();`;
+    gen.definitions_['readQMC5883'] = `
+int16_t readQMC5883(boolean bias=true) {
+    static int16_t x, y, z;
+    static int16_t yaw;
+    
+    qmc.read(&x, &y, &z, &yaw);
+    //yaw = qmc.azimuth(&y,&x);//you can get custom azimuth
+    if (bias) {
+      yaw = yaw - qmcYawBias;
+      /*
+      if ( yaw < -180 ) {
+        yaw = yaw + 360;
+      } else if ( yaw > 180 ) {
+        yaw = yaw -360;
+      }*/
+    }
+
+  #ifdef DEBUG
+    Serial.print("x: ");
+    Serial.print(x);
+    Serial.print(" y: ");
+    Serial.print(y);
+    Serial.print(" z: ");
+    Serial.print(z);
+    Serial.print(" yaw: ");
+    Serial.print(yaw);
+    Serial.println();
+  #endif
+
+    return yaw;
+}
+`;
+    return [`readQMC5883()`, gen.ORDER_ATOMIC];
   }
 
   async isGesture(args) {
@@ -2305,6 +2480,7 @@ class cBrain {
   }
 
   isGestureGen(gen, block) {
+    wireCommon(gen);
     mpuCommon(gen);
     const x = gen.valueToCode(block, 'GESTURE');
     //console.log('x=',typeof x, x);
@@ -2453,6 +2629,7 @@ class cBrain {
   }
 
   imuReadGen(gen, block) {
+    wireCommon(gen);
     mpuCommon(gen);
     const x = gen.valueToCode(block, 'IMU');
     //console.log('x=',typeof x, x);
@@ -3249,7 +3426,9 @@ while (${sertype}.available()) {
     }
     //console.log('after.. board.event:', board.eventNames());
     this.board.pending = 0;
-    this.board.buffer = [];  
+    this.board.buffer = [];
+    this.compass = null;
+    this.imu = null;
     //board.servo = {};
     //board.matrix = {};
     //console.log('now board:', board);
