@@ -1504,22 +1504,31 @@ class cBrain {
           }
         },
         {
-          opcode: 'resetMagYaw',
+          opcode: 'resetAzimuth',
           blockType: BlockType.COMMAND,
-          text: 'reset Yaw angle',
-          func: 'resetMagYaw',
+          text: 'reset Azimuth',
+          func: 'resetAzimuth',
           gen: {
-            arduino: this.resetMagYawGen
+            arduino: this.resetAzimuthGen
           }
         },
         {
-          opcode: 'magYaw',
+          opcode: 'azimuth',
           blockType: BlockType.REPORTER,
-          text: 'Yaw reading(°)',
+          text: 'Azimuth reading(°)',
           //checkboxInFlyout: true,
-          func: 'magYaw',
+          func: 'azimuth',
           gen: {
-            arduino: this.magYawGen
+            arduino: this.azimuthGen
+          }
+        },
+        {
+          opcode: 'calCompass',
+          blockType: BlockType.COMMAND,
+          text: 'calibrate compass',
+          func: 'calCompass',
+          gen: {
+            arduino: this.calCompassGen
           }
         },
         /*
@@ -1829,8 +1838,9 @@ class cBrain {
           'stringlength': '字串[TEXT]長度',
           'resettimer': '重置計時器',
           'gettimer': '計時(毫秒)',
-          'resetMagYaw': '將偏航角歸零',
-          'magYaw': '偏航角度(°)',
+          'resetAzimuth': '將方位角歸零',
+          'azimuth': '方位角(°)',
+          'calCompass': '校正羅盤',
         },
         'zh-cn': { // 簡體中文
           //'cBrain': '鸡车脑',
@@ -1891,8 +1901,9 @@ class cBrain {
           'stringlength': '字符串[TEXT]长度',
           'resettimer': '重置计时器',
           'gettimer': '计时(毫秒)',
-          'resetMagYaw': '将航向角归零',
-          'magYaw': '航向角度(°)',
+          'resetAzimuth': '将方位角归零',
+          'azimuth': '方位角(°)',
+          'calCompass': '校正罗盘',
         },
       }
 
@@ -2204,7 +2215,7 @@ class cBrain {
     });
   }
 
-  async resetMagYaw(args) {
+  async resetAzimuth(args) {
     if (!this.compass) {
       this.compass = 0x0D; // QMC5883L i2c address
       /*
@@ -2229,8 +2240,8 @@ class cBrain {
     this.yawBias = Math.atan(x,y) * 180.0/Math.PI;
     console.log('compass.yaw_bias=', this.yawBias);
   }
-
-  resetMagYawGen(gen, block) {
+/*
+  resetAzimuthGen(gen, block) {
     wireCommon(gen);
     gen.includes_['QMC5883'] = '#include "MechaQMC5883.h"\n';
     gen.definitions_['QMC5883'] = `
@@ -2248,12 +2259,12 @@ int16_t readQMC5883(boolean bias=true) {
     //yaw = qmc.azimuth(&y,&x);//you can get custom azimuth
     if (bias) {
       yaw = yaw - qmcYawBias;
-      /*
+      
       if ( yaw < -180 ) {
         yaw = yaw + 360;
       } else if ( yaw > 180 ) {
         yaw = yaw -360;
-      }*/
+      }
     }
 
   #ifdef DEBUG
@@ -2273,8 +2284,49 @@ int16_t readQMC5883(boolean bias=true) {
 `;
     return gen.line(`qmcYawBias = readQMC5883(false)`);
   }
+*/
+  resetAzimuthGen(gen, block) {
+    wireCommon(gen);
+    gen.includes_['QMC5883'] = '#include "QMC5883LCompass.h"\n';
+    gen.definitions_['QMC5883'] = `
+QMC5883LCompass compass;
+int16_t azimuthBias=0;
+//#define DEBUG
+`;
+    gen.setupCodes_['QMC5883'] = `
+  compass.init();
+  //compass.setCalibration(X_MIN, X_MAX, Y_MIN, Y_MAX, Z_MIN, Z_MAX);
+  compass.setSmoothing(10,true);
+`;
+    gen.definitions_['readQMC5883'] = `
+int16_t readQMC5883(boolean bias=true) {
+    static int16_t azimuth;
+    
+    compass.read();
+    azimuth = compass.getAzimuth();
+    if (bias) {
+      azimuth = azimuth - azimuthBias;
+    }
 
-  async magYaw(args) {
+  #ifdef DEBUG
+    Serial.print("x: ");
+    Serial.print(compass.getX());
+    Serial.print(" y: ");
+    Serial.print(compass.getY());
+    Serial.print(" z: ");
+    Serial.print(compass.getZ());
+    Serial.print(" azimuth: ");
+    Serial.print(azimuth);
+    Serial.println();
+  #endif
+
+    return azimuth;
+}
+`;
+    return gen.line(`azimuthBias = readQMC5883(false)`);
+  }
+
+  async azimuth(args) {
     if (!this.compass) {
       this.compass = 0x0D; // QMC5883L i2c address
       /*
@@ -2299,8 +2351,8 @@ int16_t readQMC5883(boolean bias=true) {
     
     return yaw;
   }
-
-  magYawGen(gen, block) {
+/*
+  azimuthGen(gen, block) {
     wireCommon(gen);
     gen.includes_['QMC5883'] = '#include "MechaQMC5883.h"\n';
     gen.definitions_['QMC5883'] = `
@@ -2318,12 +2370,12 @@ int16_t readQMC5883(boolean bias=true) {
     //yaw = qmc.azimuth(&y,&x);//you can get custom azimuth
     if (bias) {
       yaw = yaw - qmcYawBias;
-      /*
+      
       if ( yaw < -180 ) {
         yaw = yaw + 360;
       } else if ( yaw > 180 ) {
         yaw = yaw -360;
-      }*/
+      }
     }
 
   #ifdef DEBUG
@@ -2342,6 +2394,156 @@ int16_t readQMC5883(boolean bias=true) {
 }
 `;
     return [`readQMC5883()`, gen.ORDER_ATOMIC];
+  }
+*/
+  azimuthGen(gen, block) {
+    wireCommon(gen);
+    gen.includes_['QMC5883'] = '#include "QMC5883LCompass.h"\n';
+    gen.definitions_['QMC5883'] = `
+QMC5883LCompass compass;
+int16_t azimuthBias=0;
+//#define DEBUG
+`;
+    gen.setupCodes_['QMC5883'] = `
+  compass.init();
+  //compass.setCalibration(X_MIN, X_MAX, Y_MIN, Y_MAX, Z_MIN, Z_MAX);
+  compass.setSmoothing(10,true);
+`;
+    gen.definitions_['readQMC5883'] = `
+int16_t readQMC5883(boolean bias=true) {
+    static int16_t azimuth;
+    
+    compass.read();
+    azimuth = compass.getAzimuth();
+    if (bias) {
+      azimuth = azimuth - azimuthBias;
+    }
+
+  #ifdef DEBUG
+    Serial.print("x: ");
+    Serial.print(compass.getX());
+    Serial.print(" y: ");
+    Serial.print(compass.getY());
+    Serial.print(" z: ");
+    Serial.print(compass.getZ());
+    Serial.print(" azimuth: ");
+    Serial.print(azimuth);
+    Serial.println();
+  #endif
+
+    return azimuth;
+}
+`;
+    return [`readQMC5883()`, gen.ORDER_ATOMIC];
+  }
+
+  async calCompass(args) {
+
+  }
+
+  calCompassGen(gen, block) {
+    wireCommon(gen);
+    gen.includes_['QMC5883'] = '#include "QMC5883LCompass.h"\n';
+    gen.definitions_['QMC5883'] = `
+QMC5883LCompass compass;
+int16_t azimuthBias=0;
+//#define DEBUG
+`;
+    gen.setupCodes_['QMC5883'] = `
+compass.init();
+//compass.setCalibration(X_MIN, X_MAX, Y_MIN, Y_MAX, Z_MIN, Z_MAX);
+compass.setSmoothing(10,true);
+`;
+    gen.definitions_['calQMC5883'] = `
+void calQMC5883() {
+  int16_t x,y,z;
+  int16_t calibrationData[3][2];
+  bool changed = false;
+  bool done = false;
+  uint32_t t = 0;
+  uint32_t c = 0;
+    
+  #ifdef DEBUG  
+    Serial.println("This will provide calibration settings for your QMC5883L chip. When prompted, move the magnetometer in all directions until the calibration is complete.");
+    Serial.println("Calibration will begin in 5 seconds.");
+    delay(5000);
+  #endif
+
+  while (!done){
+    // Read compass values
+    compass.read();
+
+    // Return XYZ readings
+    x = compass.getX();
+    y = compass.getY();
+    z = compass.getZ();
+
+    changed = false;
+
+    if(x < calibrationData[0][0]) {
+      calibrationData[0][0] = x;
+      changed = true;
+    }
+    if(x > calibrationData[0][1]) {
+      calibrationData[0][1] = x;
+      changed = true;
+    }
+    
+    if(y < calibrationData[1][0]) {
+      calibrationData[1][0] = y;
+      changed = true;
+    }
+    if(y > calibrationData[1][1]) {
+      calibrationData[1][1] = y;
+      changed = true;
+    }
+
+    if(z < calibrationData[2][0]) {
+      calibrationData[2][0] = z;
+      changed = true;
+    }
+    if(z > calibrationData[2][1]) {
+      calibrationData[2][1] = z;
+      changed = true;
+    }
+
+    if (changed && !done) {
+      #ifdef DEBUG
+        Serial.println("CALIBRATING... Keep moving your sensor around.");
+      #endif
+      c = millis();
+    }
+      t = millis();
+  
+  
+    if ( (t - c > 5000) && !done) {
+      done = true;
+      #ifdef DEBUG
+          Serial.println("DONE. Copy the line below and paste it into your projects sketch.);");
+          Serial.println();
+      
+          Serial.print("compass.setCalibration(");
+          Serial.print(calibrationData[0][0]);
+          Serial.print(", ");
+          Serial.print(calibrationData[0][1]);
+          Serial.print(", ");
+          Serial.print(calibrationData[1][0]);
+          Serial.print(", ");
+          Serial.print(calibrationData[1][1]);
+          Serial.print(", ");
+          Serial.print(calibrationData[2][0]);
+          Serial.print(", ");
+          Serial.print(calibrationData[2][1]);
+          Serial.println(");");
+      #endif
+    }
+  }
+  compass.setCalibration(calibrationData[0][0], calibrationData[0][1],
+                          calibrationData[1][0], calibrationData[1][1],
+                          calibrationData[2][0], calibrationData[2][1]);
+}
+`;
+    return gen.line(`calQMC5883()`);
   }
 
   async isGesture(args) {
