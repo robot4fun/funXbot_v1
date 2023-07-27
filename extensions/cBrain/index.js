@@ -377,6 +377,7 @@ async function timeout(ms) {
   });
 };
 
+
 class TransportStub extends Emitter {
   constructor(path/*, options, openCallback*/) {
     super();
@@ -2190,13 +2191,15 @@ class cBrain {
   }
 
 
-  wireRead16(add, reg) {
+  i2cRead6B(add, reg) {
     return new Promise(resolve => {
-      this.board.i2cReadOnce(add, reg, 2, reply => {
-        let d16bits = (reply[1] << 8) | reply[0];
-        d16bits>> 15 ? ((d16bits ^ 0xFFFF) + 1) * -1 : d16bits;
-        console.log('d16bits=', d16bits.toString(2), ', ', d16bits);
-        resolve(d16bits);
+      this.board.i2cReadOnce(add, reg, 6, bytes => {
+        let data = {
+          x : five.Fn.int16(bytes[1], bytes[0]),
+          y : five.Fn.int16(bytes[3], bytes[2]),
+          z : five.Fn.int16(bytes[5], bytes[4]),
+        }
+        resolve(data); 
       });
     });
   }
@@ -2219,11 +2222,11 @@ class cBrain {
 
     }
 
-    let x = await this.wireRead16(this.compass,0x00);
-    let y = await this.wireRead16(this.compass,0x02);
-    let z = await this.wireRead16(this.compass,0x04);
+    let data = await this.i2cRead6B(this.compass,0x00);
+    //console.log('x=', data.x, ', ', 'y=', data.y, ',', 'z=', data.z);
+    let azimuth = Math.atan2(data.y,data.x) * 180.0/Math.PI - 5;
 
-    this.azimuthBias = (Math.atan2(y,x) * 180.0/Math.PI - 5) < 0? 360+this.azimuthBias : this.azimuthBias;
+    this.azimuthBias = azimuth < 0? 360+azimuth : azimuth;
     console.log('compass.azimuthBias=', this.azimuthBias);
   }
 /*
@@ -2329,11 +2332,21 @@ int16_t readQMC5883(boolean bias=true) {
       this.board.i2cWriteReg(this.compass, 0x09, 0b00011101); // init setup
 
     }
+    /*
+    this.i2cRead6B(this.compass,0x00).then(data => {
+      console.log('x=', data.x, ', ', 'y=', data.y, ',', 'z=', data.z);
+      let azimuth = Math.atan2(data.y, data.x) * 180.0/Math.PI - this.azimuthBias - 5;
+      //azimuth< 0? 360+azimuth : azimuth;
+      console.log('heading=', azimuth);
 
-    let x = await this.wireRead16(this.compass,0x00);
-    let y = await this.wireRead16(this.compass,0x02);
-    let z = await this.wireRead16(this.compass,0x04);
-    let azimuth = Math.atan2(y,x) * 180.0/Math.PI - this.azimuthBias - 5;
+      //return azimuth;//< 0? 360+azimuth : azimuth;
+    }).catch(err => {
+      console.log('error->', err);
+    });
+    */
+    let data = await this.i2cRead6B(this.compass,0x00);
+    console.log('x=', data.x, ', ', 'y=', data.y, ',', 'z=', data.z);
+    let azimuth = Math.atan2(data.y,data.x) * 180.0/Math.PI - this.azimuthBias - 5;
 
     return azimuth< 0? 360+azimuth : azimuth;
   }
