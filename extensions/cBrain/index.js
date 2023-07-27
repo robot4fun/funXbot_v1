@@ -287,7 +287,7 @@ bool IMUshaked(){
   #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
       Fastwire::setup(400, true);
   #endif*/
-  
+
   #ifdef DEBUG
     Serial.begin(115200);
   #endif
@@ -429,7 +429,7 @@ class cBrain {
     this.board = new firmata.Board(this.trans /*, {samplingInterval: 10}*/);
     //this.board = new Firmata(this.trans).Board;
     //console.log("firmata attached(this.board)", this.board);//for debug
-    
+
     // cross extension usage
     window.board = this.board;
     board._port = Ports_rj;
@@ -516,7 +516,7 @@ class cBrain {
       this.session.onclose = this.onclose;
 
       console.log("cBrain connected");//for debug
-      if(!this.board.isReady){        
+      if(!this.board.isReady){
         console.log("after connected, to request version again..");
         this.board.reportVersion(() => {
           console.log('-> after connected, got version finally');
@@ -524,7 +524,7 @@ class cBrain {
         this.board.queryFirmware(() => {
           console.log('-> after connected, got firmware info finally');
         });
-      }      
+      }
       if(this.firstrun) {
         this.firstrun = false;
       } else {
@@ -544,8 +544,8 @@ class cBrain {
     console.log('before disconnect, window.board:', board); // 沒用, reset比較快執行完
     //console.log('window.j5board:',j5board);
     this.reset();
-    this.session.close();    
-    console.log("cBrain disconnected");//for debug    
+    this.session.close();
+    console.log("cBrain disconnected");//for debug
   }
 
   isConnected() {
@@ -2125,7 +2125,7 @@ class cBrain {
     // digitalRead執行後會開始監聽digital-read- , pin value變化即會回報並存在pins.value內
     if (board.eventNames().indexOf(`digital-read-${pin}`) === -1) { // just call digitalRead() once
       board.digitalRead(pin, value => {   // 只要call一次,pin value變化時(即使沒執行此block)
-        //console.log('pin value=', value); // 即會執行此callback      
+        //console.log('pin value=', value); // 即會執行此callback
       });
       //console.log('old pin value=', board.pins[pin].value);
       await timeout(75);  // let the 1st data being fresh
@@ -2194,6 +2194,7 @@ class cBrain {
     return new Promise(resolve => {
       this.board.i2cReadOnce(add, reg, 2, reply => {
         let d16bits = (reply[1] << 8) | reply[0];
+        d16bits>> 15 ? ((d16bits ^ 0xFFFF) + 1) * -1 : d16bits;
         console.log('d16bits=', d16bits.toString(2), ', ', d16bits);
         resolve(d16bits);
       });
@@ -2217,11 +2218,11 @@ class cBrain {
       this.board.i2cWriteReg(this.compass, 0x09, 0b00011101); // init setup
 
     }
-    
+
     let x = await this.wireRead16(this.compass,0x00);
     let y = await this.wireRead16(this.compass,0x02);
     let z = await this.wireRead16(this.compass,0x04);
-    
+
     this.azimuthBias = (Math.atan2(y,x) * 180.0/Math.PI - 5) < 0? 360+this.azimuthBias : this.azimuthBias;
     console.log('compass.azimuthBias=', this.azimuthBias);
   }
@@ -2239,12 +2240,12 @@ int16_t qmcYawBias=0;
 int16_t readQMC5883(boolean bias=true) {
     static int16_t x, y, z;
     static int16_t yaw;
-    
+
     qmc.read(&x, &y, &z, &yaw);
     //yaw = qmc.azimuth(&y,&x);//you can get custom azimuth
     if (bias) {
       yaw = yaw - qmcYawBias;
-      
+
       if ( yaw < -180 ) {
         yaw = yaw + 360;
       } else if ( yaw > 180 ) {
@@ -2271,7 +2272,7 @@ int16_t readQMC5883(boolean bias=true) {
   }
 */
   resetAzimuthGen(gen, block) {
-    wireCommon(gen);    
+    wireCommon(gen);
     gen.includes_['QMC5883'] = '#include "QMC5883LCompass.h"\n';
     gen.definitions_['QMC5883'] = `
 QMC5883LCompass compass;
@@ -2286,7 +2287,7 @@ int16_t azimuthBias=0;
     gen.definitions_['readQMC5883'] = `
 int16_t readQMC5883(boolean bias=true) {
     static int16_t azimuth;
-    
+
     compass.read();
     azimuth = compass.getAzimuth();
     if (bias) {
@@ -2328,12 +2329,12 @@ int16_t readQMC5883(boolean bias=true) {
       this.board.i2cWriteReg(this.compass, 0x09, 0b00011101); // init setup
 
     }
-    
+
     let x = await this.wireRead16(this.compass,0x00);
     let y = await this.wireRead16(this.compass,0x02);
     let z = await this.wireRead16(this.compass,0x04);
     let azimuth = Math.atan2(y,x) * 180.0/Math.PI - this.azimuthBias - 5;
-    
+
     return azimuth< 0? 360+azimuth : azimuth;
   }
 /*
@@ -2350,12 +2351,12 @@ int16_t qmcYawBias=0;
 int16_t readQMC5883(boolean bias=true) {
     static int16_t x, y, z;
     static int16_t yaw;
-    
+
     qmc.read(&x, &y, &z, &yaw);
     //yaw = qmc.azimuth(&y,&x);//you can get custom azimuth
     if (bias) {
       yaw = yaw - qmcYawBias;
-      
+
       if ( yaw < -180 ) {
         yaw = yaw + 360;
       } else if ( yaw > 180 ) {
@@ -2397,7 +2398,7 @@ int16_t azimuthBias=0;
     gen.definitions_['readQMC5883'] = `
 int16_t readQMC5883(boolean bias=true) {
     static int16_t azimuth;
-    
+
     compass.read();
     azimuth = compass.getAzimuth();
     if (bias) {
@@ -2447,8 +2448,8 @@ void calQMC5883() {
   bool done = false;
   uint32_t t = 0;
   uint32_t c = 0;
-    
-  #ifdef DEBUG  
+
+  #ifdef DEBUG
     Serial.println("This will provide calibration settings for your QMC5883L chip. When prompted, move the magnetometer in all directions until the calibration is complete.");
     Serial.println("Calibration will begin in 5 seconds.");
     delay(5000);
@@ -2473,7 +2474,7 @@ void calQMC5883() {
       calibrationData[0][1] = x;
       changed = true;
     }
-    
+
     if(y < calibrationData[1][0]) {
       calibrationData[1][0] = y;
       changed = true;
@@ -2499,14 +2500,14 @@ void calQMC5883() {
       c = millis();
     }
       t = millis();
-  
-  
+
+
     if ( (t - c > 5000) && !done) {
       done = true;
       #ifdef DEBUG
           Serial.println("DONE. Copy the line below and paste it into your projects sketch.);");
           Serial.println();
-      
+
           Serial.print("compass.setCalibration(");
           Serial.print(calibrationData[0][0]);
           Serial.print(", ");
@@ -3626,7 +3627,7 @@ while (${sertype}.available()) {
     //console.log('isConnected?',this.isConnected());
     if (this.isConnected()) {
       board.reset();
-    } 
+    }
     //console.log('before.. board.event:', board.eventNames());
     for (let pin = 0; pin < board.pins.length; pin++) {
         board.removeAllListeners("digital-read-" + pin);
