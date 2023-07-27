@@ -43,6 +43,22 @@ const wireCommon = gen => {
     gen.includes_['wire'] = '#include <Wire.h>\n';
 }
 
+const warningCommon = gen => {
+  gen.definitions_['warning'] = `
+void warning(){
+      #define LED_WARNING 13
+      bool blinkState = false;
+      pinMode(LED_WARNING, OUTPUT);
+      for ( uint8_t i=0; i<5; i++) {
+          blinkState = !blinkState;
+          digitalWrite(LED_WARNING, blinkState);
+          //digitalWrite(LED_WARNING, !digitalRead(LED_WARNING));
+          delay(500);
+      }
+}
+`;
+}
+
 const mpuCommon = gen => {
   gen.includes_['stdint'] = `#include <stdint.h>`;
   gen.includes_['mpu6050'] = `
@@ -81,19 +97,6 @@ int16_t yaw_bias=0;
 //#define DEBUG
 `;
 
-  gen.definitions_['mpufailed'] = `
-void mpufailed(){
-    #define LED_WARNING 13
-    bool blinkState = false;
-    pinMode(LED_WARNING, OUTPUT);
-    for ( uint8_t i=0; i<5; i++) {
-        blinkState = !blinkState;
-        digitalWrite(LED_WARNING, blinkState);
-        //digitalWrite(LED_WARNING, !digitalRead(LED_WARNING));
-        delay(500);
-    }
-}
-`;
   gen.definitions_['mpu6050read'] = `
 int16_t mpu6050read(uint8_t d, boolean bias=true){
   uint8_t fifoBuffer[42];       // FIFO storage buffer, dmpPacketSize = 42
@@ -291,7 +294,7 @@ bool IMUshaked(){
 
   mpu.initialize();
   if (!mpu.testConnection()) {
-    mpufailed();
+    warning();
     #ifdef DEBUG
         Serial.println(F("MPU6050 connection failed"));
     #endif
@@ -336,7 +339,7 @@ bool IMUshaked(){
         Serial.println(mpu.getIntEnabled(),BIN);
       #endif
     } else {
-      mpufailed();
+      warning();
       // ERROR!
       // 1 = initial memory load failed
       // 2 = DMP configuration updates failed
@@ -1839,7 +1842,7 @@ class cBrain {
           'resettimer': '重置計時器',
           'gettimer': '計時(毫秒)',
           'resetAzimuth': '將方位角歸零',
-          'azimuth': '方位角(°)',
+          'azimuth': '方位角(° 順時針)',
           'calCompass': '校正羅盤',
         },
         'zh-cn': { // 簡體中文
@@ -1902,7 +1905,7 @@ class cBrain {
           'resettimer': '重置计时器',
           'gettimer': '计时(毫秒)',
           'resetAzimuth': '将方位角归零',
-          'azimuth': '方位角(°)',
+          'azimuth': '方位角(° 顺时针)',
           'calCompass': '校正罗盘',
         },
       }
@@ -2186,24 +2189,6 @@ class cBrain {
     return [`analogRead(${pin})`, gen.ORDER_ATOMIC];
   }
 
-  resetyaw(args) {
-    if (!this.imu) {
-      this.imu = new five.IMU({
-        controller: "MPU6050",
-        board: this.j5board,
-      });
-      this.imu.yaw_bias = 0;
-    }
-
-    this.imu.yaw_bias = /*15 */ this.imu.gyro.yaw.angle;
-  }
-
-  resetyawGen(gen, block) {
-    wireCommon(gen);
-    mpuCommon(gen);
-    //return gen.line(`mpu.yaw_bias = mpu6050read(1,false)`);
-    return gen.line(`yaw_bias = mpu6050read(1,false)`);
-  }
 
   wireRead16(add, reg) {
     return new Promise(resolve => {
@@ -2225,7 +2210,7 @@ class cBrain {
       this.compass.rng =  0b00010000;  // range = 8G
       this.compass.osr =  0b00000000;  // over sampling rate = 512
       */
-      this.yawBias = 0;
+      this.azimuthBias = 0;
 
       this.board.i2cConfig();
       this.board.i2cWriteReg(this.compass, 0x0B, 0x01); // Define Set/Reset period
@@ -2237,8 +2222,8 @@ class cBrain {
     let y = await this.wireRead16(this.compass,0x02);
     let z = await this.wireRead16(this.compass,0x04);
     
-    this.yawBias = Math.atan(x,y) * 180.0/Math.PI;
-    console.log('compass.yaw_bias=', this.yawBias);
+    this.azimuthBias = (Math.atan2(y,x) * 180.0/Math.PI - 5) < 0? 360+this.azimuthBias : this.azimuthBias;
+    console.log('compass.azimuthBias=', this.azimuthBias);
   }
 /*
   resetAzimuthGen(gen, block) {
@@ -2286,7 +2271,7 @@ int16_t readQMC5883(boolean bias=true) {
   }
 */
   resetAzimuthGen(gen, block) {
-    wireCommon(gen);
+    wireCommon(gen);    
     gen.includes_['QMC5883'] = '#include "QMC5883LCompass.h"\n';
     gen.definitions_['QMC5883'] = `
 QMC5883LCompass compass;
@@ -2296,7 +2281,7 @@ int16_t azimuthBias=0;
     gen.setupCodes_['QMC5883'] = `
   compass.init();
   //compass.setCalibration(X_MIN, X_MAX, Y_MIN, Y_MAX, Z_MIN, Z_MAX);
-  compass.setSmoothing(10,true);
+  compass.setSmoothing(4,true);
 `;
     gen.definitions_['readQMC5883'] = `
 int16_t readQMC5883(boolean bias=true) {
@@ -2320,7 +2305,7 @@ int16_t readQMC5883(boolean bias=true) {
     Serial.println();
   #endif
 
-    return azimuth;
+    return azimuth - 5; // 地磁偏角 = -5度
 }
 `;
     return gen.line(`azimuthBias = readQMC5883(false)`);
@@ -2336,7 +2321,7 @@ int16_t readQMC5883(boolean bias=true) {
       this.compass.rng =  0b00010000;  // range = 8G
       this.compass.osr =  0b00000000;  // over sampling rate = 512
       */
-      this.yawBias = 0;
+      this.azimuthBias = 0;
 
       this.board.i2cConfig();
       this.board.i2cWriteReg(this.compass, 0x0B, 0x01); // Define Set/Reset period
@@ -2347,9 +2332,9 @@ int16_t readQMC5883(boolean bias=true) {
     let x = await this.wireRead16(this.compass,0x00);
     let y = await this.wireRead16(this.compass,0x02);
     let z = await this.wireRead16(this.compass,0x04);
-    let yaw = Math.atan(x,y) * 180.0/Math.PI - this.yawBias;
+    let azimuth = Math.atan2(y,x) * 180.0/Math.PI - this.azimuthBias - 5;
     
-    return yaw;
+    return azimuth< 0? 360+azimuth : azimuth;
   }
 /*
   azimuthGen(gen, block) {
@@ -2407,7 +2392,7 @@ int16_t azimuthBias=0;
     gen.setupCodes_['QMC5883'] = `
   compass.init();
   //compass.setCalibration(X_MIN, X_MAX, Y_MIN, Y_MAX, Z_MIN, Z_MAX);
-  compass.setSmoothing(10,true);
+  compass.setSmoothing(4,true);
 `;
     gen.definitions_['readQMC5883'] = `
 int16_t readQMC5883(boolean bias=true) {
@@ -2431,7 +2416,7 @@ int16_t readQMC5883(boolean bias=true) {
     Serial.println();
   #endif
 
-    return azimuth;
+    return azimuth - 5; // 台灣地磁偏角 = -5度
 }
 `;
     return [`readQMC5883()`, gen.ORDER_ATOMIC];
@@ -2544,6 +2529,26 @@ void calQMC5883() {
 }
 `;
     return gen.line(`calQMC5883()`);
+  }
+
+  resetyaw(args) {
+    if (!this.imu) {
+      this.imu = new five.IMU({
+        controller: "MPU6050",
+        board: this.j5board,
+      });
+      this.imu.yaw_bias = 0;
+    }
+
+    this.imu.yaw_bias = /*15 */ this.imu.gyro.yaw.angle;
+  }
+
+  resetyawGen(gen, block) {
+    wireCommon(gen);
+    warningCommon(gen);
+    mpuCommon(gen);
+    //return gen.line(`mpu.yaw_bias = mpu6050read(1,false)`);
+    return gen.line(`yaw_bias = mpu6050read(1,false)`);
   }
 
   async isGesture(args) {
@@ -2683,6 +2688,7 @@ void calQMC5883() {
 
   isGestureGen(gen, block) {
     wireCommon(gen);
+    warningCommon(gen);
     mpuCommon(gen);
     const x = gen.valueToCode(block, 'GESTURE');
     //console.log('x=',typeof x, x);
@@ -2832,6 +2838,7 @@ void calQMC5883() {
 
   imuReadGen(gen, block) {
     wireCommon(gen);
+    warningCommon(gen);
     mpuCommon(gen);
     const x = gen.valueToCode(block, 'IMU');
     //console.log('x=',typeof x, x);
