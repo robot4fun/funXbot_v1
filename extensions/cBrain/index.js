@@ -1034,7 +1034,7 @@ class cBrain {
           opcode: 'resettimer',
           blockType: BlockType.COMMAND,
           text: 'reset timer',
-          func: 'noop',//'resetTimer',
+          func: 'resetTimer',
           gen: {
             arduino: this.resetTimerGen
           }
@@ -1043,7 +1043,7 @@ class cBrain {
           opcode: 'gettimer',
           text: 'timer value (ms)',
           blockType: BlockType.REPORTER,
-          func: 'noop',//'getTimer',
+          func: 'getTimer',
           gen: {
             arduino: this.getTimerGen
           }
@@ -1507,15 +1507,7 @@ class cBrain {
             arduino: this.resetGen
           }
         },
-        {
-          opcode: 'resetAzimuth',
-          blockType: BlockType.COMMAND,
-          text: 'reset Azimuth',
-          func: 'resetAzimuth',
-          gen: {
-            arduino: this.resetAzimuthGen
-          }
-        },
+        '---',
         {
           opcode: 'azimuth',
           blockType: BlockType.REPORTER,
@@ -1533,6 +1525,15 @@ class cBrain {
           func: 'calCompass',
           gen: {
             arduino: this.calCompassGen
+          }
+        },
+        {
+          opcode: 'resetAzimuth',
+          blockType: BlockType.COMMAND,
+          text: 'reset Azimuth',
+          func: 'resetAzimuth',
+          gen: {
+            arduino: this.resetAzimuthGen
           }
         },
         /*
@@ -3492,7 +3493,23 @@ uint32_t getTimer(bool _reseT = false) {
   }
 
   getTimerGen(gen, block) {
+    gen.definitions_['timer'] = `
+uint32_t getTimer(bool _reseT = false) {
+  static uint32_t _t0 = 0;
+  if (_reseT) _t0 = millis();
+  return ( millis() - _t0 );
+}
+`;
     return ['getTimer()', gen.ORDER_ATOMIC];
+  }
+
+  resetTimer(args){
+    this.t0 = new Date().getTime(); // 獲取當前毫秒數
+  }
+
+  getTimer(args){
+    if (!this.t0) this.t0 = 0;
+    return new Date().getTime()-this.t0;
   }
 
   // bellow is for I2C
@@ -3684,7 +3701,7 @@ uint16_t readVcc() {
   ADCSRA |= _BV(ADSC); // Start conversion
   while (bit_is_set(ADCSRA,ADSC)); // measuring
 
-  uint8_t low = ADCL; // must read ADCL first - it then locks ADCH  
+  uint8_t low = ADCL; // must read ADCL first - it then locks ADCH
   uint8_t high = ADCH; // unlocks both
 
   uint16_t result = (high<<8) | low;
