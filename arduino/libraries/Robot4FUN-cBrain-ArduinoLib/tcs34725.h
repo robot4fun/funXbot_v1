@@ -1,5 +1,5 @@
 #include <Wire.h>
-#include "Adafruit_TCS34725.h"
+#include "funXbot_TCS34725.h"
 
 //
 // An experimental wrapper class that implements the improved lux and color temperature from
@@ -47,7 +47,7 @@ private:
   uint16_t agc_cur;
 
   void setGainTime(void);
-  Adafruit_TCS34725 tcs;
+  funXbot_TCS34725 tcs;
 
 public:
   tcs34725(void);
@@ -82,7 +82,7 @@ tcs34725::tcs34725() : agc_cur(0), isAvailable(0), isSaturated(0) {
 
 // initialize the sensor
 boolean tcs34725::begin(void) {
-  tcs = Adafruit_TCS34725(agc_lst[agc_cur].at, agc_lst[agc_cur].ag);
+  tcs = funXbot_TCS34725(agc_lst[agc_cur].at, agc_lst[agc_cur].ag);
   if ((isAvailable = tcs.begin()))
     setGainTime();
   return(isAvailable);

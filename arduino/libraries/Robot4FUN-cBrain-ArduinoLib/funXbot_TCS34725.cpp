@@ -1,25 +1,7 @@
 /*!
- *  @file Adafruit_TCS34725.cpp
+ *  modified from Adafruit_TCS34725.cpp by tonyet
  *
- *  @mainpage Driver for the TCS34725 digital color sensors.
- *
- *  @section intro_sec Introduction
- *
- *  Adafruit invests time and resources providing this open source code,
- *  please support Adafruit and open-source hardware by purchasing
- *  products from Adafruit!
- *
- *  @section author Author
- *
- *  KTOWN (Adafruit Industries)
- *
- *  @section license License
- *
- *  BSD (see license.txt)
- *
- *  @section HISTORY
- *
- *  v1.0 - First release
+
  */
 #ifdef __AVR
 #include <avr/pgmspace.h>
@@ -29,7 +11,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "Adafruit_TCS34725.h"
+#include "funXbot_TCS34725.h"
 
 /*!
  *  @brief  Implements missing powf function
@@ -48,7 +30,7 @@ float powf(const float x, const float y) {
  *  @param  reg
  *  @param  value
  */
-void Adafruit_TCS34725::write8(uint8_t reg, uint32_t value) {
+void funXbot_TCS34725::write8(uint8_t reg, uint32_t value) {
   _wire->beginTransmission(_i2caddr);
 #if ARDUINO >= 100
   _wire->write(TCS34725_COMMAND_BIT | reg);
@@ -65,7 +47,7 @@ void Adafruit_TCS34725::write8(uint8_t reg, uint32_t value) {
  *  @param  reg
  *  @return value
  */
-uint8_t Adafruit_TCS34725::read8(uint8_t reg) {
+uint8_t funXbot_TCS34725::read8(uint8_t reg) {
   _wire->beginTransmission(_i2caddr);
 #if ARDUINO >= 100
   _wire->write(TCS34725_COMMAND_BIT | reg);
@@ -87,7 +69,7 @@ uint8_t Adafruit_TCS34725::read8(uint8_t reg) {
  *  @param  reg
  *  @return value
  */
-uint16_t Adafruit_TCS34725::read16(uint8_t reg) {
+uint16_t funXbot_TCS34725::read16(uint8_t reg) {
   uint16_t x;
   uint16_t t;
 
@@ -115,7 +97,7 @@ uint16_t Adafruit_TCS34725::read16(uint8_t reg) {
 /*!
  *  @brief  Enables the device
  */
-void Adafruit_TCS34725::enable() {
+void funXbot_TCS34725::enable() {
   write8(TCS34725_ENABLE, TCS34725_ENABLE_PON);
   delay(3); // 2.4ms
   write8(TCS34725_ENABLE, TCS34725_ENABLE_PON | TCS34725_ENABLE_AEN);
@@ -132,7 +114,7 @@ void Adafruit_TCS34725::enable() {
 /*!
  *  @brief  Disables the device (putting it in lower power sleep mode)
  */
-void Adafruit_TCS34725::disable() {
+void funXbot_TCS34725::disable() {
   /* Turn the device off to save power */
   uint8_t reg = 0;
   reg = read8(TCS34725_ENABLE);
@@ -146,7 +128,7 @@ void Adafruit_TCS34725::disable() {
  *  @param  gain
  *          Gain
  */
-Adafruit_TCS34725::Adafruit_TCS34725(uint8_t it,
+funXbot_TCS34725::funXbot_TCS34725(uint8_t it,
                                      tcs34725Gain_t gain) {
   _tcs34725Initialised = false;
   _tcs34725IntegrationTime = it;
@@ -159,7 +141,7 @@ Adafruit_TCS34725::Adafruit_TCS34725(uint8_t it,
  *          i2c address
  *  @return True if initialization was successful, otherwise false.
  */
-boolean Adafruit_TCS34725::begin(uint8_t addr) {
+boolean funXbot_TCS34725::begin(uint8_t addr) {
   _i2caddr = addr;
   _wire = &Wire;
 
@@ -174,7 +156,7 @@ boolean Adafruit_TCS34725::begin(uint8_t addr) {
  *          The Wire object
  *  @return True if initialization was successful, otherwise false.
  */
-boolean Adafruit_TCS34725::begin(uint8_t addr, TwoWire *theWire) {
+boolean funXbot_TCS34725::begin(uint8_t addr, TwoWire *theWire) {
   _i2caddr = addr;
   _wire = theWire;
 
@@ -185,7 +167,7 @@ boolean Adafruit_TCS34725::begin(uint8_t addr, TwoWire *theWire) {
  *  @brief  Initializes I2C and configures the sensor
  *  @return True if initialization was successful, otherwise false.
  */
-boolean Adafruit_TCS34725::begin() {
+boolean funXbot_TCS34725::begin() {
   _i2caddr = TCS34725_ADDRESS;
   _wire = &Wire;
 
@@ -196,7 +178,7 @@ boolean Adafruit_TCS34725::begin() {
  *  @brief  Part of begin
  *  @return True if initialization was successful, otherwise false.
  */
-boolean Adafruit_TCS34725::init() {
+boolean funXbot_TCS34725::init() {
   _wire->begin();
 
   /* Make sure we're actually connected */
@@ -221,7 +203,7 @@ boolean Adafruit_TCS34725::init() {
  *  @param  it
  *          Integration Time
  */
-void Adafruit_TCS34725::setIntegrationTime(uint8_t it) {
+void funXbot_TCS34725::setIntegrationTime(uint8_t it) {
   if (!_tcs34725Initialised)
     begin();
 
@@ -232,11 +214,11 @@ void Adafruit_TCS34725::setIntegrationTime(uint8_t it) {
   _tcs34725IntegrationTime = it;
 }
 
-uint8_t Adafruit_TCS34725::getIntegrationTime() {
+uint8_t funXbot_TCS34725::getIntegrationTime() {
   return (uint8_t)_tcs34725IntegrationTime;
 }
 
-tcs34725Gain_t Adafruit_TCS34725::getGain() {
+tcs34725Gain_t funXbot_TCS34725::getGain() {
   return _tcs34725Gain;
 }
 
@@ -245,7 +227,7 @@ tcs34725Gain_t Adafruit_TCS34725::getGain() {
  *  @param  gain
  *          Gain (sensitivity to light)
  */
-void Adafruit_TCS34725::setGain(tcs34725Gain_t gain) {
+void funXbot_TCS34725::setGain(tcs34725Gain_t gain) {
   if (!_tcs34725Initialised)
     begin();
 
@@ -267,7 +249,7 @@ void Adafruit_TCS34725::setGain(tcs34725Gain_t gain) {
  *  @param  *c
  *          Clear channel value
  */
-void Adafruit_TCS34725::getRawData(uint16_t *r, uint16_t *g, uint16_t *b,
+void funXbot_TCS34725::getRawData(uint16_t *r, uint16_t *g, uint16_t *b,
                                    uint16_t *c) {
   if (!_tcs34725Initialised)
     begin();
@@ -299,7 +281,7 @@ void Adafruit_TCS34725::getRawData(uint16_t *r, uint16_t *g, uint16_t *b,
  *  @param  *c
  *          Clear channel value
  */
-void Adafruit_TCS34725::getRawDataOneShot(uint16_t *r, uint16_t *g, uint16_t *b,
+void funXbot_TCS34725::getRawDataOneShot(uint16_t *r, uint16_t *g, uint16_t *b,
                                           uint16_t *c) {
   if (!_tcs34725Initialised)
     begin();
@@ -318,7 +300,7 @@ void Adafruit_TCS34725::getRawDataOneShot(uint16_t *r, uint16_t *g, uint16_t *b,
  *  @param  *b
  *          Blue value normalized to 0-255
  */
-void Adafruit_TCS34725::getRGB(float *r, float *g, float *b) {
+void funXbot_TCS34725::getRGB(float *r, float *g, float *b) {
   uint16_t red, green, blue, clear;
   getRawData(&red, &green, &blue, &clear);
   uint32_t sum = clear;
@@ -344,7 +326,7 @@ void Adafruit_TCS34725::getRGB(float *r, float *g, float *b) {
  *          Blue value
  *  @return Color temperature in degrees Kelvin
  */
-uint16_t Adafruit_TCS34725::calculateColorTemperature(uint16_t r, uint16_t g,
+uint16_t funXbot_TCS34725::calculateColorTemperature(uint16_t r, uint16_t g,
                                                       uint16_t b) {
   float X, Y, Z; /* RGB to XYZ correlation      */
   float xc, yc;  /* Chromaticity co-ordinates   */
@@ -391,7 +373,7 @@ uint16_t Adafruit_TCS34725::calculateColorTemperature(uint16_t r, uint16_t g,
  *          Clear channel value
  *  @return Color temperature in degrees Kelvin
  */
-uint16_t Adafruit_TCS34725::calculateColorTemperature_dn40(uint16_t r,
+uint16_t funXbot_TCS34725::calculateColorTemperature_dn40(uint16_t r,
                                                            uint16_t g,
                                                            uint16_t b,
                                                            uint16_t c) {
@@ -481,7 +463,7 @@ uint16_t Adafruit_TCS34725::calculateColorTemperature_dn40(uint16_t r,
  *          Blue value
  *  @return Lux value
  */
-uint16_t Adafruit_TCS34725::calculateLux(uint16_t r, uint16_t g, uint16_t b) {
+uint16_t funXbot_TCS34725::calculateLux(uint16_t r, uint16_t g, uint16_t b) {
   float illuminance;
 
   /* This only uses RGB ... how can we integrate clear or calculate lux */
@@ -496,7 +478,7 @@ uint16_t Adafruit_TCS34725::calculateLux(uint16_t r, uint16_t g, uint16_t b) {
  *  @param  i
  *          Interrupt (True/False)
  */
-void Adafruit_TCS34725::setInterrupt(boolean i) {
+void funXbot_TCS34725::setInterrupt(boolean i) {
   uint8_t r = read8(TCS34725_ENABLE);
   if (i) {
     r |= TCS34725_ENABLE_AIEN;
@@ -509,7 +491,7 @@ void Adafruit_TCS34725::setInterrupt(boolean i) {
 /*!
  *  @brief  Clears inerrupt for TCS34725
  */
-void Adafruit_TCS34725::clearInterrupt() {
+void funXbot_TCS34725::clearInterrupt() {
   _wire->beginTransmission(_i2caddr);
 #if ARDUINO >= 100
   _wire->write(TCS34725_COMMAND_BIT | 0x66);
@@ -526,7 +508,7 @@ void Adafruit_TCS34725::clearInterrupt() {
  *  @param  high
  *          High limit
  */
-void Adafruit_TCS34725::setIntLimits(uint16_t low, uint16_t high) {
+void funXbot_TCS34725::setIntLimits(uint16_t low, uint16_t high) {
   write8(0x04, low & 0xFF);
   write8(0x05, low >> 8);
   write8(0x06, high & 0xFF);
