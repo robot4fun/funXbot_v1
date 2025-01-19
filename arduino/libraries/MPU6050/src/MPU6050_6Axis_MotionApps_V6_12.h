@@ -495,10 +495,10 @@ uint8_t MPU6050::dmpGetGyro(VectorInt16 *v, const uint8_t* packet) {
 // uint8_t MPU6050::dmpSetLinearAccelFilterCoefficient(float coef);
 // uint8_t MPU6050::dmpGetLinearAccel(long *data, const uint8_t* packet);
 uint8_t MPU6050::dmpGetLinearAccel(VectorInt16 *v, VectorInt16 *vRaw, VectorFloat *gravity) {
-    // get rid of the gravity component (+1g = +8192 in standard DMP FIFO packet, sensitivity is 2g)
-    v -> x = vRaw -> x - gravity -> x*8192;
-    v -> y = vRaw -> y - gravity -> y*8192;
-    v -> z = vRaw -> z - gravity -> z*8192;
+    // get rid of the gravity component (+1g = +16384 in standard DMP FIFO packet, sensitivity is 2g)
+    v -> x = vRaw -> x - gravity -> x*16384;
+    v -> y = vRaw -> y - gravity -> y*16384;
+    v -> z = vRaw -> z - gravity -> z*16384;
     return 0;
 }
 // uint8_t MPU6050::dmpGetLinearAccelInWorld(long *data, const uint8_t* packet);
