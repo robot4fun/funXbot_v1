@@ -14,6 +14,6 @@ TODO: a batch file to do xcopy automatically
 3. 接口2B不能和主機內建 聲強度感應器 同時使用
 4. 程式積木所指x軸為朝接口5-8方向; y軸朝向USB及電源接口方向
 ![PD2.jpg](./PD2.jpg)
-5. 安插 funXtcp WiFi 模組時, 白色標記需和主控器無線通訊接口白色標記對齊(插反會燒毀)
+5. 安插 funXtcp WiFi 模組時, 白色標記需和主控器無線通訊接口白色標記對齊
 6. 無線通訊接口無法和有線通訊接口(USB) 同時使用. 使用USB前, 請先拔除funXtcp WiFi 模組
 7. 使用無線通訊前, 需先在Windows 連無線網路(預設密碼12345678), 再在funXblock中連 funXbot
