@@ -1,7 +1,9 @@
-/// \file QTRSensors.h
+// modified by tonyet@funxedu
+#ifndef funXbot_lineSensor_h
+#define funXbot_lineSensor_h
 
 #pragma once
-
+#include <Arduino.h>
 #include <stdint.h>
 
 /// \brief Emitter behavior when taking readings.
@@ -78,13 +80,13 @@ const uint8_t QTRMaxSensors = 31;
 ///
 /// See \ref md_usage for an overview of how this library can be used and some
 /// example code.
-class QTRSensors
+class funXbotlineSensor
 {
   public:
 
-    QTRSensors() = default;
+    funXbotlineSensor() = default;
 
-    ~QTRSensors();
+    ~funXbotlineSensor();
 
     /// \brief Specifies that the sensors are RC.
     ///
@@ -488,9 +490,10 @@ class QTRSensors
     /// readLineWhite().
     ///
     /// See \ref md_usage for more information and example code.
-    uint16_t readLineBlack(uint16_t * sensorValues, QTRReadMode mode = QTRReadMode::On)
+    uint16_t readLineBlack(uint16_t * sensorValues, bool newMethod = false, QTRReadMode mode = QTRReadMode::On)
     {
-      return readLinePrivate(sensorValues, mode, false);
+      if (newMethod) return readLinePrivate2(sensorValues, mode, false);
+      else return readLinePrivate(sensorValues, mode, false);
     }
 
     /// \brief Reads the sensors, provides calibrated values, and returns an
@@ -511,9 +514,10 @@ class QTRSensors
     /// readLineBlack().
     ///
     /// See \ref md_usage for more information and example code.
-    uint16_t readLineWhite(uint16_t * sensorValues, QTRReadMode mode = QTRReadMode::On)
+    uint16_t readLineWhite(uint16_t * sensorValues, bool newMethod = false, QTRReadMode mode = QTRReadMode::On)
     {
-      return readLinePrivate(sensorValues, mode, true);
+      if (newMethod) return readLinePrivate2(sensorValues, mode, true);
+      else return readLinePrivate(sensorValues, mode, true);
     }
 
 
@@ -528,6 +532,8 @@ class QTRSensors
       uint16_t * minimum = nullptr;
       /// Highest readings seen during calibration.
       uint16_t * maximum = nullptr;
+
+      //uint16_t avg = 0;
     };
 
     /// \name Calibration data
@@ -547,6 +553,16 @@ class QTRSensors
 
     /// \}
 
+    uint16_t getPattern(uint16_t *sensorValues, QTRReadMode mode = QTRReadMode::On);
+
+    void setMux(uint8_t sigPin);
+
+    void setMuxControlPin(const uint8_t * pins);
+
+    void setIOexpand();
+
+    uint16_t wait2read = 1;
+
   private:
 
     uint16_t emittersOnWithPin(uint8_t pin);
@@ -558,6 +574,7 @@ class QTRSensors
     void readPrivate(uint16_t * sensorValues, uint8_t start = 0, uint8_t step = 1);
 
     uint16_t readLinePrivate(uint16_t * sensorValues, QTRReadMode mode, bool invertReadings);
+    uint16_t readLinePrivate2(uint16_t * sensorValues, QTRReadMode mode, bool invertReadings);
 
     QTRType _type = QTRType::Undefined;
 
@@ -571,9 +588,18 @@ class QTRSensors
     uint8_t _oddEmitterPin = QTRNoEmitterPin; // also used for single emitter pin
     uint8_t _evenEmitterPin = QTRNoEmitterPin;
     uint8_t _emitterPinCount = 0;
+    uint8_t _oddEmitterState = LOW;
+    uint8_t _evenEmitterState = LOW;
 
-    bool _dimmable = true;
+    bool _dimmable = false;
     uint8_t _dimmingLevel = 0;
 
     uint16_t _lastPosition = 0;
+
+    bool _useMux = false;
+    bool _useIOexpand = false;
+    uint8_t _sigPin;
+    uint8_t _muxControlPins[3];
+    uint16_t readMux(uint8_t channel);
 };
+#endif

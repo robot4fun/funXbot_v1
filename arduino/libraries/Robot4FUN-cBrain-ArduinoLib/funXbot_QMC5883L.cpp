@@ -1,8 +1,6 @@
 /*
 ===============================================================================================================
-QMC5883LCompass.h
 Library for using QMC5583L series chip boards as a compass.
-Learn more at [https://github.com/mprograms/QMC5883LCompass]
 
 Supports:
 
@@ -16,12 +14,13 @@ Supports:
 ===============================================================================================================
 
 v1.0 - June 13, 2019
-Written by MRPrograms 
+Written by MPrograms
 Github: [https://github.com/mprograms/]
 
 Release under the GNU General Public License v3
 [https://www.gnu.org/licenses/gpl-3.0.en.html]
 
+modified by tonyet@funXedu
 ===============================================================================================================
 
 
@@ -46,27 +45,27 @@ OVER SAMPLE RATIO (OSR)
 	512         	0x00
 	256         	0x40
 	128         	0x80
-	64          	0xC0 
-  
+	64          	0xC0
+
 */
 
-
-
 #include "Arduino.h"
-#include "QMC5883LCompass.h"
+#include "funXbot_QMC5883L.h"
 #include <Wire.h>
 
-QMC5883LCompass::QMC5883LCompass() {
+//#define DEBUG
+
+funXbotQMC5883L::funXbotQMC5883L() {
 }
 
 
 /**
 	INIT
 	Initialize Chip - This needs to be called in the sketch setup() function.
-	
+
 	@since v0.1;
 **/
-void QMC5883LCompass::init(){
+void funXbotQMC5883L::init(){
 	Wire.begin();
 	_writeReg(0x0B,0x01);
 	setMode(0x01,0x0C,0x10,0X00);
@@ -76,11 +75,11 @@ void QMC5883LCompass::init(){
 /**
 	SET ADDRESS
 	Set the I2C Address of the chip. This needs to be called in the sketch setup() function.
-	
+
 	@since v0.1;
 **/
 // Set I2C Address if different then default.
-void QMC5883LCompass::setADDR(byte b){
+void funXbotQMC5883L::setADDR(byte b){
 	_ADDR = b;
 }
 
@@ -90,11 +89,11 @@ void QMC5883LCompass::setADDR(byte b){
 /**
 	REGISTER
 	Write the register to the chip.
-	
+
 	@since v0.1;
 **/
 // Write register values to chip
-void QMC5883LCompass::_writeReg(byte r, byte v){
+void funXbotQMC5883L::_writeReg(byte r, byte v){
 	Wire.beginTransmission(_ADDR);
 	Wire.write(r);
 	Wire.write(v);
@@ -105,61 +104,181 @@ void QMC5883LCompass::_writeReg(byte r, byte v){
 /**
 	CHIP MODE
 	Set the chip mode.
-	
+
 	@since v0.1;
 **/
 // Set chip mode
-void QMC5883LCompass::setMode(byte mode, byte odr, byte rng, byte osr){
+void funXbotQMC5883L::setMode(byte mode, byte odr, byte rng, byte osr){
 	_writeReg(0x09,mode|odr|rng|osr);
+}
+
+
+/**
+ * Define the magnetic declination for accurate degrees.
+ * https://www.magnetic-declination.com/
+ *
+ * @example
+ * For: Londrina, PR, Brazil at date 2022-12-05
+ * The magnetic declination is: -19º 43'
+ *
+ * then: setMagneticDeclination(-19, 43);
+ */
+void funXbotQMC5883L::setMagneticDeclination(int degrees, uint8_t minutes) {
+	_magneticDeclinationDegrees = degrees + minutes / 60;
 }
 
 
 /**
 	RESET
 	Reset the chip.
-	
+
 	@since v0.1;
 **/
 // Reset the chip
-void QMC5883LCompass::setReset(){
+void funXbotQMC5883L::setReset(){
 	_writeReg(0x0A,0x80);
 }
 
 // 1 = Basic 2 = Advanced
-void QMC5883LCompass::setSmoothing(byte steps, bool adv){
+void funXbotQMC5883L::setSmoothing(byte steps, bool adv){
 	_smoothUse = true;
 	_smoothSteps = ( steps > 10) ? 10 : steps;
 	_smoothAdvanced = (adv == true) ? true : false;
 }
 
+void funXbotQMC5883L::calibrate() {
+	int x,y,z;
+	int calibrationData[3][2] = {{32767, -32767}, {32767, -32767}, {32767, -32767}};
+
+	clearCalibration();
+	//int16_t x = _calibrationData[0][0] = _calibrationData[0][1] = getX();
+  //int16_t y = _calibrationData[1][0] = _calibrationData[1][1] = getY();
+  //int16_t z = _calibrationData[2][0] = _calibrationData[2][1] = getZ();
+
+	unsigned long startTime = millis();
+
+	while((millis() - startTime) < 10000) {
+		read();
+
+  		x = getX();
+  		y = getY();
+  		z = getZ();
+
+		if(x < calibrationData[0][0]) {
+			calibrationData[0][0] = x;
+		}
+		if(x > calibrationData[0][1]) {
+			calibrationData[0][1] = x;
+		}
+
+		if(y < calibrationData[1][0]) {
+			calibrationData[1][0] = y;
+		}
+		if(y > calibrationData[1][1]) {
+			calibrationData[1][1] = y;
+		}
+
+		if(z < calibrationData[2][0]) {
+			calibrationData[2][0] = z;
+		}
+		if(z > calibrationData[2][1]) {
+			calibrationData[2][1] = z;
+		}
+	}
+
+	setCalibration(
+		calibrationData[0][0],
+		calibrationData[0][1],
+		calibrationData[1][0],
+		calibrationData[1][1],
+		calibrationData[2][0],
+		calibrationData[2][1]
+	);
+}
+
 /**
     SET CALIBRATION
 	Set calibration values for more accurate readings
-		
-	@author Claus Näveke - TheNitek [https://github.com/TheNitek]
-	
-	@since v1.1.0
-**/
-void QMC5883LCompass::setCalibration(int x_min, int x_max, int y_min, int y_max, int z_min, int z_max){
-	_calibrationUse = true;
 
-	_vCalibration[0][0] = x_min;
-	_vCalibration[0][1] = x_max;
-	_vCalibration[1][0] = y_min;
-	_vCalibration[1][1] = y_max;
-	_vCalibration[2][0] = z_min;
-	_vCalibration[2][1] = z_max;
+	@author Claus Näveke - TheNitek [https://github.com/TheNitek]
+
+	@since v1.1.0
+
+	@deprecated Instead of setCalibration, use the calibration offset and scale methods.
+**/
+void funXbotQMC5883L::setCalibration(int x_min, int x_max, int y_min, int y_max, int z_min, int z_max){
+	_minmax[0][0] = x_min;
+	_minmax[0][1] = x_max;
+	_minmax[1][0] = y_min;
+	_minmax[1][1] = y_max;
+	_minmax[2][0] = z_min;
+	_minmax[2][1] = z_max;
+/*
+	calminmax[0][0] = x_min;
+	calminmax[0][1] = x_max;
+	calminmax[1][0] = y_min;
+	calminmax[1][1] = y_max;
+	calminmax[2][0] = z_min;
+	calminmax[2][1] = z_max;
+*/
+	setCalibrationOffsets(
+		(x_min + x_max)/2,
+		(y_min + y_max)/2,
+		(z_min + z_max)/2
+	);
+
+	float x_avg_delta = (x_max - x_min)/2;
+	float y_avg_delta = (y_max - y_min)/2;
+	float z_avg_delta = (z_max - z_min)/2;
+
+	float avg_delta = (x_avg_delta + y_avg_delta + z_avg_delta) / 3;
+
+	setCalibrationScales(
+		avg_delta / x_avg_delta,
+		avg_delta / y_avg_delta,
+		avg_delta / z_avg_delta
+	);
 }
 
+void funXbotQMC5883L::setCalibrationOffsets(float x_offset, float y_offset, float z_offset) {
+	_offset[0] = x_offset;
+	_offset[1] = y_offset;
+	_offset[2] = z_offset;
+}
 
+void funXbotQMC5883L::setCalibrationScales(float x_scale, float y_scale, float z_scale) {
+	_scale[0] = x_scale;
+	_scale[1] = y_scale;
+	_scale[2] = z_scale;
+}
+
+int16_t funXbotQMC5883L::getCalibrationMinMax(uint8_t dir, uint8_t index) {
+	//return calminmax[dir][index];
+	return _minmax[dir][index];
+}
+
+float funXbotQMC5883L::getCalibrationOffset(uint8_t index) {
+	return _offset[index];
+}
+
+float funXbotQMC5883L::getCalibrationScale(uint8_t index) {
+	return _scale[index];
+}
+
+void funXbotQMC5883L::clearCalibration(){
+	//calminmax[3][2] = {};
+	_minmax[3][2] = {};
+	setCalibrationOffsets(0., 0., 0.);
+	setCalibrationScales(1., 1., 1.);
+}
 
 /**
 	READ
 	Read the XYZ axis and save the values in an array.
-	
+
 	@since v0.1;
 **/
-void QMC5883LCompass::read(){
+void funXbotQMC5883L::read(){
 	Wire.beginTransmission(_ADDR);
 	Wire.write(0x00);
 	int err = Wire.endTransmission();
@@ -169,14 +288,12 @@ void QMC5883LCompass::read(){
 		_vRaw[1] = (int)(int16_t)(Wire.read() | Wire.read() << 8);
 		_vRaw[2] = (int)(int16_t)(Wire.read() | Wire.read() << 8);
 
-		if ( _calibrationUse ) {
-			_applyCalibration();
-		}
-		
+		_applyCalibration();
+
 		if ( _smoothUse ) {
 			_smoothing();
 		}
-		
+
 		//byte overflow = Wire.read() & 0x02;
 		//return overflow << 2;
 	}
@@ -186,32 +303,19 @@ void QMC5883LCompass::read(){
     APPLY CALIBRATION
 	This function uses the calibration data provided via @see setCalibration() to calculate more
 	accurate readings
-	
+
 	@author Claus Näveke - TheNitek [https://github.com/TheNitek]
-	
+
 	Based on this awesome article:
 	https://appelsiini.net/2018/calibrate-magnetometer/
-	
+
 	@since v1.1.0
-	
+
 **/
-void QMC5883LCompass::_applyCalibration(){
-	int x_offset = (_vCalibration[0][0] + _vCalibration[0][1])/2;
-	int y_offset = (_vCalibration[1][0] + _vCalibration[1][1])/2;
-	int z_offset = (_vCalibration[2][0] + _vCalibration[2][1])/2;
-	int x_avg_delta = (_vCalibration[0][1] - _vCalibration[0][0])/2;
-	int y_avg_delta = (_vCalibration[1][1] - _vCalibration[1][0])/2;
-	int z_avg_delta = (_vCalibration[2][1] - _vCalibration[2][0])/2;
-
-	int avg_delta = (x_avg_delta + y_avg_delta + z_avg_delta) / 3;
-
-	float x_scale = (float)avg_delta / x_avg_delta;
-	float y_scale = (float)avg_delta / y_avg_delta;
-	float z_scale = (float)avg_delta / z_avg_delta;
-
-	_vCalibrated[0] = (_vRaw[0] - x_offset) * x_scale;
-	_vCalibrated[1] = (_vRaw[1] - y_offset) * y_scale;
-	_vCalibrated[2] = (_vRaw[2] - z_offset) * z_scale;
+void funXbotQMC5883L::_applyCalibration(){
+	_vCalibrated[0] = (_vRaw[0] - _offset[0]) * _scale[0];
+	_vCalibrated[1] = (_vRaw[1] - _offset[1]) * _scale[1];
+	_vCalibrated[2] = (_vRaw[2] - _offset[2]) * _scale[2];
 }
 
 
@@ -219,50 +323,50 @@ void QMC5883LCompass::_applyCalibration(){
 	SMOOTH OUTPUT
 	This function smooths the output for the XYZ axis. Depending on the options set in
 	@see setSmoothing(), we can run multiple methods of smoothing the sensor readings.
-	
+
 	First we store (n) samples of sensor readings for each axis and store them in a rolling array.
 	As each new sensor reading comes in we replace it with a new reading. Then we average the total
 	of all (n) readings.
-	
+
 	Advanced Smoothing
 	If you turn advanced smoothing on, we will select the min and max values from our array
 	of (n) samples. We then subtract both the min and max from the total and average the total of all
 	(n - 2) readings.
-	
+
 	NOTE: This function does several calculations and can cause your sketch to run slower.
-	
+
 	@since v0.3;
 **/
-void QMC5883LCompass::_smoothing(){
+void funXbotQMC5883L::_smoothing(){
 	byte max = 0;
 	byte min = 0;
-	
+
 	if ( _vScan > _smoothSteps - 1 ) { _vScan = 0; }
-	
+
 	for ( int i = 0; i < 3; i++ ) {
 		if ( _vTotals[i] != 0 ) {
 			_vTotals[i] = _vTotals[i] - _vHistory[_vScan][i];
 		}
-		_vHistory[_vScan][i] = ( _calibrationUse ) ? _vCalibrated[i] : _vRaw[i];
+		_vHistory[_vScan][i] = _vCalibrated[i];
 		_vTotals[i] = _vTotals[i] + _vHistory[_vScan][i];
-		
+
 		if ( _smoothAdvanced ) {
 			max = 0;
 			for (int j = 0; j < _smoothSteps - 1; j++) {
 				max = ( _vHistory[j][i] > _vHistory[max][i] ) ? j : max;
 			}
-			
+
 			min = 0;
 			for (int k = 0; k < _smoothSteps - 1; k++) {
 				min = ( _vHistory[k][i] < _vHistory[min][i] ) ? k : min;
 			}
-					
+
 			_vSmooth[i] = ( _vTotals[i] - (_vHistory[max][i] + _vHistory[min][i]) ) / (_smoothSteps - 2);
 		} else {
 			_vSmooth[i] = _vTotals[i]  / _smoothSteps;
 		}
 	}
-	
+
 	_vScan++;
 }
 
@@ -270,11 +374,11 @@ void QMC5883LCompass::_smoothing(){
 /**
 	GET X AXIS
 	Read the X axis
-	
+
 	@since v0.1;
 	@return int x axis
 **/
-int QMC5883LCompass::getX(){
+int funXbotQMC5883L::getX(){
 	return _get(0);
 }
 
@@ -282,11 +386,11 @@ int QMC5883LCompass::getX(){
 /**
 	GET Y AXIS
 	Read the Y axis
-	
+
 	@since v0.1;
 	@return int y axis
 **/
-int QMC5883LCompass::getY(){
+int funXbotQMC5883L::getY(){
 	return _get(1);
 }
 
@@ -294,29 +398,26 @@ int QMC5883LCompass::getY(){
 /**
 	GET Z AXIS
 	Read the Z axis
-	
+
 	@since v0.1;
 	@return int z axis
 **/
-int QMC5883LCompass::getZ(){
+int funXbotQMC5883L::getZ(){
 	return _get(2);
 }
 
 /**
 	GET SENSOR AXIS READING
 	Get the smoothed, calibration, or raw data from a given sensor axis
-	
+
 	@since v1.1.0
 	@return int sensor axis value
 **/
-int QMC5883LCompass::_get(int i){
-	if ( _smoothUse ) 
+int funXbotQMC5883L::_get(int i){
+	if ( _smoothUse )
 		return _vSmooth[i];
-	
-	if ( _calibrationUse )
-		return _vCalibrated[i];
 
-	return _vRaw[i];
+	return _vCalibrated[i];
 }
 
 
@@ -324,13 +425,15 @@ int QMC5883LCompass::_get(int i){
 /**
 	GET AZIMUTH
 	Calculate the azimuth (in degrees);
-	
+	Correct the value with magnetic declination if defined.
+
 	@since v0.1;
 	@return int azimuth
 **/
-int QMC5883LCompass::getAzimuth(){
-	int a = atan2( getY(), getX() ) * 180.0 / PI;
-	return a < 0 ? 360 + a : a;
+int funXbotQMC5883L::getAzimuth(){
+	float heading = atan2( getY(), getX() ) * 180.0 / PI;
+	heading += _magneticDeclinationDegrees;
+	return (int)heading % 360;
 }
 
 
@@ -338,16 +441,18 @@ int QMC5883LCompass::getAzimuth(){
 	GET BEARING
 	Divide the 360 degree circle into 16 equal parts and then return the a value of 0-15
 	based on where the azimuth is currently pointing.
-	
+
+
+	@since v1.2.1 - function takes into account negative azimuth values. Credit: https://github.com/prospark
 	@since v1.0.1 - function now requires azimuth parameter.
 	@since v0.2.0 - initial creation
-	
+
 	@return byte direction of bearing
 */
-byte QMC5883LCompass::getBearing(int azimuth){
-	unsigned long a = azimuth / 22.5;
+byte funXbotQMC5883L::getBearing(int azimuth){
+	unsigned long a = ( azimuth > -0.5 ) ? azimuth / 22.5 : (azimuth+360)/22.5;
 	unsigned long r = a - (int)a;
-	byte sexdec = 0;	
+	byte sexdec = 0;
 	sexdec = ( r >= .5 ) ? ceil(a) : floor(a);
 	return sexdec;
 }
@@ -356,30 +461,31 @@ byte QMC5883LCompass::getBearing(int azimuth){
 /**
 	This will take the location of the azimuth as calculated in getBearing() and then
 	produce an array of chars as a text representation of the direction.
-	
+
 	NOTE: This function does not return anything since it is not possible to return an array.
 	Values must be passed by reference back to your sketch.
-	
+
 	Example:
-	
+
 	( if direction is in 1 / NNE)
-	
+
 	char myArray[3];
 	compass.getDirection(myArray, azimuth);
-	
+
 	Serial.print(myArray[0]); // N
 	Serial.print(myArray[1]); // N
 	Serial.print(myArray[2]); // E
-	
-	
+
+
 	@see getBearing();
-	
+
 	@since v1.0.1 - function now requires azimuth parameter.
 	@since v0.2.0 - initial creation
 */
-void QMC5883LCompass::getDirection(char* myArray, int azimuth){
+/*void funXbotQMC5883L::getDirection(char* myArray, int azimuth){
 	int d = getBearing(azimuth);
 	myArray[0] = _bearings[d][0];
 	myArray[1] = _bearings[d][1];
 	myArray[2] = _bearings[d][2];
 }
+*/
