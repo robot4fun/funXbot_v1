@@ -18,5 +18,5 @@ if not exist %DESTINATION% mkdir %DESTINATION%
 
 xcopy "%SOURCE%*" %DESTINATION% /E /I /Y
 
-echo 文件複製完成!
+echo done!
 pause

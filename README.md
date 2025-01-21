@@ -1,10 +1,11 @@
 # funXblock 1.84z for funXbot and funXdrone
+目前僅有 Windows 版
 
 # 安裝方法
 1. 下載 Kittenblock 1.8.4 ( -> https://reurl.cc/O5zqKy )後安裝
-2. 於此處(GitHub)下載 xblock1.84z 後解壓縮
+2. 於此處( https://github.com/robot4fun/xblock1.84z )下載 xblock1.84z 後解壓縮
 ![github.jpg](./github.jpg)
-3. 以管理員權限執行 install.bat
+3. 以 "管理員權限" 執行 install.bat
 
 
 # funXbot v1 使用注意事項
