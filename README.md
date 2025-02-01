@@ -16,7 +16,7 @@
 5. 安插 funXtcp WiFi 模組時, 白色標記需和主控器無線通訊接口白色標記對齊
 ![wifi.jpg](./wifi.jpg)
 6. 無線通訊接口無法和有線通訊接口(USB) 同時使用. 使用USB前, 請先拔除funXtcp WiFi 模組
-7. 使用無線通訊前, 需先在Windows 連無線網路(預設密碼12345678), 再在funXblock中連 funXbot
+7. 使用無線通訊前, 需先在Windows 連無線網路(SSID: funXtcp_00xx, 預設密碼12345678), 再在funXblock中連 funXbot 或 funXdrone
 
 # 如何在 funXblock 中使用 funXbot v1
 1. 在硬體選單中點選 "funXbot v1"
