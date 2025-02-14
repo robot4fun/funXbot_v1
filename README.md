@@ -16,7 +16,8 @@
 5. 安插 funXtcp WiFi 模組時, 白色標記需和主控器無線通訊接口白色標記對齊
 ![wifi.jpg](./wifi.jpg)
 6. 無線通訊接口無法和有線通訊接口(USB) 同時使用. 使用USB前, 請先拔除funXtcp WiFi 模組
-7. 使用無線通訊前, 需先在Windows 連無線網路(SSID: funXtcp_00xx, 預設密碼12345678), 再在funXblock中連 funXbot 或 funXdrone
+7. 使用無線通訊前, 需先在Windows 連無線網路(SSID: funXtcp_00xx, 預設密碼12345678), 再在funXblock中連 funXbot
+8. 可使用USB或電池盒供電. 電池盒需要2顆 14500 鋰電池串聯(8.4V), 請勿使用電壓不足的電池, 例如鹼性或鎳氫電池
 
 # 如何在 funXblock 中使用 funXbot v1
 1. 在硬體選單中點選 "funXbot v1"
@@ -31,4 +32,4 @@
 ![s6.jpg](./s6.jpg)
 6. 點選 "舞台模式" 即可回到舞台
 ![s7.jpg](./s7.jpg)
-7. 一旦 "編程模式" (off-line 離線模式)下曾經上傳過程式, 要再回到 "舞台模式" 和電腦連線互動, 就必須再點選 "升級韌體"後才可以
+7. 一旦 "編程模式" (off-line)下曾經上傳過程式, 要再回到 "舞台模式" 和電腦連線互動, 就必須再點選 "升級韌體"後才可以
