@@ -75,7 +75,7 @@ funXbot v1 是一個低成本、DIY（自己動手做）的機器人套件項目
 
   2. 將32-pin TQFP封裝的 ATmega328/P ADC6, ADC7 接到 擴充板的RJ11 A6, A7 ![](doc/hardware/32pinsTQFP_ATM328p.jpg) ![](doc/hardware/A6A7BT1.jpg)
 
-  3. 將擴充板的無線通訊接口(BT1) VG1相對應的電阻移除 
+  3. 將擴充板的無線通訊接口(BT1) VG1相對應的電阻移除 ![](doc/hardware/1.png)
 
   4. 將擴充板的無線通訊接口(BT1)的VG1腳位接3.3V (funXtcp WiFi模組用)
 
