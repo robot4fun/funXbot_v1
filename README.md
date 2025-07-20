@@ -195,7 +195,7 @@ funXbot v1 是一個低成本、DIY（自己動手做）的機器人套件項目
 
 4. 如果要讓 funXbot 獨立運作, 請點選 `編程模式` (off-line)![s5.jpg](doc/software/s5.jpg)
 
-5. 點選 `編程模式` 後, 會出現C++ 編程視窗, 這裡會自動翻譯積木程式為C++語言. 程式完成後點選 `上傳` 即可上傳到 funXbot 中 ![s6.jpg](doc/software/s6.jpg)
+5. 點選 `編程模式` 後, 會出現C++ 編程視窗, 這裡會自動翻譯積木語言為C++語言. 程式完成後點選 `上傳` 即可上傳到 funXbot 中 ![s6.jpg](doc/software/s6.jpg)
 
 6. 點選 `舞台模式` 即可回到舞台![s7.jpg](doc/software/s7.jpg)
 
