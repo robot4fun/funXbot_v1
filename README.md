@@ -15,7 +15,7 @@ funXbot v1 是一個低成本、DIY（自己動手做）的機器人套件項目
 * `funXblock`: 基於 `Kittenblock` 積木編程軟體 (基於 `Scratch`，但增加了上傳程式讓機器人離線自主動作的功能)，是 `funXbot v1` 的程式開發環境(IDE)，目前僅有 Windows 版
 
 # funXbot v1 套件可以怎麼玩?
-[![](doc/demo.png)](https://photos.app.goo.gl/XpYc3omgsmDtc2Y2A)
+[![](doc/demo1.png)](https://photos.app.goo.gl/XpYc3omgsmDtc2Y2A)
 [![](doc/demo2.png)](https://photos.app.goo.gl/KkY9mZn8f1qZUgqs6)
 
 # DIY 材料清單
