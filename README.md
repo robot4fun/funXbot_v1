@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="funxedu-logo4-white.png">
-    <source media="(prefers-color-scheme: light)" srcset="funxedu-logo4-black.png">
-    <img alt="funXedu" src="funxedu-logo4-black.png" style="max-width: 100%;">
+    <source media="(prefers-color-scheme: dark)" srcset="doc/funxedu-logo4-white.png">
+    <source media="(prefers-color-scheme: light)" srcset="doc/funxedu-logo4-black.png">
+    <img alt="funXedu" src="doc/funxedu-logo4-black.png" style="max-width: 100%;">
   </picture>
   <br/>
 </p>
