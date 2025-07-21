@@ -13,7 +13,7 @@
 
 # 項目包含三大部分
 * `funXbot`: 主機、電池盒、感應器、顯示設備和馬達等設備，搭配樂高規格相容積木所組成的完整教育機器人套件
-* `funXtcp`: 使用 `KittenBot` 基於 `esp-link` 技術的 WiFi 模組，讓 `funXbot v1` 具備無線功能
+* `funXtcp`: 使用 `KittenBot` (基於 `esp-link` 技術) 韌體的 WiFi 模組，讓 `funXbot v1` 具備無線功能
 * `funXblock`: 基於 `Kittenblock` 積木編程軟體 (基於 `Scratch`，但增加了上傳程式讓機器人離線自主動作的功能)，是 `funXbot v1` 的程式開發環境(IDE)，目前僅有 Windows 版
 
 # funXbot v1 套件可以怎麼玩?
