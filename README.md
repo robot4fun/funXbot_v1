@@ -102,7 +102,8 @@
 ## `funXtcp` WiFi模組
   * 下載 [`wifi/`](/wifi) 目錄內所有韌體檔案 ( *.bin ) 到電腦
 
-  * 將ESP12S模組正確放在 `燒錄器` 上 ![](doc/hardware/programmer2.jpg) (如果使用 `USB to TTL` 或 `開發板` 當燒錄器，請確保接線和電壓正確)
+  * 將ESP12S模組正確放在 `燒錄器` 上 ![](doc/hardware/programmer2.jpg)
+    (如果使用 `USB to TTL` 或 `開發板` 當燒錄器，請確保接線和電壓正確)
 
   * 以 `USB 訊號線` (不是充電線) 連接 `電腦` 和 `燒錄器` 
 
