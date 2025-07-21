@@ -102,9 +102,10 @@
 ## `funXtcp` WiFi模組
   * 下載 [`wifi/`](/wifi) 目錄內所有韌體檔案 ( *.bin ) 到電腦
 
-  * 將ESP12S模組正確放在 `燒錄器` 上 ![](doc/hardware/programmer2.jpg)
-    (如果使用 `USB to TTL` 或 `開發板` 當燒錄器，請確保接線和電壓正確)
-
+  * 將ESP12S模組正確放在 `燒錄器` 上 (如果使用 `USB to TTL` 或 `開發板` 當燒錄器，請確保接線和電壓正確)
+  
+  ![](doc/hardware/programmer2.jpg)
+  
   * 以 `USB 訊號線` (不是充電線) 連接 `電腦` 和 `燒錄器` 
 
   * 點選進入 [`燒錄工具網頁版`](https://espressif.github.io/esptool-js/)
@@ -156,7 +157,7 @@
 
 * `16路循線感應器`:
   * 2張 `QTR-8A 循線模組` 、 `CD74HC4067 類比IO擴展模組` 和 `PCF8574T IO擴展模組` 組成 ![](doc/hardware/ls16.jpg) 依圖將三者的對應腳位連接後，使用 `6P4C` 水晶頭將 PCF8574T 的  `SDA` 訊號接 `腳位2`， `SCL` 訊號接 `腳位3`， CD74HC4067 的 `SIG` 需額外的 `6P4C` 水晶頭，接 `腳位3` 。![](doc/hardware/linesensor2.jpg)![](doc/hardware/linesensor3.jpg)![](doc/hardware/linesensor.jpg)
-  * 如果同時要使用 `顏色感應器` ， 須改用 `藍色板`PCF8574T，注意腳位接線並製作 I2C 轉接頭![](doc/hardware/pcf8574.png)
+  * 如果同時要使用 `顏色感應器` ， 須製作 I2C 轉接頭
 
 * `顯示設備`:
   * TM1637數字顯示板的 `clk` 接 `腳位2` ， `dio` 接 `腳位3`
@@ -185,13 +186,19 @@
 
 2. 點選 `沒有連接` 按鈕或圖示後選擇正確的WiFi或USB埠 `開始連線` funXbot![s3.jpg](doc/software/s3.jpg)![](doc/software/connect.png)
 
-3. 預設為 `舞台模式` (on-line), 可和電腦連線互動. 如果無法互動, 請點選 `升級韌體`![s4.jpg](doc/software/s4.jpg)
+3. 預設為 `舞台模式` (on-line), 可和電腦連線互動. 如果無法互動, 請點選 `升級韌體`
 
-4. 如果要讓 funXbot 獨立運作, 請點選 `編程模式` (off-line)![s5.jpg](doc/software/s5.jpg)
+![s4.jpg](doc/software/s4.jpg)
+
+4. 如果要讓 funXbot 獨立運作, 請點選 `編程模式` (off-line)
+
+![s5.jpg](doc/software/s5.jpg)
 
 5. 點選 `編程模式` 後, 會出現C++ 編程視窗, 這裡會自動翻譯積木語言為C++語言. 程式完成後點選 `上傳` 即可上傳到 funXbot 中 ![s6.jpg](doc/software/s6.jpg)
 
-6. 點選 `舞台模式` 即可回到舞台![s7.jpg](doc/software/s7.jpg)
+6. 點選 `舞台模式` 即可回到舞台
+
+![s7.jpg](doc/software/s7.jpg)
 
 7. 一旦 `編程模式` (off-line)下曾經上傳過程式, 要再回到 `舞台模式` 和電腦連線互動, 就必須再點選 `升級韌體` 後才可以
 
