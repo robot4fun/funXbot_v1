@@ -175,11 +175,12 @@
 
 
 # `funXblock` 安裝方法
-1. 下載 [Kittenblock 1.8.4](https://reurl.cc/O5zqKy) 後安裝
+1. 下載 [Kittenblock 1.8.4](https://github.com/robot4fun/funXbot_v1/releases/download/v1.0.0/Kittenblock.Setup.1.8.4.exe) 後安裝
 
-2. 於此處下載 `funXblock` 後解壓縮 ![github.jpg](doc/software/github.jpg)
+2. 於此處下載 [`funXblock`](https://github.com/robot4fun/funXbot_v1/archive/refs/tags/v1.0.0.zip) 後解壓縮(或依下圖方式下載)
+   ![github.jpg](doc/software/github.jpg)
 
-3. 以 "管理員權限" 執行 `install.bat`
+4. 以 "管理員權限" 執行 `install.bat`
 
 ## 如何在 funXblock 中使用 funXbot v1
 1. 在硬體選單中點選 `funXbot v1`![s1-2.jpg](doc/software/s1-2.jpg)
